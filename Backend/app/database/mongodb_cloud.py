@@ -7,8 +7,10 @@ import sys
 import re
 import time
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from config.config import MONGO_URL, OPENAI_API_KEY
+from vector_db.embedding import get_embedding
+from config.config import MONGO_URL
 
 
 client = MongoClient(MONGO_URL)
@@ -63,12 +65,12 @@ def text_emb(job_title, technologies_used):
 
 docs = []
 for _, row in tqdm(jobs_df.iterrows(), total=len(jobs_df), desc="Embedding & build docs"):
-    job_title = row.get('job_title', '')
-    techs = row.get('technologies_used', '')
+    # job_title = row.get('job_title', '')
+    # techs = row.get('technologies_used', '')
 
     doc = row.to_dict()
-    emd = text_emb(job_title, techs)
-    doc['embedding'] = emd
+    # emd = text_emb(job_title, techs)
+    # doc['embedding'] = emd
     docs.append(doc)
     time.sleep(1.1)
 
