@@ -12,7 +12,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from vector_db.embedding import get_embedding
 from config.config import MONGO_URL
 
-
 client = MongoClient(MONGO_URL)
 db = client['scan-cv']
 job_collection = db['jobs']
