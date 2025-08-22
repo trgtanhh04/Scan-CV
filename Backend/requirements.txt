@@ -5,10 +5,8 @@ sqlalchemy==2.0.42
 pydantic==2.11.7
 fitz==0.0.1.dev2
 langchain==0.2.5
-langchain-core==0.3.74
-langchain-community==0.3.24
 langchain-qdrant==0.1.4
-qdrant-client==1.7.0
+qdrant-client==1.10.1
 mistralai==0.1.7
 regex==2025.7.34
 python-dotenv==1.0.0
