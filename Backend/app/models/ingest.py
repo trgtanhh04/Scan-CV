@@ -14,6 +14,8 @@ from models import (
     Skill, Language, candidate_skills, candidate_languages
 )
 
+CVS_PATH = "../../raw/cvs"
+
 # ---------- helpers ----------
 def normalize_date(s: Optional[str]) -> Tuple[Optional[date], bool]:
     """
@@ -195,13 +197,18 @@ SAMPLE = {
 }
 
 
+def insert_candidate_to_db(db: Session, cv: dict) -> Candidate:
+    cand = upsert_candidate_from_json(db, cv)
+    db.commit()
+    return cand
+
+
 def main(db_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
     engine = create_all(db_url)
     SessionLocal.configure(bind=engine)
 
     with SessionLocal() as db:
-        cand = upsert_candidate_from_json(db, SAMPLE)
-        db.commit()
+        cand = insert_candidate_to_db(db, SAMPLE)
         print(f"Upserted candidate id={cand.id} email={cand.email}")
 
 
