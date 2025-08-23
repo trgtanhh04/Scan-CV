@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "postgresql://postgres:123456@localhost:5432/cv_database"
+DATABASE_URL = "postgresql://postgres:postgres@db:5432/scan_cv"
 
 engine = create_engine(DATABASE_URL, echo=True)
 

@@ -8,6 +8,8 @@ langchain==0.2.5
 langchain-qdrant==0.1.4
 qdrant-client==1.10.1
 mistralai==0.1.7
-regex==2025.7.34
+regex==2022.1.18
 python-dotenv==1.0.0
 PyMuPDF==1.26.3
+uvicorn[standard]
+dateparser==1.1.1

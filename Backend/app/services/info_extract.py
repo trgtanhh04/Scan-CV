@@ -5,6 +5,13 @@ import json
 import re
 from langchain.schema import HumanMessage
 from langchain.schema import Document
+from langchain_deepseek import ChatDeepSeek
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from config.config import DEEPSEEK_API_KEY
+
+llm = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 def extract_text_from_pdf(file_path: str) -> str:
     doc = fitz.open(file_path)
@@ -15,8 +22,6 @@ def extract_text_from_pdf(file_path: str) -> str:
     return text.strip()
 
 def extract_info(text: str, llm) -> dict:
-    prompt = prompt_template.format(text=text)
-    messages = [HumanMessage(content=prompt)]
     prompt_template = """
     Extract the following candidate information fields from the CV content (as plain text) below in the exact JSON format:
     {{
@@ -61,6 +66,8 @@ def extract_info(text: str, llm) -> dict:
     CV content:
     {text}
     """
+    prompt = prompt_template.format(text=text)
+    messages = [HumanMessage(content=prompt)]
     response = llm.invoke(messages)
     raw_content = response.content
 
@@ -99,15 +106,25 @@ def process_cvs(input_dir: str, output_file: str, limit: int = 10):
         # trích xuất text từ PDF
         text = extract_text_from_pdf(file_path)
 
-        # trích xuất thông tin từ LLM
-        info = extract_info(text)
+    # trích xuất thông tin từ LLM
+    info = extract_info(text, llm)
 
         # Thêm tên file để dễ đối chiếu
-        info["source_file"] = filename
-        results.append(info)
+    info["source_file"] = filename
+    results.append(info)
 
     # B3: lưu kết quả thành JSON (list of objects)
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=4)
 
     print(f"Saved {len(results)} CVs into {output_file}")
+
+
+if __name__ == "__main__":
+    input_directory = "../../raw/cvs/01.pdf"
+    text = extract_text_from_pdf(input_directory)
+    info = extract_info(text, llm)
+    print(info)
+    output_json = "extracted_candidates.json"
+    with open(output_json, "w", encoding="utf-8") as f:
+        json.dump(info, f, ensure_ascii=False, indent=4)
