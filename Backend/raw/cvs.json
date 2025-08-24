@@ -1,0 +1,843 @@
+[
+    {
+        "full_name": "JR Sabado",
+        "email": "sabadotweetie@gmail.com",
+        "phone": "+639178871043",
+        "job_title": "Software Engineer",
+        "education": [
+            {
+                "degree": "Bachelor of Science in Information Systems",
+                "university": "University of Santo Tomas",
+                "start_year": null,
+                "end_year": 2014
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Software Engineer",
+                "company": "Infor, PSSC, Inc.",
+                "start_date": "Sep 2019",
+                "end_date": "Present",
+                "description": "Maintained current Homepages and developed additional Widgets App. Working on H5A, a migration of their H5 Classic App which was built using Java, to Angular. Primary Component Owner of components under H5A: Focus, Charting, Auto scroll, Split Screen."
+            },
+            {
+                "job_title": "Application Development Analyst",
+                "company": "Accenture, Inc.",
+                "start_date": "Aug 2017",
+                "end_date": "Aug 2019",
+                "description": "Responsible for development of web portal for diamond clients. Deliver front-end development tasks using AngularJS, HTML and CSS. Performance improvement and code enhancement. Pioneered Accenture's web portal for client schedules and agenda builder."
+            },
+            {
+                "job_title": "R&D PHP Developer",
+                "company": "Gameloft Philippines",
+                "start_date": "Aug 2016",
+                "end_date": "May 2017",
+                "description": "Develop localized web applications optimized for desktop and mobile using PHP framework like CodeIgniter. Research and develop applications with new tech stacks. Assist in developing functional prototypes from wireframes. Projects: Disney Magic Kingdoms, Iron Blade, Asphalt Xtreme, Zombie Anarchy."
+            },
+            {
+                "job_title": "Software Development Engineer",
+                "company": "Allied Telesis Labs, Inc.",
+                "start_date": "Aug 2014",
+                "end_date": "Apr 2016",
+                "description": "Maintenance of existing Java GUI Applets for switches and routers. Developed Next Generation Firewall UI using MEAN Stack and Bootstrap. Developed Offline Voucher System and Project Management System from scratch."
+            },
+            {
+                "job_title": "Web Developer Intern",
+                "company": "Granton World Philippines",
+                "start_date": "Aug 2012",
+                "end_date": "Nov 2013",
+                "description": null
+            }
+        ],
+        "skills": [
+            "Javascript",
+            "Typescript",
+            "PHP",
+            "Java",
+            "VB.Net",
+            "SQL",
+            "NodeJS",
+            "AngularJS",
+            "Angular",
+            "jQuery",
+            "Jasmine",
+            "Mocha",
+            "Bootstrap",
+            "Foundation",
+            "Angular Material",
+            "Codeigniter",
+            "HTML",
+            "CSS",
+            "SCSS",
+            "SVN",
+            "Git",
+            "Azure Devops",
+            "Visual Studio Code",
+            "Wordpress",
+            "Heroku",
+            "Adaptable",
+            "Organized",
+            "Multitasking",
+            "Team Player",
+            "Committed",
+            "Respectful"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "01.pdf"
+    },
+    {
+        "full_name": "Charlotte Harris",
+        "email": "support@qwikresume.com",
+        "phone": "(123) 456 7899",
+        "job_title": "Senior Software Engineer",
+        "education": [
+            {
+                "degree": "Bachelor of Science in Computer Science",
+                "university": "University of California, Berkeley",
+                "start_year": 2015,
+                "end_year": 2018
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "Pineapple Enterprises",
+                "start_date": "Jun/2021",
+                "end_date": "Ongoing",
+                "description": "Maintained high-capacity ad server processing over 15 billion requests daily with 10ms latency and zero downtime, generating $300M in revenue. Led requirements gathering and development for critical ad-serving features. Revamped ad-serving request architecture, decreasing integration time from weeks to days. Automated release cycles using Bamboo, reducing time to release to a few hours."
+            },
+            {
+                "job_title": "Software Engineer",
+                "company": "Summit Peak Industries",
+                "start_date": "Jun/2018",
+                "end_date": "Jun/2021",
+                "description": "Extracted and optimized string literals from JavaScript, Oracle PL/SQL, C#, and ASP.NET code to enhance application performance. Adapted external .NET translation tool for integration with ASP.NET web applications. Developed and maintained JavaScript and PL/SQL stored procedures within large ASP.NET web application. Designed and developed SSIS packages for data extraction, transformation, and loading."
+            }
+        ],
+        "skills": [
+            "JavaServer Pages",
+            "HTML5",
+            "Java Persistence API",
+            "EclipseLink ORM",
+            "Apache ZooKeeper"
+        ],
+        "certifications": [],
+        "languages": [
+            "English",
+            "Russian",
+            "Dutch"
+        ],
+        "source_file": "02.pdf"
+    },
+    {
+        "full_name": "Brian Sanchez",
+        "email": "isanchez.brian@gmail.com",
+        "phone": "(323) 319-7596",
+        "job_title": "Software Engineer",
+        "education": [
+            {
+                "degree": "Bachelors of Science",
+                "university": "East Los Angeles College",
+                "start_year": 2017,
+                "end_year": 2020
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Supervision Aide",
+                "company": "Los Angeles Unified School District",
+                "start_date": "February 2017",
+                "end_date": "June 2020",
+                "description": "Supervised students to maintain a safe environment for both students and parents. Patrolled and monitored campus to maintain order and security in a middle school setting. Memorized and ensured student compliance with school and District rules, regulations, and policies. Performed duties with patience, tact and good judgment following established guidelines."
+            },
+            {
+                "job_title": "Sales Associate",
+                "company": "Curacao",
+                "start_date": "November 2016",
+                "end_date": "January 2017",
+                "description": "Game Department. Sold games and consoles to customers with promotions and deals for bundles. Established an understanding and execution of the highest honesty, integrity and ethical practices at all times. Memorized promotions and properly communicated details to customers. Responsible for being up to date with newly released games, consoles, accessories, etc."
+            }
+        ],
+        "skills": [
+            "Operating Systems",
+            "Object Oriented Programming",
+            "Agile Development",
+            "RESTful APIs",
+            "Visual Studio Code"
+        ],
+        "certifications": [
+            {
+                "certificate_name": "Certificate of Achievement",
+                "organization": "General Assembly"
+            }
+        ],
+        "languages": [
+            "HTML5",
+            "CSS3",
+            "JavaScript",
+            "jQuery",
+            "Node.js",
+            "Express.js",
+            "MongoDB",
+            "Git",
+            "GitHub",
+            "Python",
+            "Django",
+            "React.js",
+            "Django REST Framework",
+            "PostgresQL",
+            "Heroku"
+        ],
+        "source_file": "03.pdf"
+    },
+    {
+        "full_name": "Ryan Martinsen",
+        "email": "ryan@ryanmartinsen.com",
+        "phone": null,
+        "job_title": "Principal Software Engineer",
+        "education": [],
+        "experience": [
+            {
+                "job_title": "Principal Software Engineer",
+                "company": "Atlassian",
+                "start_date": "March 2022",
+                "end_date": "present",
+                "description": "Leading multiple workstreams building out enterprise change management capabilities. Driving org-level developer productivity."
+            },
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "Pluralsight",
+                "start_date": "July 2019",
+                "end_date": "March 2022",
+                "description": "Led a highly collaborative dev team to improve user onboarding. Worked closely with product management to plan our product roadmap. Used TDD and pair programing to build microservices with React, Vue.js, PostgreSQL, RabbitMQ, Kafka, Redis, and Node.js. Contributed to an infrastructure as code Gitlab pipeline to deploy services to an AWS-hosted Kubernetes cluster. Developed internal tools to increase developer productivity."
+            },
+            {
+                "job_title": "Senior Developer",
+                "company": "Dotdash",
+                "start_date": "September 2011",
+                "end_date": "July 2019",
+                "description": "Built a custom structured-content WYSIWYG editor with Quill. Created content management systems with Vue.js and Angular. Developed services and REST APIs in Node.js for content management systems. Worked to implement a publishing pipeline which was 10x smaller than the old one. Designed and developed a new permission model for CMS tools. Led effort to modernize CMS development with ES2015 and above. Standardized logging across all CMS tools and applications."
+            },
+            {
+                "job_title": "Senior Developer",
+                "company": "PetFlow.com",
+                "start_date": "March 2010",
+                "end_date": "April 2011",
+                "description": "Managed the setup, administration, and backups of development, staging and production servers, MySQL databases and database servers. Developed entire customer-facing website in Drupal (PHP, JavaScript, CSS). Was instrumental in executing a painless migration from Drupal to a new framework."
+            },
+            {
+                "job_title": "Developer & DBA",
+                "company": "Portero Luxury",
+                "start_date": "October 2008",
+                "end_date": "March 2010",
+                "description": "Configured a network of high-availability servers in a virtual private grid. Built admin and vendor platforms using Linux, PHP, MySQL, and the Doctrine ORM. Developed, extended, and integrated an API to synchronize data between a back-end server and the customer-facing Magento website. Contributed enhancements to the Zoop PHP framework. Administration of MySQL databases, database servers, and database replication."
+            },
+            {
+                "job_title": "Developer & Sys Admin",
+                "company": "eRev",
+                "start_date": "2006",
+                "end_date": "2008",
+                "description": "Built a content management and e-commerce system from the ground up using PHP and MySQL. This platform powered over 200 websites. Implemented 3rd party payment processors PayPal and Authorize.Net. Designed and implemented solutions to streamline the sales to deployment pipeline. Complete server setup and management."
+            },
+            {
+                "job_title": "Web Developer",
+                "company": "Nextline Media",
+                "start_date": "2005",
+                "end_date": "2006",
+                "description": "Built and maintained a variety of projects with PHP and MySQL."
+            }
+        ],
+        "skills": [
+            "JavaScript",
+            "TypeScript",
+            "Node.js",
+            "React",
+            "Vue.js",
+            "PostgreSQL",
+            "Python",
+            "Java",
+            "Spring Boot",
+            "git",
+            "complex local development environments",
+            "MySQL",
+            "HTML",
+            "CSS",
+            "Kotlin",
+            "Flask",
+            "Celery",
+            "AWS",
+            "SQS",
+            "DynamoDB",
+            "Lambda",
+            "EC2",
+            "ElastiCache",
+            "Docker",
+            "LocalStack",
+            "RabbitMQ",
+            "Kafka",
+            "Redis",
+            "Kubernetes",
+            "PHP",
+            "MongoDB",
+            "Drupal",
+            "Doctrine ORM",
+            "Magento"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "04.pdf"
+    },
+    {
+        "full_name": "Luis Furtado Araujo",
+        "email": "luiscesm1@gmail.com",
+        "phone": "(61) 99913-7803",
+        "job_title": "Software Engineer",
+        "education": [
+            {
+                "degree": "B.S. Software Engineering",
+                "university": "University of Brasília – School of Science and Technology in Engineering (UnB FCTE)",
+                "start_year": 2018,
+                "end_year": 2024
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Staff Software Engineer",
+                "company": "ARCO EDUCAÇÃO",
+                "start_date": "2023",
+                "end_date": "Present",
+                "description": "Led a team of five engineers in migrating multiple legacy services to well-architected, scalable microservices. Achieved over $80K/year in cost savings through AWS FinOps initiatives optimizing legacy services. Designed, developed, and maintained microservices with a strong foundation in software engineering principles and best practices."
+            },
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "ARCO EDUCAÇÃO",
+                "start_date": "2022",
+                "end_date": "2023",
+                "description": "Technical leadership and development in JavaScript/TypeScript, Node.js, React, AWS, and various frameworks. Developing and maintaining 6+ applications across different domains."
+            },
+            {
+                "job_title": "Tech Lead",
+                "company": "MB LABS",
+                "start_date": "2022",
+                "end_date": "2023",
+                "description": "Technical leadership, including mentoring junior developers and providing guidance. Code reviews, project planning and estimations, organizing timelines and deliveries for clients. Lead developer and tech leader for a full-scale education application."
+            },
+            {
+                "job_title": "Software Engineer",
+                "company": "MB LABS",
+                "start_date": "2020",
+                "end_date": "2022",
+                "description": "Designing and developing robust web applications with a focus on scalability and performance. Full-stack expertise, leveraging front-end and back-end technologies to drive innovation and deliver exceptional user experiences. Contributed to various applications, including for Versa Fuel, a geolocation startup built with Node.js (backend), React (dashboard), and React Native (client-side)."
+            },
+            {
+                "job_title": "Full Stack Web Developer",
+                "company": "BOX IT",
+                "start_date": "2018",
+                "end_date": "2019",
+                "description": "Developed and maintained CRM (Customer Relationship Management) and ERP (Enterprise Resource Planning) systems. Tech stack: Vue.js (JavaScript) for the front end and Laravel (PHP) for the back end. Built custom institutional websites tailored to specific business needs."
+            }
+        ],
+        "skills": [
+            "JavaScript",
+            "TypeScript",
+            "NodeJS",
+            "React",
+            "Next",
+            "AWS",
+            "Git",
+            "CI/CD",
+            "SQL",
+            "NoSQL",
+            "Software Architecture",
+            "Microservices",
+            "Problem Solving"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "05.pdf"
+    },
+    {
+        "full_name": "Paul Ellsworth",
+        "email": "paulewog@gmail.com",
+        "phone": "408-892-9987",
+        "job_title": "Staff Software Engineer",
+        "education": [
+            {
+                "degree": "Bachelor of Science: Computer Science",
+                "university": "The Master's College",
+                "start_year": null,
+                "end_year": 2008
+            },
+            {
+                "degree": "Bachelor of Music: Theory and Composition",
+                "university": "The Master's College",
+                "start_year": null,
+                "end_year": 2008
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Staff Software Engineer",
+                "company": "IBM",
+                "start_date": "2010",
+                "end_date": "Present",
+                "description": "Software test planning and execution, primarily functioning in an integration test capacity. Responsible for helping test a variety of data mobility products and assisting testing a related product when necessary. Responsibilities include test plans, test cases, test execution, test reports, opening and verifying work requests/bug reports, and helping recreate customer issues. Primary engineer responsible for automated test design, frontend and backend feature implementation, and any other improvements to the test automation framework."
+            },
+            {
+                "job_title": "Software Engineer",
+                "company": "IBM",
+                "start_date": null,
+                "end_date": null,
+                "description": "Software test planning and execution, primarily functioning in an integration test capacity. Responsible for helping test a variety of data mobility products. Responsibilities included test plans, test cases, test execution, test reports, opening and verifying work requests/bug reports, and helping recreate customer issues. Designed and implemented frontend for test automation framework and network installation service backends."
+            },
+            {
+                "job_title": "Tutor",
+                "company": "Gavilan College",
+                "start_date": null,
+                "end_date": null,
+                "description": "Tutored college students in math."
+            }
+        ],
+        "skills": [
+            "Software Testing",
+            "Test Automation",
+            "Python",
+            "PHP",
+            "Perl",
+            "Javascript",
+            "SQL",
+            "Shell Scripting",
+            "HTML",
+            "XML",
+            "CSS",
+            "HP-UX",
+            "AIX",
+            "Solaris",
+            "Linux",
+            "Windows",
+            "VMware ESX Server",
+            "Oracle VirtualBox",
+            "IBM VIO Server",
+            "HP Integrity Virtual Machines",
+            "Xen"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "06.pdf"
+    },
+    {
+        "full_name": "Vaibhav Kulkarni",
+        "email": "vkulkarn@protonmail.com",
+        "phone": null,
+        "job_title": "Engineering Manager: Data & Bioinformatics",
+        "education": [
+            {
+                "degree": "PhD, Computer Science",
+                "university": "University of Lausanne",
+                "start_year": 2015,
+                "end_year": 2019
+            },
+            {
+                "degree": "MS, Embedded Systems",
+                "university": "Technische Universiteit Eindhoven",
+                "start_year": 2014,
+                "end_year": 2015
+            },
+            {
+                "degree": "MS, Information & Communication Technology",
+                "university": "Technische Universität Berlin",
+                "start_year": 2013,
+                "end_year": 2014
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Engineering Manager: Data & Bioinformatics",
+                "company": "Debiopharm",
+                "start_date": "July 2025",
+                "end_date": "Present",
+                "description": "Leading cross-functional team of data engineers & bioinformaticians to architect & deliver next-generation data fabric & bioinformatics platforms. Engineering bioinformatics pipelines for processing multi-omics & non-clinical data for biomarker discovery programs & harmonizing datasets."
+            },
+            {
+                "job_title": "Data Engineering Team Lead",
+                "company": "Debiopharm",
+                "start_date": "July 2022",
+                "end_date": "June 2025",
+                "description": "Architected & led the development from scratch of the company's most utilized data platform; Central Data Repository, automating ingestion & quality control of clinical & non-clinical trial data at enterprise-scale. Engineered deployment of scientific analytics platforms on company-controlled cloud infrastructure."
+            },
+            {
+                "job_title": "Senior Data Engineer",
+                "company": "SOPHiA Genetics",
+                "start_date": "April 2021",
+                "end_date": "June 2022",
+                "description": "Implemented terabyte-scale ETL pipelines to transform raw genomics data into analytics-ready format. Developed API endpoints & CLI tools to expose database functionalities to internal teams. Implemented regression testing mechanisms for variant detection bioinformatics pipelines."
+            },
+            {
+                "job_title": "Software Engineer | Research & Development Lead",
+                "company": "GenLots",
+                "start_date": "September 2019",
+                "end_date": "March 2021",
+                "description": "Developed a microservices architecture for client ERP data processing. Deployed reinforcement learning-based solution for supply chain optimization. Engineered suite of tools for reporting & monitoring integrated into dashboards."
+            },
+            {
+                "job_title": "Research Scientist",
+                "company": "Distributed Object Programming Lab",
+                "start_date": "November 2015",
+                "end_date": "August 2019",
+                "description": "Partnered with public transport firms to architect systems capturing real-time ridership data. Developed ML-driven platform to detect and reduce ticketless travel. Led platform development for large-scale spatiotemporal mobility-data collection project."
+            },
+            {
+                "job_title": "Project Engineer",
+                "company": "ETH Zürich",
+                "start_date": "January 2015",
+                "end_date": "August 2015",
+                "description": "Implemented software-defined-radio-based platform for reliable IoT product testing, generating interference patterns of wireless appliances. Deployed platform in production at ETH Zurich & TU Berlin."
+            },
+            {
+                "job_title": "Embedded Systems Engineer",
+                "company": "BOLT IoT",
+                "start_date": "September 2011",
+                "end_date": "January 2013",
+                "description": "Designed PCB layouts for embedded platforms used in robotics & IoT systems. Implemented toolsets & applications to benchmark platform performance, validation tests, EMI simulations & industry compliance certifications."
+            },
+            {
+                "job_title": "Project Intern",
+                "company": "National Institute of Oceanography",
+                "start_date": "June 2011",
+                "end_date": "August 2011",
+                "description": "Contributed to autonomous underwater vehicle localization project by developing triangulation algorithms & learning satellite communication and ocean current modeling"
+            }
+        ],
+        "skills": [
+            "Object-oriented programming",
+            "Test-driven development",
+            "Microservices architecture",
+            "API development",
+            "Python",
+            "Java",
+            "Scala",
+            "Rust",
+            "ETL pipeline development",
+            "Data modeling",
+            "Quality assurance",
+            "Containerization",
+            "Orchestration",
+            "Cloud-native application deployment",
+            "Azure",
+            "AWS",
+            "Docker",
+            "Kubernetes",
+            "Statistical analysis",
+            "Predictive modeling",
+            "Production ML systems",
+            "Reinforcement learning",
+            "Real-time analytics",
+            "Large language model applications",
+            "Genomics analysis",
+            "Multi-omics data processing",
+            "Clinical data harmonization",
+            "RNA-seq",
+            "Variant calling pipelines",
+            "Bioinformatics workflow management",
+            "Cross-functional team leadership",
+            "Technical strategy development",
+            "Project management",
+            "Agile development"
+        ],
+        "certifications": [
+            {
+                "certificate_name": "Data Engineering with Rust",
+                "organization": "Duke University"
+            },
+            {
+                "certificate_name": "Generative AI with Large Language Models",
+                "organization": "DeepLearning.AI & AWS"
+            },
+            {
+                "certificate_name": "Data Engineering with Azure",
+                "organization": "Udemy"
+            },
+            {
+                "certificate_name": "Applied Machine Learning & Data Science",
+                "organization": "University of Michigan"
+            },
+            {
+                "certificate_name": "Amazon Web Services",
+                "organization": "AWS"
+            },
+            {
+                "certificate_name": "Information Security & Privacy",
+                "organization": "University College London"
+            },
+            {
+                "certificate_name": "Fundamentals of Machine Learning",
+                "organization": "Stanford University"
+            }
+        ],
+        "languages": [],
+        "source_file": "07.pdf"
+    },
+    {
+        "full_name": "Atyansh Jaiswal",
+        "email": "atyansh.jaiswal@gmail.com",
+        "phone": null,
+        "job_title": "Senior Software Engineer",
+        "education": [
+            {
+                "degree": "BS/MS in Computer Science",
+                "university": "University of California, San Diego",
+                "start_year": 2012,
+                "end_year": 2017
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "Global Payments Security and Privacy Team",
+                "start_date": "March 2024",
+                "end_date": "Present",
+                "description": "Detecting abusive automated behavior such as account takeover and payment fraud, Protecting payments APIs from web attacks and DDoS, Writing backend services using Golang, Redis, MySQL, Kafka, Built an internal Inventory System to track metadata for all Payments APIs, Building a rule engine platform at the API Gateway layer to intercept all payment transactions"
+            },
+            {
+                "job_title": "Staff Software Engineer",
+                "company": "Privacy Engineering",
+                "start_date": "May 2022",
+                "end_date": "March 2024",
+                "description": "Leading Consent Management Framework at Block, built solutions for cookie consent across both Web and Mobile, Worked on in house data deletion and export systems for privacy compliance, Primarily using Java, MySQL, Datadog, AWS, Snowflake, Terraform, Acted as an adhoc privacy analyst, surfacing and mitigating privacy concerns for Cash Contacts, Created long term strategy for purpose based data classification and asset inventory"
+            },
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "Privacy Infrastructure",
+                "start_date": "August 2017",
+                "end_date": "May 2022",
+                "description": "Focus on detecting and mitigating large scale scraping attacks on Facebook and Instagram, Build systems to observe, classify, and mitigate botted activity, Understanding attacker intent, measuring signals, deducing patterns, and engineering features out of them, Primarily using Haskell, Hack, and Python, Additionally part of the Privacy IMOC oncall rotation where I'm responsible for coordinating response for privacy incidents at the company and postmortem reviews"
+            },
+            {
+                "job_title": "Software Engineer",
+                "company": "Messenger Privacy",
+                "start_date": "March 2020",
+                "end_date": "November 2021",
+                "description": "Building infrastructure to make Messenger clients more secure and compliant with privacy regulations, Created a differential privacy focused logging framework for both server and iOS client, Built a real time engine to surface consent flows on mobile clients, Created scripts for proper ownership classification for entire Messenger codebase, Pioneered a new Messenger Security team focused on detecting and mitigating client side vulnerabilities, Primarily using Hack, C, and Python"
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "Ads Signals",
+                "start_date": "Summer 2016",
+                "end_date": null,
+                "description": "Integrated real time aggregations for conversion optimization, Worked on C++ backend to ingest data and perform aggregations, Implemented PHP/HACK endpoint to process API calls, Created a React JS based UI to create aggregation rules, Wrote a thrift service to send conversion data between PHP and C++ backend"
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "Ads Infrastructure",
+                "start_date": "Fall 2015",
+                "end_date": null,
+                "description": "Created a real time storage solution for an in-house object delivery distributed system in C++, Improved network performance by implementing a more efficient serialization method, Increased storage efficiency of connection objects in HDFS by 30%, Used an in house real time key value storage system to deliver connection objects"
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "YouTube Infrastructure",
+                "start_date": "Summer 2015",
+                "end_date": null,
+                "description": "Migrated YouTube V3 API from Java to Python backend, Improved safety of video fetches across the YouTube backend, Added improved permission validation support for video fetch requests"
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "Satellite Internet Analytics",
+                "start_date": "Summer 2014",
+                "end_date": null,
+                "description": "Created a Page Load Metrics Collection and Analysis Framework, Developed Firefox extension in JavaScript to measure web page load times, Set up Python Flask server with nginx to ingest page load times, Set up ElasticSearch and Hadoop storage systems for page load time analysis"
+            }
+        ],
+        "skills": [
+            "Golang",
+            "Redis",
+            "MySQL",
+            "Kafka",
+            "Java",
+            "Datadog",
+            "AWS",
+            "Snowflake",
+            "Terraform",
+            "Haskell",
+            "Hack",
+            "Python",
+            "C",
+            "C++",
+            "PHP",
+            "React JS",
+            "JavaScript",
+            "Flask",
+            "nginx",
+            "ElasticSearch",
+            "Hadoop"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "08.pdf"
+    },
+    {
+        "full_name": "Alex Li",
+        "email": "me@alexli.ca",
+        "phone": "+1 (650) 709-5727",
+        "job_title": "Senior Software Engineer",
+        "education": [
+            {
+                "degree": "Honours B.Sc., with high distinction",
+                "university": "University of Toronto",
+                "start_year": 2015,
+                "end_year": 2019
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Senior Software Engineer",
+                "company": "Meta",
+                "start_date": "2019",
+                "end_date": "Present",
+                "description": "Smart Glasses/Knowledge Graph - Bringing GenAI and multimodal LLMs to the assistant on smart devices such as the Ray-Ban Meta. Instagram Growth Acquisition - Tech lead for several top-of-funnel growth products: web embeds, QR codes (nametag), profile/link sharing. My launches directly drive +15 million monthly active users to Instagram annually."
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "Airbnb",
+                "start_date": "Summer 2018",
+                "end_date": "Summer 2018",
+                "description": "Trust and Safety: User Knowledge - Developed a weakly-supervised machine learning model to automatically label training data using NLP, saving thousands of hours of manual ops work on user background checks."
+            },
+            {
+                "job_title": "Software Engineering Intern",
+                "company": "Google",
+                "start_date": "Summer 2016",
+                "end_date": "Summer 2017",
+                "description": "Data Infrastructure and Analysis - Developed automation tools for Evenflow, the scalable distributed system for AdWords log aggregation. DoubleClick Bid Manager - Processed millions of Google Maps business chains to grow ad campaign geotargeting coverage by 500%."
+            }
+        ],
+        "skills": [
+            "Full-stack software engineering",
+            "C++",
+            "C",
+            "Java",
+            "Python",
+            "JavaScript",
+            "PHP",
+            "HTML/CSS",
+            "SQL",
+            "Unix-like environments",
+            "C#",
+            "Objective-C",
+            "R",
+            "MATLAB",
+            "Lisp",
+            "Haskell",
+            "Prolog",
+            "Verilog/VHDL",
+            "LATEX"
+        ],
+        "certifications": [],
+        "languages": [
+            "English",
+            "Mandarin"
+        ],
+        "source_file": "09.pdf"
+    },
+    {
+        "full_name": "Jared Rummler",
+        "email": "jared@jaredrummler.com",
+        "phone": null,
+        "job_title": "Senior Software Engineer, Entrepreneur",
+        "education": [
+            {
+                "degree": "Business Administration and Management, General",
+                "university": "California State University, Fullerton",
+                "start_year": 2006,
+                "end_year": 2010
+            }
+        ],
+        "experience": [
+            {
+                "job_title": "Founder, CEO",
+                "company": "goatbytes.io",
+                "start_date": "Apr 2012",
+                "end_date": "Present",
+                "description": "Utilizing the Nordic Semiconductor Android Bluetooth LE library and working directly with firmware teams, I updated the mobile application for Invoy, LLC (healthcare & medical device company) for their next iteration of medical devices. Implemented a powerful Android chart/graph SDK to display personalized, data-driven insights for Invoy, LLC. Refactored the Android application for Invoy to utilize the Model-View-ViewModel (MVVM) architecture pattern."
+            },
+            {
+                "job_title": "Senior Software Engineer for Android",
+                "company": "Vidaloop, Inc.",
+                "start_date": "May 2020",
+                "end_date": "Feb 2022",
+                "description": "Lead developer for VotingApp for Android—a native mobile voting application written in Kotlin—utilizing Kotlin Multiplatform for shared business logic across iOS and Android and integrated with enterprise blockchain technology (Hyperledger Sawtooth by Intel). Developed an Android security SDK for detecting security threats and a custom mobile accessibility service."
+            },
+            {
+                "job_title": "Engineering Manager, Agile Software Engineer",
+                "company": "TribalScale",
+                "start_date": "Feb 2018",
+                "end_date": "Aug 2019",
+                "description": "Developed Honda Dream Drive—the award-winning Android Auto application for Honda Innovations. Led and developed the Android TV, Amazon Fire TV, and Facebook Portal TV applications for iHeartRadio. Promoted to Engineering Manager and led teams of software engineers on projects for Nissan, Honda, NBA, iHeartRadio, and Katalyst Interactive Inc."
+            },
+            {
+                "job_title": "Co-Founder, Director of Engineering",
+                "company": "Dashhero",
+                "start_date": "Feb 2019",
+                "end_date": "Aug 2020",
+                "description": "Developed an Android Auto prototype integrating on-device natural language processing and Google Dialogflow to order Starbucks via voice. Coordinated with Ford Motor Company to debut Dashero at CES 2019."
+            },
+            {
+                "job_title": "Founder, CEO, Software Engineer",
+                "company": "JRummy Apps Inc.",
+                "start_date": "Oct 2010",
+                "end_date": "Dec 2017",
+                "description": "Designed, planned, developed, tested, marketed, and maintained over 25 applications published on the Google Play Store generating 7-figure profit and receiving over 330,000 5-star reviews. Managed mobile advertising, monetization, analytics, and user acquisition strategies."
+            },
+            {
+                "job_title": "Software Developer",
+                "company": "Control Air Conditioning Corp.",
+                "start_date": "Apr 2007",
+                "end_date": "Apr 2011",
+                "description": "Created and refined inventory process including developing and managing a new inventory application which saved hundreds of thousands on cost reimbursable contract jobs."
+            }
+        ],
+        "skills": [
+            "Kotlin",
+            "Java",
+            "Dart",
+            "Swift",
+            "TypeScript",
+            "JavaScript",
+            "Objective-C",
+            "Groovy",
+            "Bash",
+            "C#",
+            "C",
+            "Go",
+            "Rust",
+            "Android Studio",
+            "IntelliJ IDEA",
+            "Webstorm",
+            "Xcode",
+            "Visual Studio Code",
+            "Eclipse",
+            "AppCode",
+            "macOS",
+            "Windows",
+            "Ubuntu",
+            "iOS",
+            "Android",
+            "JIRA",
+            "Pivotal Tracker",
+            "Jenkins",
+            "Travis CI",
+            "Amazon AWS",
+            "Google Cloud",
+            "Heroku",
+            "Dialogflow",
+            "Sketch",
+            "Adobe Illustrator",
+            "Microsoft Excel",
+            "Slack"
+        ],
+        "certifications": [],
+        "languages": [],
+        "source_file": "10.pdf"
+    }
+]
