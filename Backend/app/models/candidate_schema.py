@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 # ------------ Education ------------
-class Education(BaseModel):
+class Educations(BaseModel):
     degree: Optional[str] = None
     university: Optional[str] = None
     start_year: Optional[int] = None
@@ -59,7 +59,7 @@ class CandidateIn(BaseModel):
     phone: Optional[str] = None
     location: Optional[str] = None
 
-    education: List[Education] = Field(default_factory=list)
+    educations: List[Educations] = Field(default_factory=list)
     experience: List[ExperienceIn] = Field(default_factory=list)
     skills: List[str] = Field(default_factory=list)
     certifications: List[Certification] = Field(default_factory=list)
@@ -74,7 +74,7 @@ class CandidateOut(BaseModel):
     phone: Optional[str] = None
     location: Optional[str] = None
 
-    education: List[Education] = Field(default_factory=list)
+    educations: List[Educations] = Field(default_factory=list)
     experience: List[ExperienceOut] = Field(default_factory=list)
     skills: List[str] = Field(default_factory=list)          # nếu muốn trả tên skill đơn giản
     languages: List[str] = Field(default_factory=list)       # tương tự

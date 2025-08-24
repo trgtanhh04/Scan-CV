@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 import dateparser
 from sqlalchemy.orm import Session
 
-from models import (
+from app.models import (
     get_engine, create_all, SessionLocal,
     Candidate, Education, Experience,
     Skill, Language, candidate_skills, candidate_languages

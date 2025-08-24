@@ -9,7 +9,7 @@ from sqlalchemy.types import Boolean
 # ---------------- Base / Engine helpers ----------------
 Base = declarative_base()
 
-def get_engine(url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scancv"):
+def get_engine(url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
     return create_engine(url, future=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, future=True)
@@ -52,6 +52,7 @@ class Language(Base):
     def __repr__(self) -> str:
         return f"<Language id={self.id} name={self.name!r}>"
 
+
 class Candidate(Base):
     __tablename__ = "candidates"
 
@@ -63,7 +64,7 @@ class Candidate(Base):
     location   = Column(String, nullable=True)
 
     # relations
-    education     = relationship("Education", back_populates="candidate", cascade="all, delete-orphan")
+    educations     = relationship("Educations", back_populates="candidate", cascade="all, delete-orphan")
     experience    = relationship("Experience", back_populates="candidate", cascade="all, delete-orphan")
     certifications= relationship("Certification", back_populates="candidate", cascade="all, delete-orphan")
     attachments   = relationship("Attachment", back_populates="candidate", cascade="all, delete-orphan")
@@ -78,8 +79,9 @@ class Candidate(Base):
 Index("idx_candidates_location", Candidate.location)
 Index("idx_candidates_job_title", Candidate.job_title)
 
-class Education(Base):
-    __tablename__ = "education"
+
+class Educations(Base):
+    __tablename__ = "educations"
 
     id           = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False)
@@ -88,10 +90,10 @@ class Education(Base):
     start_year   = Column(Integer, nullable=True)   # giữ dạng năm cho đơn giản
     end_year     = Column(Integer, nullable=True)
 
-    candidate    = relationship("Candidate", back_populates="education")
+    candidate    = relationship("Candidate", back_populates="educations")
 
     def __repr__(self) -> str:
-        return f"<Education id={self.id} candidate_id={self.candidate_id} degree={self.degree!r}>"
+        return f"<Educations id={self.id} candidate_id={self.candidate_id} degree={self.degree!r}>"
 
 class Experience(Base):
     __tablename__ = "experiences"
