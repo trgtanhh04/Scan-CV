@@ -29,6 +29,7 @@ def extract_info(text: str, llm) -> dict:
     "email": "...",
     "phone": "...",
     "job_title": "...",
+    "location": "...",
     "education": [
         {{
         "degree": "...",

@@ -8,15 +8,10 @@ import fitz
 import dateparser
 from sqlalchemy.orm import Session
 
-# from app.models import (
-#     get_engine, create_all, SessionLocal,
-#     Candidate, Education, Experience,
-#     Skill, Language, candidate_skills, candidate_languages
-# )
 from app.models.models import (
     get_engine, create_all, SessionLocal,
     Candidate, Educations, Experience,
-    Skill, Language, candidate_skills, candidate_languages
+    Skill, Language, candidate_skills, candidate_languages, Certification, Attachment
 )
 
 CVS_PATH = "../../raw/cvs"
@@ -115,7 +110,7 @@ def upsert_candidate_from_json(db: Session, cv: dict) -> Candidate:
     # --- Education (replace all) ---
     cand.education.clear()
     for e in cv.get("education", []):
-        edu = Education(
+        edu = Educations(
             candidate_id=cand.id,
             degree=e.get("degree"),
             university=e.get("university"),
@@ -139,6 +134,16 @@ def upsert_candidate_from_json(db: Session, cv: dict) -> Candidate:
             description=xp.get("description"),
         )
         cand.experience.append(ex)
+
+    # --- Certifications: replace all ---
+    cand.certifications.clear()
+    for c in cv.get("certifications", []) or []:
+        cert = Certification(
+            candidate_id=cand.id,
+            certificate_name=(c.get("certificate_name") or None),
+            organization=(c.get("organization") or None),
+        )
+        cand.certifications.append(cert)
 
     # --- Skills (merge) ---
     # Lấy set skill_id hiện có để tránh trùng
@@ -170,6 +175,19 @@ def upsert_candidate_from_json(db: Session, cv: dict) -> Candidate:
         if l.id not in existing_lang_ids:
             db.execute(candidate_languages.insert().values(candidate_id=cand.id, language_id=l.id))
             existing_lang_ids.add(l.id)
+
+    # if source_file:
+    #     # ví dụ lưu ngay record, public_url sẽ được build ở tầng service upload
+    #     att = Attachment(
+    #         candidate_id=cand.id,
+    #         type="cv",
+    #         storage_provider="local",
+    #         object_key=source_file,     # bạn có thể đổi thành "{cand.id}/{uuid}.pdf"
+    #         public_url=None,            # set ở chỗ upload/serve hoặc build từ BASE_PUBLIC_URL
+    #         original_filename=source_file,
+    #         mime_type="application/pdf",
+    #     )
+    #     cand.attachments.append(att)
 
     db.flush()
     return cand
@@ -203,10 +221,13 @@ SAMPLE = {
 
 
 def insert_candidate_to_db(db: Session, cv: dict) -> Candidate:
-    cand = upsert_candidate_from_json(db, cv)
-    db.commit()
-    return cand
-
+    try:
+        cand = upsert_candidate_from_json(db, cv)
+        db.commit()
+        return cand
+    except Exception:
+        db.rollback()
+        raise
 
 def main(db_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
     engine = create_all(db_url)

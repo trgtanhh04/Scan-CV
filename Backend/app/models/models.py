@@ -128,19 +128,37 @@ class Certification(Base):
     def __repr__(self) -> str:
         return f"<Certification id={self.id} cand={self.candidate_id} name={self.certificate_name!r}>"
 
+
+# ---- Attachment (đề xuất) ----
 class Attachment(Base):
     __tablename__ = "attachments"
 
     id           = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False)
-    type         = Column(String, nullable=True)    # 'pdf','docx'
-    created_at   = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at   = Column(DateTime(timezone=True), onupdate=func.now())
 
-    candidate    = relationship("Candidate", back_populates="attachments")
+    # metadata hữu ích
+    original_name = Column(String, nullable=True)
+    mime_type     = Column(String, nullable=True)
+    size_bytes    = Column(Integer, nullable=True)
+
+    # nơi lưu & đường dẫn
+    storage   = Column(String, nullable=False, default="local")  # 'local' | 'gcs' | 's3' ...
+    path      = Column(String, nullable=False)                   # vd: 'cv/<uuid>.pdf' (relative trong /media)
+    public_url= Column(String, nullable=True)                    # vd: 'https://.../media/cv/<uuid>.pdf'
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    candidate  = relationship("Candidate", back_populates="attachments")
+
+    __table_args__ = (
+        # truy vấn "CV mới nhất của 1 ứng viên" nhanh hơn
+        Index("idx_att_candidate_type_created", "candidate_id", "mime_type", "created_at"),
+    )
 
     def __repr__(self) -> str:
-        return f"<Attachment id={self.id} cand={self.candidate_id} type={self.type!r}>"
+        return f"<Attachment id={self.id} cand={self.candidate_id} type={self.type!r} provider={self.storage_provider!r}>"
+
 
 # ---------------- Bootstrap ----------------
 def create_all(url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
