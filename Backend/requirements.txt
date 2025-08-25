@@ -1,16 +1,25 @@
+# requirements.txt (đoạn liên quan)
 pandas==2.3.1
 pymongo==4.6.0
 tqdm==4.66.4
-sqlalchemy==2.0.42
+SQLAlchemy==2.0.42
 pydantic==2.11.7
-fitz==0.0.1.dev2
-langchain==0.2.5
-langchain-qdrant==0.1.4
-qdrant-client==1.10.1
-mistralai==0.1.7
+PyMuPDF==1.26.3
 regex==2022.1.18
 python-dotenv==1.0.0
-PyMuPDF==1.26.3
-uvicorn[standard]
+uvicorn[standard]==0.35.0
 dateparser==1.1.1
 sqlglot==0.4.0
+psycopg2-binary==2.9.3
+fastapi==0.116.1
+qdrant-client==1.10.1
+
+# ---- LangChain stack (0.3.x) ----
+langchain>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-core>=0.3.68,<0.4.0
+langchain-qdrant==0.1.4
+langchain-google-genai==2.1.9
+langgraph>=0.2.45,<0.3.0
+mistralai==0.1.7
+streamlit==1.35.0
