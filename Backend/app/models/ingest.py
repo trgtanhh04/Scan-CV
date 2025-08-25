@@ -4,13 +4,18 @@ from datetime import date
 import re
 import sys
 from typing import Optional, Tuple
-
+import fitz
 import dateparser
 from sqlalchemy.orm import Session
 
-from app.models import (
+# from app.models import (
+#     get_engine, create_all, SessionLocal,
+#     Candidate, Education, Experience,
+#     Skill, Language, candidate_skills, candidate_languages
+# )
+from app.models.models import (
     get_engine, create_all, SessionLocal,
-    Candidate, Education, Experience,
+    Candidate, Educations, Experience,
     Skill, Language, candidate_skills, candidate_languages
 )
 
