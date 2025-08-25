@@ -1,4 +1,4 @@
-Backend/raw/cvs
+# Backend/raw/cvs
 .env
 *.env
 *__pycache__/
