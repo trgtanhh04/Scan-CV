@@ -1,0 +1,4303 @@
+[
+  {
+    "full_name": "Alexander Antonison",
+    "email": "alex@antonison-cg.com",
+    "phone": "(256) 426-4379",
+    "job_title": "Data Solutions Consultant",
+    "location": "Nashville, TN",
+    "education": [
+      {
+        "degree": "M.C.S Data Science",
+        "university": "University of Illinois at Urbana-Champaign",
+        "start_year": 2017,
+        "end_year": 2020
+      },
+      {
+        "degree": "B.E. Industrial and Systems Engineering",
+        "university": "University of Alabama in Huntsville",
+        "start_year": 2007,
+        "end_year": 2011
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Solutions Consultant",
+        "company": "Antonison Consulting Group",
+        "start_date": "June 2020",
+        "end_date": "Present",
+        "description": "Help clients by providing solutions that foster growth and efficiency through Data Engineering and Architecture services."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Verana Health",
+        "start_date": "March 2021",
+        "end_date": "November 2021",
+        "description": "Worked on building an ingestion platform that pulls in data from Electronic Health Record (EHR) systems and processes them into a common data model for further processing and analysis."
+      },
+      {
+        "job_title": "Principal Machine Learning Engineer",
+        "company": "Stratasan",
+        "start_date": "October 2019",
+        "end_date": "February 2021",
+        "description": "Started as Data Services Manager leading Data Engineering and Data Science team, transitioned to Principal Machine Learning Engineer to focus on scaling data products and supporting machine learning model development and deployment."
+      },
+      {
+        "job_title": "Data Engineer -> Data Scientist",
+        "company": "Axial Healthcare",
+        "start_date": "July 2017",
+        "end_date": "September 2019",
+        "description": "Worked on Data Operations team enhancing intake and processing of client data, transferred to Data Science team to streamline development, deployment, and management of models."
+      },
+      {
+        "job_title": "Data Engineer/Analyst",
+        "company": "FreseniusRx",
+        "start_date": "April 2015",
+        "end_date": "July 2017",
+        "description": "Supported analytic groups through developing data pipelines, warehousing data, developing and maintaining reporting and dashboard solutions."
+      },
+      {
+        "job_title": "System Analyst",
+        "company": "Oilfield Instrumentation",
+        "start_date": "August 2014",
+        "end_date": "March 2015",
+        "description": "Worked in engineering department supporting development, testing, and troubleshooting field issues for software products."
+      },
+      {
+        "job_title": "System Analyst",
+        "company": "Wyle, CAS",
+        "start_date": "May 2012",
+        "end_date": "August 2014",
+        "description": "Worked as analyst in support of PATRIOT System Effectiveness Model (PSEM), a simulation model of the PATRIOT missile defense system."
+      }
+    ],
+    "skills": [
+      "R",
+      "Python",
+      "SQL",
+      "BASH",
+      "Markdown",
+      "MSSQL",
+      "Postgres",
+      "Hive",
+      "Presto",
+      "Spark",
+      "Salesforce",
+      "Snowflake",
+      "AWS Lambda",
+      "AWS S3",
+      "AWS EC2",
+      "AWS Glue",
+      "AWS Step Functions",
+      "AWS Athena",
+      "AWS Redshift",
+      "AWS EMR",
+      "AWS IAM",
+      "AWS Quicksight",
+      "AWS ECR",
+      "AWS Fargate",
+      "AWS CloudWatch",
+      "Google BigQuery",
+      "Google Cloud Storage",
+      "Serverless",
+      "Docker",
+      "GitHub",
+      "Bitbucket",
+      "PyTest",
+      "GitHub Actions",
+      "Cookiecutter",
+      "dbt",
+      "Deequ",
+      "Talend",
+      "Tableau",
+      "PowerBI",
+      "SSRS",
+      "Excel PowerQuery",
+      "Excel PowerPivot",
+      "RStudio Server Pro",
+      "JupyterHub",
+      "RMarkdown"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "01.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/42f132883203445f9014502f3a38ba1f.pdf",
+    "candidate_id": 18
+  },
+  {
+    "full_name": "John Francis",
+    "email": "johnfrancis95815@gmail.com",
+    "phone": "+91-9488835026",
+    "job_title": "Data Engineer",
+    "location": "India",
+    "education": [
+      {
+        "degree": "Bachelors Degree in Engineering",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Engineer",
+        "company": "BatchService",
+        "start_date": "03/2024",
+        "end_date": "Present",
+        "description": "Optimized ETL processes for US real estate data, handling over 100 million records per batch. Focused on cost-efficiency and delivery speed. Implemented complex business logic to ensure the most reliable and up-to-date data for customers and data consumers."
+      },
+      {
+        "job_title": "Senior Data Engineer",
+        "company": "Loyalytics AI",
+        "start_date": "10/2023",
+        "end_date": "03/2024",
+        "description": "Led the design and implementation of a robust data lake architecture for GMG, a global FMCG leader. By integrating data from diverse sources such as SAP, SFTP, and REST APIs, we created a centralized, real-time data platform leveraging AWS Glue and Databricks. This initiative streamlined data access and reporting, enabling better decision-making and operational efficiency across the organization."
+      },
+      {
+        "job_title": "Product Data Engineer",
+        "company": "Loyalytics AI",
+        "start_date": "04/2023",
+        "end_date": "10/2023",
+        "description": "Led the ETL setup for unstructured retail business data across all Loyalytics clients, building a robust data lake architecture using Delta Live Tables and Apache Kafka streaming services. Developed and self-managed a scalable, reusable data lifecycle framework that ingests a variety of file types (XML, JSON, CSV, etc.) and integrates seamlessly with Unity Catalog and Delta Live Tables."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Loyalytics AI",
+        "start_date": "08/2022",
+        "end_date": "04/2023",
+        "description": "Led the ETL setup for diverse data sources like MySQL, Oracle DB, SQL Server, and Oracle Fusion for Panda Retail. Migrated from Oracle Data Integrator to Azure Databricks and Azure Data Factory, optimizing data processing workflows and improving real-time analytics capabilities."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "LiftOff LLC",
+        "start_date": "09/2020",
+        "end_date": "09/2021",
+        "description": "Various full stack and backend development projects focused on creating robust, user-friendly web applications. Contributed to both frontend and backend development for OkayHumans, a mental healthcare platform. Built on the Node.js framework (Hapi.js), implemented SQL transactions to ensure integrity in the booking flow and developed a robust membership system with failure refunds integrated via Stripe."
+      }
+    ],
+    "skills": [
+      "Python",
+      "JavaScript",
+      "SQL",
+      "HTML",
+      "CSS",
+      "Pyspark",
+      "Spark",
+      "Databricks",
+      "Delta Live Tables",
+      "Unity Catalog",
+      "AWS Glue",
+      "AWS S3",
+      "Azure Data Factory",
+      "Azure Storage Gen2",
+      "Fivetran",
+      "NumPy",
+      "Pandas",
+      "AWS",
+      "Docker",
+      "GIT",
+      "Medallion Architecture",
+      "Data Manipulation",
+      "Troubleshooting",
+      "Creative Problem Solving",
+      "Apache Spark Streaming",
+      "Role-Based Access Control (RBAC)",
+      "Big Data",
+      "Microsoft SQL Server",
+      "Data Lakes",
+      "Extract, Transform, Load (ETL)",
+      "Object-Relational Mapping (ORM)",
+      "JSON",
+      "Quality Control",
+      "Quality Assurance",
+      "Amazon EC2",
+      "Amazon S3",
+      "Amazon Relational Database Service (RDS)",
+      "AWS Lambda",
+      "REST APIs",
+      "Microsoft Azure",
+      "Node.js",
+      "MongoDB",
+      "Full-Stack Development",
+      "HTML5",
+      "Jupyter",
+      "PostgreSQL"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Databricks Data Engineering Associate Certification",
+        "organization": "Databricks"
+      }
+    ],
+    "languages": [],
+    "source_file": "02.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/e7acbe1f458946009313078bdcdc914d.pdf",
+    "candidate_id": 19
+  },
+  {
+    "full_name": "DharamKumar Gajera",
+    "email": "gajeradharam@gmail.com",
+    "phone": "+91-8866215421",
+    "job_title": "Senior Data Engineer",
+    "location": "Rajkot, India",
+    "education": [
+      {
+        "degree": "Bachelor of Engineering (Computer Science)",
+        "university": "M. S. University",
+        "start_year": 2011,
+        "end_year": 2015
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Data Engineer",
+        "company": "Ollion (Formerly CloudCover)",
+        "start_date": "08/2021",
+        "end_date": "Present",
+        "description": "Leading pre-sales calls for technical discovery and documenting requirements. Proposing solutions and architectures. Preparing estimations & SoWs. Managing stakeholders, communicating with clients and leading projects technically. Designing, building, deploying and maintaining data pipelines and data platforms. Performing testing, conducting code reviews, and enhancing the performance. Overseeing a team of data engineers and mentoring them by providing technical expertise. Designed and Delivered several data migration, one data validation, one data mesh, one data modernization, one real-time processing and a few data warehouse implementation projects."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Avesta Technologies",
+        "start_date": "01/2018",
+        "end_date": "08/2021",
+        "description": "Integrated ClickStream Analytics for a RealEstate portal and in our Digital Assessment product. Built a simple yet scalable architecture on AWS for Clickstream analytics. Engineered cost-effective data pipelines/ETLs. Query results within 2 sec on 1 Billion data points for a monthly cost of < 500$. Built 15+ dashboards and 5+ reports to cater different business needs."
+      },
+      {
+        "job_title": "ML Engineer",
+        "company": "Avesta Technologies",
+        "start_date": "01/2018",
+        "end_date": "08/2021",
+        "description": "Modernized Digital Scanning & Assessment product with AI & Computer Vision techniques to minimize human efforts. Implemented Blank page check, Blur page check, objects in image and Page number identification with > 99% accuracy, using custom in-house developed ML models. Implemented custom cropping and alignment algorithm for better image quality. Automated Image enhancements for clear and readable images."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Tech Mahindra Ltd.",
+        "start_date": "08/2015",
+        "end_date": "01/2018",
+        "description": "Providing 2nd line support to a few applications for client British Telecom. Getting involved in Design Discussions and Development. Automated repetitive incidents/service request tasks using scripts. Monitoring, Deploying, Supporting & Maintaining Production environments."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Tech Mahindra Ltd.",
+        "start_date": "08/2015",
+        "end_date": "01/2018",
+        "description": "Built a data lake from scratch on GCP for a neo bank client. Outlined a future-proof data architecture for streaming and batch use cases. Generated dynamic config-driven data pipelines orchestrated via Airflow. Automated the entire manual report generation process."
+      }
+    ],
+    "skills": [
+      "Python",
+      "Java",
+      "SQL",
+      "Google Cloud Platform (GCP)",
+      "Amazon Web Services (AWS)",
+      "Data Pipelines",
+      "Apache Airflow",
+      "Apache Beam",
+      "BigQuery",
+      "Spanner",
+      "Apache Druid",
+      "MySQL",
+      "Kafka",
+      "PubSub",
+      "Git",
+      "Apache Spark",
+      "Docker",
+      "Superset",
+      "Data Architecture",
+      "Data Analysis",
+      "Data Modelling",
+      "MongoDB",
+      "BigTable",
+      "Dataplex",
+      "Looker Studio",
+      "Data Validation",
+      "Data Quality",
+      "Cloud Build",
+      "Apache Flink",
+      "Databricks"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Google Cloud Platform Professional Data Engineer",
+        "organization": "Google Cloud Platform"
+      },
+      {
+        "certificate_name": "Apache Airflow Fundamentals",
+        "organization": "Astronomer"
+      },
+      {
+        "certificate_name": "Apache Druid Basics",
+        "organization": "Imply"
+      },
+      {
+        "certificate_name": "Deep Learning Specialization",
+        "organization": "Coursera"
+      }
+    ],
+    "languages": [],
+    "source_file": "03.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/99502fe0b0f349c0bd6a3139557eff54.pdf",
+    "candidate_id": 20
+  },
+  {
+    "full_name": "Marco Russo",
+    "email": "mrussorb@gmail.com",
+    "phone": "+34 603 220 001, +39 338 1038 912",
+    "job_title": "Machine Learning Engineer & Professor",
+    "location": "Europe",
+    "education": [
+      {
+        "degree": "Data Engineering & Data Science & Business Analytics Master degree",
+        "university": "Universitat Oberta Catalunya",
+        "start_year": null,
+        "end_year": null
+      },
+      {
+        "degree": "Economics degree spec. financial markets",
+        "university": "Universitat Oberta Catalunya",
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Data Scientist",
+        "company": "Paradigma Digital by Indra Group · Plexus · Bosonit",
+        "start_date": "06/2018",
+        "end_date": "Ongoing",
+        "description": "As a data specialist I carry out statistically valid data analysis to solve specific business problems. As a data engineer I build statistical and machine learning models and automate them by designing and building secure, reliable and scalable data processing systems. Worked in 8+ different projects and industries in AWS, GCP, Azure. Developed a Data pipeline and ML workflow Python and Spark. Managed 15 data specialist agile autonomous teams got the data which they need to forecast sales and demand."
+      },
+      {
+        "job_title": "Machine Learning Engineer & in-company Trainer as freelancer",
+        "company": "Dataschool.Tech for banking · insurance · energy&power co.",
+        "start_date": "02/2012",
+        "end_date": "Ongoing",
+        "description": "As freelance I design, develop, deploy and manage different statistical models focused: Data Mining & EDA - Data Visualization, Machine Learning modeling, used deep statistic techniques (SVM, Gradient, Clustering, PCA, LDA, Decision Tree, KNN, K-Means, Logistic Regression and Linear Regression, ANOVA, time series, neural network. Used machine learning algorithms to analyze adoption phase retention that resulted in a 10x increase in long term retention. Trained and assessed over 40 individuals in over 70 total sessions and consultations."
+      },
+      {
+        "job_title": "Associate Professor · Tutor of Data Science program and master's degree",
+        "company": "Universitat Oberta Catalunya · The Bridge Talent · other BS",
+        "start_date": "01/2005",
+        "end_date": "Ongoing",
+        "description": "Associate professor and main instructor for courses: Create, coordinate and tutoring of the Introduction to Big Data platform, Statistics, Maths, Algorithms fundamentals and Machine Learning, Data Mining, Cloud programming, Data pipeline and MLOps. Business Intelligence program from Data Integration ETL, SSIS, SSAS SSRS and Visualization Power BI or Tableau. Use Cases with real dataset or open data datasets."
+      }
+    ],
+    "skills": [
+      "Spark & Databricks",
+      "AWS",
+      "GCP",
+      "Azure",
+      "ML Engineering & MLOps",
+      "Data mining & Data modeling",
+      "Lambda & Kappa architecture",
+      "SQL & NoSQL databases",
+      "Python",
+      "R programming",
+      "Data analysis & Dataviz",
+      "PowerBI"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Associate Data Engineer AutoML",
+        "organization": "Microsoft Azure"
+      },
+      {
+        "certificate_name": "Associate Data Engineer AutoML",
+        "organization": "GCP"
+      },
+      {
+        "certificate_name": "Associate Data Engineer AutoML",
+        "organization": "AWS"
+      },
+      {
+        "certificate_name": "Spark Analysis",
+        "organization": null
+      },
+      {
+        "certificate_name": "SparkML",
+        "organization": null
+      },
+      {
+        "certificate_name": "Databricks",
+        "organization": null
+      },
+      {
+        "certificate_name": "Confluent Streaming",
+        "organization": null
+      }
+    ],
+    "languages": [
+      "English (Proficient)",
+      "Italian (Native)",
+      "Spanish (Native)",
+      "French (Intermediate)"
+    ],
+    "source_file": "04.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/a8ca300972344146a86abec0939e6d23.pdf",
+    "candidate_id": 21
+  },
+  {
+    "full_name": "Olivia Smith",
+    "email": "support@qwikresume.com",
+    "phone": "(123) 456 7899",
+    "job_title": "Data Engineer",
+    "location": "Los Angeles",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "University of California, Berkeley",
+        "start_year": 2018,
+        "end_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Engineer",
+        "company": "Seaside Innovations",
+        "start_date": "Dec/2020",
+        "end_date": "Ongoing",
+        "description": "Designed and implemented scalable data pipelines using Apache Hadoop and Spark. Developed ETL processes, utilized AWS services, automated data workflows with Apache Airflow, conducted performance tuning of SQL queries, and provided technical guidance to junior data engineers."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Lakeside Apparel Co",
+        "start_date": "Dec/2019",
+        "end_date": "Dec/2020",
+        "description": "Analyzed large datasets to identify trends and insights, worked with cross-functional teams to define data requirements, implemented data governance practices, developed dashboards and reports using Tableau, and participated in agile development processes."
+      }
+    ],
+    "skills": [
+      "Apache Hadoop",
+      "Apache Hive",
+      "Apache HBase",
+      "Data Integration"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "05.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/473b16280e874310b7dd877bb8cd0248.pdf",
+    "candidate_id": 22
+  },
+  {
+    "full_name": "John Smith",
+    "email": "email@email.com",
+    "phone": "3868683442",
+    "job_title": "Data Engineer",
+    "location": "Los Angeles, CA 90291, United States",
+    "education": [
+      {
+        "degree": "BS, Computer Science",
+        "university": "Texas University",
+        "start_year": 2021,
+        "end_year": 2021
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Engineer",
+        "company": "FNB",
+        "start_date": "01/2018",
+        "end_date": "12/2020",
+        "description": "Responsible for scaling machine learning models and making these models fit within banking environments with sci-kit-learn, Tensorflow, and Keras. Translated business propositions into quantitative queries, developed scalable databases capable of ETL processes using SQL and Spark, estimated workflow and increased efficiency of data pipelines processing over 60 TB of data daily, utilized MongoDB to create NoSQL databases, and created tables, join conditions, partitioning tables, correlated subqueries, views, sequences, nested queries, and synonyms for business application development."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "ABSA",
+        "start_date": "01/2015",
+        "end_date": "12/2017",
+        "description": "Responsible for developing database triggers, packages, functions, and stored procedures using PL/SQL. Co-developed SQL server database system to maximize performance benefits, assisted senior-level Data Scientists in design of ETL processes including SSIS packages, developed coherent Logical Data Models, collaborated with development teams to deploy data quality solutions, and created/maintained standard operating procedure documentation."
+      }
+    ],
+    "skills": [
+      "SQL",
+      "Java",
+      "Apache Spark",
+      "Hadoop",
+      "Python",
+      "Coding"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "CCA Cloudera Certified Associate",
+        "organization": "Cloudera"
+      }
+    ],
+    "languages": [
+      "English",
+      "German"
+    ],
+    "source_file": "06.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/60d7cb67bdba4a95b675495d998f74ce.pdf",
+    "candidate_id": 23
+  },
+  {
+    "full_name": "RIYA CHACKO",
+    "email": "riyachacko100@gmail.com",
+    "phone": "+31687134161",
+    "job_title": "Microsoft certified Azure Data Engineer",
+    "location": "Amsterdam Netherlands",
+    "education": [
+      {
+        "degree": "Bachelors in Electronics and Telecommunications Engineering",
+        "university": "Government Engineering College Thrissur, Kerala, India",
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Software Engineer",
+        "company": "Oracle Corporation",
+        "start_date": "04/2006",
+        "end_date": "09/2010",
+        "description": "Constructed a data pipeline that facilitated the ingestion, analysis, and transformation of logging data produced during Oracle Fusionware installations. This innovative solution resulted in a 12% reduction in problem resolution time, improved contextual understanding of installation issues, and a seamless installation progression. Achieved recognition as the top contributor in the Oracle Fusion Middleware Patch Set team."
+      },
+      {
+        "job_title": "Senior Software Engineer",
+        "company": "Misys Banking Solutions",
+        "start_date": "05/2005",
+        "end_date": "04/2006",
+        "description": "Developed and implemented a data pipeline for end-to-end ETL processes, encompassing web APIs, resulting in enhanced data integration, transformation, and system efficiency. Successfully extracted data from X RESTful APIs, performed efficient transformations, and loaded it into the Banking system, leading to a 20% improvement in data processing speed."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "EcommIT Labs Pvt Ltd",
+        "start_date": "05/2004",
+        "end_date": "03/2005",
+        "description": "Designed and developed XIBOS product, a cutting-edge management solution tailored for online businesses, driving operational efficiency and productivity gains."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "SYNERGY LOG IN Banking Solutions",
+        "start_date": "02/2001",
+        "end_date": "04/2004",
+        "description": "Developed and deployed a robust pipeline for ingesting and transforming historical data, resulting in the successful implementation and programming of the Monte Carlo VAR Express for Gantry Trades product, leading to a 10% increase in accuracy for risk analysis capabilities."
+      }
+    ],
+    "skills": [
+      "Azure Synapse Analytics",
+      "Azure Data Factory",
+      "Databricks",
+      "PySpark",
+      "DeltaLake",
+      "SQL",
+      "Python",
+      "Java",
+      "C++",
+      "ETL",
+      "Data Engineering",
+      "Data Analytics",
+      "Data Visualization",
+      "Power BI",
+      "Azure Cloud",
+      "DevOps",
+      "GitHub"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "DP-203: Data Engineering on Microsoft Azure",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "PL-300: Microsoft Power BI Data Analyst",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "AZ-900: Microsoft Azure Fundamentals",
+        "organization": "Microsoft"
+      }
+    ],
+    "languages": [
+      "English",
+      "Dutch"
+    ],
+    "source_file": "07.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/a3254bac96b94d68b17a8e00397c6483.pdf",
+    "candidate_id": 24
+  },
+  {
+    "full_name": "Guilherme Leite",
+    "email": "guipleite@gmail.com",
+    "phone": "+55(11)991209202",
+    "job_title": "Data Engineer",
+    "location": "São Paulo, SP, Brazil",
+    "education": [
+      {
+        "degree": "Bachelor's in Computer Engineering",
+        "university": "Insper",
+        "start_year": 2017,
+        "end_year": 2021
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Engineer",
+        "company": "Beegol",
+        "start_date": "09/2021",
+        "end_date": "Present",
+        "description": "Contributed to the development, construction, and supervision of data processing systems. Created pipelines for the ingestion and consolidation of sales and stock data from over 30 different sources, performing tests and generating automated reports. Reducing the processing time from weeks to hours. Implemented and managed a relational database with the sales and stock historical data spanning over 7 years, enabling new insights for the clients. Engaged on structuring data for the consumption and encapsulation of predictive models, treating and implementing business rules to the model outputs. Participated in multiple projects with prominent companies, including multinational teams."
+      },
+      {
+        "job_title": "Software Engineering Intern",
+        "company": "Beegol",
+        "start_date": "07/2021",
+        "end_date": "09/2021",
+        "description": "Assisted in management and maintaining of large scale data processing pipelines. Implemented versioning for the data utilized in training Machine Learning models through the use of DVC (Data Version Control). Contributed in the refactoring of ETL and processing mechanisms."
+      }
+    ],
+    "skills": [
+      "SQL",
+      "Python",
+      "Pandas",
+      "Polars",
+      "Scikit-learn",
+      "Keras",
+      "PySpark",
+      "Spark",
+      "AWS",
+      "S3",
+      "RDS",
+      "EC2",
+      "Lambda",
+      "Snowflake",
+      "Azure",
+      "BlobStorage",
+      "Data Factory",
+      "PowerAutomate",
+      "Linux",
+      "Git",
+      "Shell Script",
+      "ETL",
+      "Data Warehousing",
+      "Web Scraping",
+      "Machine Learning",
+      "Jira",
+      "Data Management",
+      "Data Analysis",
+      "Problem Solving",
+      "Teamwork",
+      "Agile Scrum"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Big Data with PySpark",
+        "organization": "Datacamp"
+      },
+      {
+        "certificate_name": "TOEFL",
+        "organization": null
+      }
+    ],
+    "languages": [
+      "Portuguese",
+      "English",
+      "Spanish"
+    ],
+    "source_file": "08.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/29443ce6add544749ed3f73769a5966a.pdf",
+    "candidate_id": 25
+  },
+  {
+    "full_name": "Robert Smith",
+    "email": "info@qwikresume.com",
+    "phone": "(123) 456 78 99",
+    "job_title": "Senior ETL Developer",
+    "location": "1737 Marshville Road, Alabama",
+    "education": [
+      {
+        "degree": "Bachelor Of Engineering in Electronics",
+        "university": "Anna University",
+        "start_year": null,
+        "end_year": 2005
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior ETL Developer",
+        "company": "American International Group, Inc.",
+        "start_date": "June 2009",
+        "end_date": "December 2014",
+        "description": "Gathered business and technical requirements, wrote BRD and prepared FSD. Prepared technical design documents. Involved as primary on-site ETL developer during analysis, planning, design, development, and implementation stages using IBM Infosphere/WebSphere software. Performed Datastage software migrations and developed stored procedures, functions, packages, triggers, indexes and views."
+      },
+      {
+        "job_title": "ETL Developer",
+        "company": "ABC Corp",
+        "start_date": "2005",
+        "end_date": "2009",
+        "description": "Participated in gathering ETL requirements from Business Analysts and Owners. Assisted with developing database objects and creating ETL processes. Created databases, tablespaces, tables, indexes, triggers, procedures, and other database objects. Worked within defined content and structure of the database (schema) and implemented changes with post-implementation support."
+      }
+    ],
+    "skills": [
+      "IBM DataStage",
+      "Db2",
+      "SQL",
+      "BIDW",
+      "Unix Shell Scripting",
+      "Mainframe",
+      "ETL",
+      "Agile"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "09.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/0a7ec51af24c42ab81372778a0c54926.pdf",
+    "candidate_id": 26
+  },
+  {
+    "full_name": "Rana Yossef",
+    "email": "ranayossef95@gmail.com",
+    "phone": "+972536256545",
+    "job_title": null,
+    "location": "Haifa, Israel",
+    "education": [
+      {
+        "degree": null,
+        "university": "Haifa University",
+        "start_year": 2016,
+        "end_year": 2021
+      }
+    ],
+    "experience": [],
+    "skills": [
+      "Data warehousing",
+      "Apache spark streaming",
+      "Python",
+      "SQL",
+      "Java",
+      "Linux",
+      "Shell",
+      "ETL Development",
+      "Data Pipelines",
+      "Big data processing",
+      "Data migration",
+      "AWS cloud",
+      "CI/CD Jenkins",
+      "databricks",
+      "snowflake",
+      "Apache Airflow",
+      "Amazon Redshift"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "AWS cloud practitioner",
+        "organization": null
+      }
+    ],
+    "languages": [
+      "English",
+      "Arabic",
+      "Hebrew",
+      "German"
+    ],
+    "source_file": "10.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/c50ca83a082947008902307463a395ca.pdf",
+    "candidate_id": 27
+  },
+  {
+    "full_name": "Ayush Jain",
+    "email": "aj3152@nyu.edu",
+    "phone": "+1 (917)-459-7240",
+    "job_title": null,
+    "location": "Jersey City, NJ",
+    "education": [
+      {
+        "degree": "Masters of Science in Computer Science",
+        "university": "New York University - Courant Institute of Mathematical Sciences",
+        "start_year": 2021,
+        "end_year": 2023
+      },
+      {
+        "degree": "Bachelor of Engineering in Electronics and Telecommunication with a minor in Computer Science",
+        "university": "RV College of Engineering",
+        "start_year": 2015,
+        "end_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer Intern",
+        "company": "Walmart Global Tech",
+        "start_date": "May 2022",
+        "end_date": "Aug 2022",
+        "description": "Designed an architecture to implement California Privacy Rights Act by analysing the existing dataflow diagrams to empower 120M Walmart users by improving user data transparency using PySpark on Hive & GCS databases. Improved Spark jobs run-time by 30% by clustering on Google Cloud Storage databases using BigQuery"
+      },
+      {
+        "job_title": "Software Development Engineer",
+        "company": "Amadeus Software Labs",
+        "start_date": "Jul 2019",
+        "end_date": "May 2021",
+        "description": "Developed backend infrastructure in C++ for Air Canada enabling redemption of points for 10M+ travellers. Spearheaded complex development and deployment of CPP11 to CPP14 migration of Ticketing backend in Agile. Delivered 20+ bespoke developments by updating Baggage, cabin, security and regulatory policies for 5+ airlines. Handled CI/CD pipeline and critical maintenance tasks, patching 100+ incident records for 20+ airlines. Awarded with High flyer award in Q4 of 2019 for showcasing best delivery, innovation, and ownership in team"
+      },
+      {
+        "job_title": "Software Development Intern",
+        "company": "Amadeus Software Labs",
+        "start_date": "Jan 2019",
+        "end_date": "May 2019",
+        "description": "Implemented a full-stack C++ backend app to form a consolidated document for flight, hotel, and car booking. Reduced backend transactions by ~40% for smoother traveler experience by merging all itineraries in one doc"
+      }
+    ],
+    "skills": [
+      "C++/C",
+      "Python",
+      "HTML/CSS",
+      "SQL",
+      "JavaScript",
+      "JAVA",
+      "Spark",
+      "MySQL",
+      "MongoDB",
+      "Jenkins",
+      "Docker",
+      "Kubernetes",
+      "Google Cloud Platform/Storage",
+      "Linux/Unix",
+      "Git",
+      "Vim",
+      "VS Code",
+      "Agile",
+      "BigQuery",
+      "PySpark",
+      "Hive",
+      "scikit-learn",
+      "PyTorch",
+      "TensorFlow",
+      "OpenCV",
+      "Numpy",
+      "Pandas"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "11.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/bfdaa32e17554e129ca6a624dded960f.pdf",
+    "candidate_id": 28
+  },
+  {
+    "full_name": "Mark Mikula",
+    "email": null,
+    "phone": "+37065492226",
+    "job_title": null,
+    "location": "Vilnius, Lithuania",
+    "education": [
+      {
+        "degree": "Information and Communication Technology Bachelor",
+        "university": "VilniusTech",
+        "start_year": 2022,
+        "end_year": 2026
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Cloud Platform Engineer Internship",
+        "company": "Alter Domus",
+        "start_date": "September 2024",
+        "end_date": "December 2024",
+        "description": "Architected and maintained secure cloud infrastructure using Azure and AWS, implementing Infrastructure as Code with Terraform and GitOps using Flux. Developed CI/CD pipelines using Github Actions and managed Kubernetes clusters for high availability. Implemented comprehensive monitoring stack using Prometheus and Grafana for observability."
+      },
+      {
+        "job_title": "Machine Learning Engineer Internship",
+        "company": "Threebot",
+        "start_date": "February 2024",
+        "end_date": "April 2024",
+        "description": "Developed and deployed a production-ready chatbot using Python, OpenAI API, and LLAMA framework. Collaborated in an Agile team environment using Git for version control. Implemented ML models using PyTorch and TensorFlow with data visualization through Matplotlib."
+      },
+      {
+        "job_title": "Maintenance practice",
+        "company": "Wargaming",
+        "start_date": "March 2024",
+        "end_date": "June 2024",
+        "description": "Implemented cloud-native solutions using container orchestration and monitoring tools. Developed and maintained database solutions across multiple SQL platforms."
+      }
+    ],
+    "skills": [
+      "Kubernetes",
+      "Docker",
+      "Terraform",
+      "Azure",
+      "AWS",
+      "Git",
+      "Github Actions",
+      "Prometheus",
+      "Grafana",
+      "Python",
+      "PyTorch",
+      "TensorFlow",
+      "Linux",
+      "SQL",
+      "Bash",
+      "MySQL",
+      "PostgreSQL",
+      "Java",
+      "JavaScript",
+      "Node.js",
+      "Spring",
+      "HTML/CSS",
+      "MongoDB",
+      "Hadoop",
+      "Spark",
+      "Kafka",
+      "Network architecture",
+      "Protocol analysis",
+      "Firewall configuration",
+      "VPN setup",
+      "Wireshark",
+      "Nmap"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Big Data Engineer",
+        "organization": "Accenture"
+      },
+      {
+        "certificate_name": "Networks and Cybersecurity (280 hours)",
+        "organization": null
+      }
+    ],
+    "languages": [
+      "English",
+      "Ukrainian",
+      "Russian"
+    ],
+    "source_file": "12.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/2881f7dab0cf42c6b50da9d6f2ff6917.pdf",
+    "candidate_id": 29
+  },
+  {
+    "full_name": "Rahul Jain",
+    "email": "rahulj51@gmail.com",
+    "phone": null,
+    "job_title": "Head of Business Intelligence, Analytics Engineering and Data Engineering",
+    "location": "Berlin, Germany",
+    "education": [
+      {
+        "degree": "3 months intensive workshop on empathic Leadership and Decision making",
+        "university": "altMBA",
+        "start_year": 2021,
+        "end_year": 2021
+      },
+      {
+        "degree": "Bachelor of Technology, Mining and Mineral Engineering",
+        "university": "Indian Institute of Technology (ISM)",
+        "start_year": 1995,
+        "end_year": 1999
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Head of BI, Analytics Engineering and Data Engineering",
+        "company": "Beat Mobility",
+        "start_date": "July 2021",
+        "end_date": "Dec 2022",
+        "description": "Leading the Analytics Engineering and Data Engineering functions, responsible for building a robust data and analytics engineering foundation for our ride-sharing business in Europe and Latin America."
+      },
+      {
+        "job_title": "Principal Engineering Manager, BI",
+        "company": "Omio (formerly GoEuro)",
+        "start_date": "Nov 2017",
+        "end_date": "Jun 2021",
+        "description": "Responsibilities included providing technical leadership, working with stakeholders, establishing technical best practices, growing motivated teams, and managing data governance. Key accomplishments included evolving data engineering architecture, stabilizing data pipelines, and executing data warehouse migration."
+      },
+      {
+        "job_title": "Lead Consultant and Technical Lead",
+        "company": "Thoughtworks",
+        "start_date": "Oct 2012",
+        "end_date": "Nov 2017",
+        "description": "Key responsibilities included Technical Project Lead, end to end delivery of product features, architecture and design of software systems, implementing agile technical practices and processes, and Agile Consulting."
+      },
+      {
+        "job_title": "Senior Analyst and Java Development Lead",
+        "company": "Credit Suisse",
+        "start_date": "Jul 2007",
+        "end_date": "Sep 2012",
+        "description": "Responsible for developing multiple java/j2ee based ETL jobs used for ingesting large volumes of financial market data into Credit Suisse's data products."
+      },
+      {
+        "job_title": "Software Developer & Project Lead",
+        "company": "Infosys",
+        "start_date": "Jan 2000",
+        "end_date": "Jun 2007",
+        "description": "Worked on various projects as a senior Java programmer and later as a project lead."
+      }
+    ],
+    "skills": [
+      "Modern Data platforms and tools",
+      "Data collection and ingestion systems",
+      "Data transformation and modeling",
+      "Data governance architecture and tooling",
+      "Analytical Data storage formats and systems",
+      "Advanced data modeling techniques",
+      "Reporting and Dashboarding tools",
+      "Reverse ETL techniques",
+      "Engineering Leadership",
+      "Agile software development",
+      "Software design principles",
+      "Microservices and service-oriented architecture",
+      "Data engineering principles",
+      "CI/CD pipelines",
+      "Python",
+      "Scala",
+      "Java",
+      "Kafka",
+      "ElasticSearch",
+      "Apache Spark",
+      "AWS",
+      "GCP",
+      "Airflow",
+      "Argo",
+      "Docker",
+      "Kubernetes"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "13.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/5e6da780b2584e098ce0be54b3d16f01.pdf",
+    "candidate_id": 30
+  },
+  {
+    "full_name": "Arnav Arnav",
+    "email": "arnav.arnav@alumni.iu.edu",
+    "phone": "+1 812-955-9112",
+    "job_title": "Solutions Engineer",
+    "location": "742 Wildflower Ridge, Davenport, FL, 33837, USA",
+    "education": [
+      {
+        "degree": "M.S. in Data Science",
+        "university": "Indiana University",
+        "start_year": 2017,
+        "end_year": 2017
+      },
+      {
+        "degree": "B.Tech. in Computer Science and Engineering",
+        "university": "Tezpur University",
+        "start_year": 2012,
+        "end_year": 2016
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Solutions Engineer",
+        "company": "Aqfer Inc.",
+        "start_date": "Nov 2020",
+        "end_date": "Present",
+        "description": "Integrated advertising data and metrics from new data sources consuming various types of APIs, into Aqfer's standard query optimized schemata. Supported development of YAML-based command line APIs that allow clients to easily specify reports and the mappings to the standard schemata, and reduce time to value. Built client specific code to extract relevant entity relationships from event level telemetry data, and perform identity resolution on top of the extracted entity-graph."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Franchise Data Solutions, LLC.",
+        "start_date": "Apr 2020",
+        "end_date": "Oct 2020",
+        "description": "Added new functionality to the company's organization, resource and operations management web application platform, using Flask, PostgreSQL, SQLAlchemy, HTML, CSS and Javascript. Automated data pulls for the platform and integrated custom reporting functionality on the platform based on the data pulled daily from various resources."
+      },
+      {
+        "job_title": "Decision Science Professional Intern",
+        "company": "The Walt Disney Company",
+        "start_date": "Aug 2019",
+        "end_date": "Apr 2020",
+        "description": "Implemented a state space post processing approach to dynamically adjust product level demand forecasts to match actual behavior based on newly observed data points using Python and SAS that improved 70% of Disney Cruise Line booking forecasts with a mean improvement of 35% in absolute error. Implemented data preparation, feature engineering, and output monitoring and built models for daily park attendance forecasting using Pyspark, Teradata, Tableau and scikit-learn. Added pyspark and spark-ml support to an internal framework that helps standardize and maintain production ML pipelines across projects using different machine learning frameworks."
+      },
+      {
+        "job_title": "Associate Instructor",
+        "company": "Indiana University: Luddy School of Informatics Computing and Engineering",
+        "start_date": "Aug 2018",
+        "end_date": "May 2019",
+        "description": "Evaluated student submissions and projects in various modules that cover, Hadoop, Spark, Scala, and Deep learning. Created course content and setup tutorials for Machine Learning with Spark module and updated content for Hadoop, Scala and Deep Learning Modules."
+      },
+      {
+        "job_title": "Python Developer",
+        "company": "Indiana University: CNS",
+        "start_date": "Oct 2017",
+        "end_date": "Dec 2017",
+        "description": "Contributed to the development of cloudmesh.pi, a library for prototyping IoT applications on Raspberry pi. Interfaced different analog and digital sensors and built modules for each of the sensors, that allow plug and use functionality. Programmed an array of dendrites to move in various patterns controlled by different Raspberry Pis communicating via MQTT."
+      },
+      {
+        "job_title": "Software Engineer Intern",
+        "company": "Navyug Infosolutions",
+        "start_date": "Oct 2016",
+        "end_date": "Jul 2017",
+        "description": "Developed and deployed an interactive and responsive internal project management (Gofer) web application used by 200 people using Ruby on Rails, Ember.js and JQuery-UI. Integrated the application with Google APIs to provide Project Managers access to auto generated time sheets used for downstream cost analyses and resource allocation. Added new functionality for a mobile application for an education client to allow instructors to gauge student performance after each class through short quizzes. Developed Android and iOS application for the web application using Apache Cordova."
+      },
+      {
+        "job_title": "Software Engineer Intern",
+        "company": "NTPC NETRA Advanced Computing Lab",
+        "start_date": "May 2015",
+        "end_date": "Jul 2015",
+        "description": "Studied the various components of the high performance computing system and the specific configuration used at the site to enable computationally intensive tasks. Used Ganglia to monitor the system and detect anomalies using data logs. Implemented various machine learning algorithms like anomaly detection, regression and classification using previously collected power plant data in Python."
+      }
+    ],
+    "skills": [
+      "Scala",
+      "Java",
+      "Python",
+      "SQL",
+      "R",
+      "C++",
+      "SAS",
+      "Javascript",
+      "Ruby",
+      "Bash",
+      "Apache Spark",
+      "AWS Athena",
+      "Hadoop",
+      "MongoDB",
+      "PostgresQL",
+      "Neo4j",
+      "Teradata",
+      "Hive",
+      "Kafka",
+      "Dask",
+      "Flask",
+      "Django",
+      "Ruby on Rails",
+      "Swagger Codegen",
+      "HTML",
+      "CSS",
+      "Ember.js",
+      "Scikit-learn",
+      "Scipy",
+      "Numpy",
+      "Pandas",
+      "NLTK",
+      "SpaCy",
+      "CoreNLP",
+      "SparkML",
+      "Torch",
+      "Tensorflow",
+      "PyVbox",
+      "Openstack API",
+      "Boto3",
+      "Docker CE",
+      "Kubernetes",
+      "Ganglia",
+      "MQTT",
+      "Travis-CI",
+      "Concourse-CI",
+      "Git",
+      "Tableau",
+      "Matplotlib",
+      "Seaborn",
+      "Altair-viz",
+      "Plotly",
+      "GGplot"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "14.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/4059049ef7324b9db6ac73eb48c6f74f.pdf",
+    "candidate_id": 31
+  },
+  {
+    "full_name": "George Claireaux",
+    "email": "george@claireaux.co.uk",
+    "phone": "07555 333 216",
+    "job_title": "Lead Data Engineer",
+    "location": "London, UK",
+    "education": [
+      {
+        "degree": "MSc Contemporary Person-Centred Psychotherapy and Applications",
+        "university": "Metanoia Institute",
+        "start_year": 2022,
+        "end_year": null
+      },
+      {
+        "degree": "BSc (Hons) Management",
+        "university": "University of Manchester (AMBS)",
+        "start_year": 2014,
+        "end_year": 2018
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Lead Data Engineer",
+        "company": "Unmind",
+        "start_date": "OCT 2022",
+        "end_date": "PRESENT",
+        "description": "Initially hired as the sole data engineer, rebuilt the foundations of the data platform from the ground up based on Modern Data Stack principles with OSS tooling (Airbyte, Dagster and dbt). Managing a direct report, providing 1-1 sessions and technical mentorship."
+      },
+      {
+        "job_title": "Senior Software Engineer",
+        "company": "Airbyte",
+        "start_date": "JUN 2021",
+        "end_date": "OCT 2022",
+        "description": "Worked on all parts of the platform including connector frameworks, platform code, cloud release work and partner API. Engaged with open-source community via Github and Slack. Worked on cross cutting projects in python and java to build leverage around connectors."
+      },
+      {
+        "job_title": "Technical Lead – Data Engineering",
+        "company": "Mars",
+        "start_date": "JAN 2021",
+        "end_date": "JUN 2021",
+        "description": "Continuation of previous role, with the team growing to >15 people."
+      },
+      {
+        "job_title": "Senior Data Engineer",
+        "company": "Mars (contractor)",
+        "start_date": "JUL 2020",
+        "end_date": "JAN 2021",
+        "description": "Led a team of 4-8 developers, providing weekly one-to-one sessions and technical leadership. Oversaw development of Gecko compliance framework and built Dynamo transformation engine. Engaged with external stakeholders at WALTHAM Petcare Science Institute."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Mars (contractor)",
+        "start_date": "JAN 2019",
+        "end_date": "JUL 2020",
+        "description": "Built and implemented new practices and frameworks including ingestion tracking, custom logging, and project structure. Led technical investigation resulting in Delta Lake adoption. Built training content to upskill the team in Spark and Databricks."
+      },
+      {
+        "job_title": "Data Engineer",
+        "company": "Kubrick Group",
+        "start_date": "SEP 2018",
+        "end_date": "JAN 2019",
+        "description": "Underwent intensive data engineering training program in key data technologies. Led data engineering for a client web scraping project. Represented Kubrick in a hackathon at a leading insurance firm."
+      },
+      {
+        "job_title": "Operations & Logistics Intern",
+        "company": "Uber",
+        "start_date": "JUL 2015",
+        "end_date": "SEP 2015",
+        "description": "Internship within the team starting up Uber in Manchester. Oversaw logistics and layout of office move. Designed virtual 3D model of new office. On-boarded new drivers and worked with current drivers to solve problems."
+      }
+    ],
+    "skills": [
+      "Python",
+      "Java",
+      "Spark",
+      "Databricks",
+      "Airbyte",
+      "dbt",
+      "Dagster",
+      "Docker",
+      "Terraform",
+      "Infrastructure as Code",
+      "APIs",
+      "Cloud data lakes",
+      "ETL Design",
+      "Data modelling",
+      "SQL",
+      "PostgreSQL",
+      "MSSQL",
+      "Oracle",
+      "SQLite",
+      "AWS",
+      "GCP",
+      "Azure",
+      "GitHub",
+      "GitLab",
+      "Azure DevOps",
+      "CI/CD",
+      "Object Oriented Programming",
+      "Integration testing",
+      "Unit testing",
+      "Agile",
+      "Linux",
+      "bash scripting",
+      "SFTP",
+      "Scala",
+      "PowerShell",
+      "HTML",
+      "CSS",
+      "PHP",
+      "JavaScript",
+      "Flask",
+      "Django",
+      "JDBC",
+      "ODBC",
+      "Redis",
+      "MongoDB",
+      "Salesforce",
+      "Neo4j",
+      "Snowflake",
+      "Airflow",
+      "Networking",
+      "Web Scraping",
+      "Machine Learning",
+      "Natural Language Processing",
+      "File formats",
+      "Encoding",
+      "Compression"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "15.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/7b6c84ae383d4a44835c90dd68b3b076.pdf",
+    "candidate_id": 32
+  },
+  {
+    "full_name": "Obi Nwokogba",
+    "email": "obi.nwokogba@gmail.com",
+    "phone": "(857) 244-4893",
+    "job_title": "Frontend Engineer",
+    "location": "Boston, MA",
+    "education": [
+      {
+        "degree": "Software Engineering Immersive",
+        "university": "General Assembly Boston",
+        "start_year": 2021,
+        "end_year": 2021
+      },
+      {
+        "degree": "Information Systems and Technology",
+        "university": "Cornell University",
+        "start_year": 2005,
+        "end_year": 2008
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Frontend Engineer",
+        "company": "Madison Logic Inc.",
+        "start_date": "2021",
+        "end_date": "present",
+        "description": "Role involves the design and implementation of UI components, user interfaces, new features, bug fixes. Working with Typescript, Javascript, Angular, ExpressJS, NodeJS, CSS3, HTML5, REST APIs, SQL. Responsible for UI and UX decisions in Agile team environment. Working with large datasets."
+      },
+      {
+        "job_title": "Full Stack Engineer, Graphic Designer",
+        "company": "Pregen Inc.",
+        "start_date": "2016",
+        "end_date": "2021",
+        "description": "Designed and maintained website as first point of contact for customers seeking legal services. Expanded role and proactively learned additional skills to improve the overall company brand image"
+      }
+    ],
+    "skills": [
+      "JavaScript",
+      "TypeScript",
+      "Python",
+      "CSS3",
+      "HTML5",
+      "Java",
+      "PHP",
+      "SQL",
+      "Sass",
+      "MQL",
+      "Angular",
+      "React",
+      "React Native",
+      "HTMX",
+      "Express",
+      "NestJS",
+      "MongoDB",
+      "NodeJS",
+      "Responsive Design",
+      "Android App Development",
+      "UI design",
+      "Database Architecture",
+      "Git",
+      "Data Structures",
+      "Version Repository",
+      "Web APIs",
+      "Data Visualization",
+      "Agile Methodology",
+      "Front-End Web Development",
+      "Full-Stack Web Development",
+      "MySQL",
+      "Bootstrap",
+      "ERDs",
+      "Graphic Design",
+      "Algorithmic Trading",
+      "Financial Markets"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "16.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/ea3d724b651645d8879b8cbdbee20d5f.pdf",
+    "candidate_id": 33
+  },
+  {
+    "full_name": "Mudassar Ghazi",
+    "email": "mudassar.ghazi@gmail.com",
+    "phone": "1-310-766-2251",
+    "job_title": "Software Engineer",
+    "location": "Corona, CA",
+    "education": [
+      {
+        "degree": "Ph.D. in Computer Science",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      },
+      {
+        "degree": "M.S. in Software Engineering",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      },
+      {
+        "degree": "M.Sc. in Computer Science",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      },
+      {
+        "degree": "B.Sc. Mathematics and Physics",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer",
+        "company": "City National Bank",
+        "start_date": "Jun 2016",
+        "end_date": "to date",
+        "description": "Software System Analysis, Design, Development, R&D, and Integration"
+      },
+      {
+        "job_title": "Technology Lead",
+        "company": "Infosys",
+        "start_date": "Apr 2016",
+        "end_date": "May 2016",
+        "description": "Software System Analysis, Design, Development, R&D, and Integration"
+      },
+      {
+        "job_title": "Consultant",
+        "company": "DMS Marketing",
+        "start_date": "Sep 2015",
+        "end_date": "Nov 2015",
+        "description": "Software System Analysis, Design, Development, R&D, and Integration"
+      },
+      {
+        "job_title": "Software Developer",
+        "company": "Dell",
+        "start_date": "Jun 2015",
+        "end_date": "Jul 2015",
+        "description": "Software System Analysis, Design, Development, R&D, and Integration"
+      },
+      {
+        "job_title": "Sr. .NET Developer",
+        "company": "Dodgers",
+        "start_date": "Jan 2015",
+        "end_date": "May 2015",
+        "description": "Cross-functional Collaboration, Communication, Design, and Architecture"
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Children Hospital Los Angeles",
+        "start_date": "Apr 2014",
+        "end_date": "Dec 2014",
+        "description": "Cross-functional Collaboration, Communication, Design, and Architecture"
+      },
+      {
+        "job_title": "Sr. .NET Developer",
+        "company": "Herbalife",
+        "start_date": "Jan 2013",
+        "end_date": "Feb 2014",
+        "description": "Cross-functional Collaboration, Communication, Design, and Architecture"
+      },
+      {
+        "job_title": "Enterprise Architect",
+        "company": "Cetera Financial Group",
+        "start_date": "Jul 2012",
+        "end_date": "Dec 2012",
+        "description": "Cross-functional Collaboration, Communication, Design, and Architecture"
+      },
+      {
+        "job_title": "Web Collaboration Architect",
+        "company": "Johnson & Johnson",
+        "start_date": "Jan 2012",
+        "end_date": "Jan 2013",
+        "description": "Cross-functional Collaboration, Communication, Design, and Architecture"
+      }
+    ],
+    "skills": [
+      "c#",
+      "vb.net",
+      "asp.net",
+      "mvc",
+      "sql",
+      "ssis",
+      "tfs",
+      "jira",
+      "github",
+      "javascript",
+      "css",
+      "bootstrap",
+      "soap",
+      "restful",
+      "web api",
+      "adobe livecycle",
+      "appian",
+      "ultimus",
+      "optimajet",
+      "java",
+      "jsp",
+      "servlet",
+      "Requirement Analysis",
+      "Design and Architecture",
+      "Software Development",
+      "Software Testing",
+      "Microsoft Office and Visio",
+      "Agile",
+      "SDLC",
+      "DevOps",
+      "CI/CD",
+      "Web Services",
+      "SOA",
+      "SaaS",
+      "Collaboration Skills",
+      "Technical Writing",
+      "Project Management",
+      "BPM",
+      "Workflow Automation",
+      "Presentation Skills",
+      "System Integration"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Microsoft Azure Fundamentals (AZ-900)",
+        "organization": "Microsoft"
+      }
+    ],
+    "languages": [],
+    "source_file": "17.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/b3776a633318464595157ee380fb2bc4.pdf",
+    "candidate_id": 34
+  },
+  {
+    "full_name": "Mohamad El Ghali",
+    "email": "mohammadghali97@gmail.com",
+    "phone": "+49 1514 1976 828",
+    "job_title": "Senior Software Engineer",
+    "location": "Dresden, Germany",
+    "education": [
+      {
+        "degree": "B.S. Computer Science With Distinction",
+        "university": "American University of Beirut",
+        "start_year": 2015,
+        "end_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Software Engineer",
+        "company": "Delivery Hero SE",
+        "start_date": "Feb 2024",
+        "end_date": "Present",
+        "description": "Promoted to Senior Software Engineer"
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Delivery Hero SE",
+        "start_date": "Dec 2022",
+        "end_date": "Feb 2024",
+        "description": "Worked on production level software engine that handles recommendation distribution to restaurants and vendors. Migrated microservices from GoLang to Java Spring. Developed PUSH/PULL API that handled hundreds of thousands of API calls with 0 down time."
+      },
+      {
+        "job_title": "Software Engineer (Full Stack)",
+        "company": "LOVOO GmbH",
+        "start_date": "Dec 2021",
+        "end_date": "Dec 2022",
+        "description": "Worked on an internal project to detect and prevent ad fraud, bots, and spam. Integrated new algorithms for detecting ad fraud, ad farms, etc. using meta data parsing, geolocation detection, human behavior patterns, etc. Redesigned the whole applications web UI."
+      },
+      {
+        "job_title": "Senior Software Engineer",
+        "company": "Cardinal Health",
+        "start_date": "Aug 2021",
+        "end_date": "Nov 2021",
+        "description": "Promoted to Senior Software Engineer."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Cardinal Health",
+        "start_date": "Jun 2019",
+        "end_date": "Aug 2021",
+        "description": "Designed, developed, and maintained over 40% of the total sprint's story points consistently, releasing over 45 features and over 150 bug fixes that went to production. Analyzed, debugged, and resolved over 37 field issues remotely. Built automation support for over 60% of new features. Developed 2 Java libraries and several scripts to help NetOps with their tasks."
+      },
+      {
+        "job_title": "Web Developer",
+        "company": "American University of Beirut",
+        "start_date": "July 2018",
+        "end_date": "June 2019",
+        "description": "Developed and maintained the ABLE Summit 2019 website (Wordpress). Implemented WCAG 2.0 guidelines for accessible use. Migrated AUB IT's website to new platform using SharePoint."
+      }
+    ],
+    "skills": [
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "TypeScript",
+      "NodeJs",
+      "jQuery",
+      "Vue JS",
+      "Flutter",
+      "Bootstrap",
+      "PHP",
+      "Java",
+      "Java Spring",
+      "GoLang",
+      "Kafka",
+      "Kubernetes",
+      "MySQL",
+      "SQL",
+      "PostgreSQL",
+      "NoSQL",
+      "Firestore",
+      "Android",
+      "Swift",
+      "iOS",
+      "Git",
+      "APIs",
+      "Linux",
+      "GCP",
+      "AWS"
+    ],
+    "certifications": [],
+    "languages": [
+      "Arabic",
+      "English",
+      "German"
+    ],
+    "source_file": "18.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/d39efdfc8393425dac3f4394bfa33b21.pdf",
+    "candidate_id": 35
+  },
+  {
+    "full_name": "Kyra Stephen",
+    "email": null,
+    "phone": null,
+    "job_title": "Software Engineer",
+    "location": "Toronto, Canada",
+    "education": [
+      {
+        "degree": "Bachelor of Science, Computer Science Specialist",
+        "university": "University of Toronto",
+        "start_year": 2014,
+        "end_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Developer",
+        "company": "Shopify",
+        "start_date": "06/2020",
+        "end_date": "Present",
+        "description": "Team: Engage - Customer Behaviour - Customer Events. Developed and maintained multiple technological services that are crucial to providing insights into marketing efforts of Shopify merchants. Developed and scaled a Golang, Kafka-based service that parses, validates, augments and produces almost 2 billion unique server-side events per day from digital storefronts. Developed Graphql APIs that configure webhooks allowing partners to subscribe to these events via AWS Eventbridge and GCP pub/sub endpoints. Independently developed a Flink pipeline service that utilizes the Flink DataStreamAPI and produces events using Kafka Sinks and Side Output."
+      },
+      {
+        "job_title": "Full Stack Developer",
+        "company": "Borrowell",
+        "start_date": "07/2019",
+        "end_date": "03/2020",
+        "description": "Team: Conversion. Increased conversion rates by 18% by creating RESTful APIs that integrated financial partners' APIs that allowed users to send leads using users' prepopulated profile data. Helped to spearhead the development, user interface and analytics integration of a guided product questionnaire experience to help users choose products built using C#, Angular, Azure Application Insights and Google Analytics. Created modular Angular components using a standardized company-wide styleguide that can be reused throughout the site. Redesigned the website's navigation bar using Angular to make it more user friendly, icon-based and responsive. Added automated unit testing to build triggers in Azure devops using YAML."
+      },
+      {
+        "job_title": "Full Stack Software Developer Intern",
+        "company": "Indigo Books and Music",
+        "start_date": "07/2017",
+        "end_date": "08/2018",
+        "description": "Team: Search. Improved conversion rates by integrating a new search framework called Algolia to existing legacy code. Implemented search performance improvements by changing the data structure used from plain JSON to a hashset, using Redis as the cache. Simplified accessing data by using Azure data entities to cache queues, tables, reference data and other complex entities. Team: Gifting. Improved wish list experience of users on Indigo.ca by redesigning the frontend and implementing new features such as filter, manual decrement, quick view and more using React, Redux, C# and .NET. Provided users with the ability to create, customize and organize registries using React, Redux, C# and .NET."
+      },
+      {
+        "job_title": "Full Stack Developer Intern",
+        "company": "Garner",
+        "start_date": "05/2017",
+        "end_date": "07/2017",
+        "description": "Wrote Scala and AngularJS applications to transform client-given input into meaningful data used to manage ExxonMobil's supply chain. Implemented a log management tool using the ELK Stack that accepts raw log data then transforms, exports and visualizes that data. Practiced continuous delivery within a team of ten people to deploy ever-changing functionalities into production that must pass the rigor of a Jenkins environment. Practiced test driven development using Scala and Karma test suites to assess product functionality and performance."
+      }
+    ],
+    "skills": [
+      "Golang",
+      "Ruby on Rails",
+      "Scala",
+      "Flink",
+      "Kafka",
+      "React",
+      "C#",
+      "Java"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "19.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/c8129fa6e60b46698a025c0dd4142526.pdf",
+    "candidate_id": 36
+  },
+  {
+    "full_name": "John Kerl",
+    "email": null,
+    "phone": "202-794-0806",
+    "job_title": "Principal Software Engineer",
+    "location": "Washington DC",
+    "education": [
+      {
+        "degree": "PhD Mathematics",
+        "university": "University of Arizona",
+        "start_year": 2005,
+        "end_year": 2010
+      },
+      {
+        "degree": "MA Mathematics",
+        "university": "Arizona State University",
+        "start_year": null,
+        "end_year": 2005
+      },
+      {
+        "degree": "BA Mathematics & Physics",
+        "university": "University of Arizona",
+        "start_year": null,
+        "end_year": 1993
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Principal Software Engineer",
+        "company": "TileDB",
+        "start_date": "2021",
+        "end_date": "Present",
+        "description": "TileDB Cloud development"
+      },
+      {
+        "job_title": "Service Reliability Engineer",
+        "company": "Auth0",
+        "start_date": "2020",
+        "end_date": "2021",
+        "description": "Distributed data pipelines, observability, knowledge management. Context: company transition from late-stage startup to mature/public. Key focus: systematic reduction in TCO / on-call burden."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Facebook",
+        "start_date": "2015",
+        "end_date": "2020",
+        "description": "Rebooted the ThreatExchange franchise for cross-company integrity-signal sharing. Full-stack, full-life-cycle software development and documentation for REST API, polyglottal OSS SDKs, and hosted React UI. Bottom-line impact was reduction of harmful content being shared on the Internet."
+      },
+      {
+        "job_title": "Software Development Engineer",
+        "company": "Amazon Web Services",
+        "start_date": "2013",
+        "end_date": "2015",
+        "description": "Full-lifecycle design, development, and operations of cross-functional, reliability-engineered systems for cloud-scale data management, in the context of network-bandwidth metering for Amazon Web Services."
+      },
+      {
+        "job_title": "Quantitative Software Developer",
+        "company": "Two Sigma Investments",
+        "start_date": "2010",
+        "end_date": "2013",
+        "description": "Architected and implemented Linux/Java/Groovy/Ruby framework for generation of terascale datasets; improved efficiency and reliability by an order of magnitude."
+      },
+      {
+        "job_title": "Senior Embedded Software Engineer",
+        "company": "Lockheed Martin",
+        "start_date": "2004",
+        "end_date": "2007",
+        "description": "Simulation and verification of FPGA-accelerated digital-signal-processing solutions. Design, implementation, documentation, regression testing, and performance analysis of custom logic for vector arithmetic, matrix multiplication, matrix inversion, FFTs, and Householder transformations."
+      },
+      {
+        "job_title": "Applications Engineer",
+        "company": "Avnet",
+        "start_date": "2000",
+        "end_date": "2004",
+        "description": "Embedded systems programming (PowerPC, ARM, Xilinx FPGAs). Circuit-board verification, device drivers, operating-system ports (Linux, uClinux, uCOS, VxWorks). From-scratch implementation of networking protocols: TCP/IP, ARP, ICMP, UDP, HTTP, BOOTP."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Lockheed Martin",
+        "start_date": "1998",
+        "end_date": "2000",
+        "description": "Implementation and testing of ASIC-accelerated digital signal processing algorithms in a supercomputing environment, with focus on FFTs and digital differential analyzers."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Motorola Emtek Healthcare Division",
+        "start_date": "1994",
+        "end_date": "1998",
+        "description": "Maintenance of database, transaction-processing, and socket-layer subsystems of a distributed medical information system."
+      }
+    ],
+    "skills": [
+      "Go",
+      "Python",
+      "Ruby",
+      "PHP",
+      "JavaScript",
+      "JS/React/Flow/GraphQL",
+      "Java",
+      "C/C++",
+      "Mercurial",
+      "Git"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "20.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/86fbb277fb65432da4ad04e153f94597.pdf",
+    "candidate_id": 37
+  },
+  {
+    "full_name": "Jay Beaton",
+    "email": "jrb@jaybeaton.com",
+    "phone": "919.533.9598",
+    "job_title": "Senior Software Engineer",
+    "location": "Pittsboro, North Carolina",
+    "education": [
+      {
+        "degree": "Master of Integrated Manufacturing Systems Engineering",
+        "university": "North Carolina State University (NCSU)",
+        "start_year": null,
+        "end_year": 1992
+      },
+      {
+        "degree": "B.S. Mechanical Engineering",
+        "university": "Virginia Polytechnic Institute and State University (Virginia Tech)",
+        "start_year": null,
+        "end_year": 1991
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Owner",
+        "company": "Jay Beaton Consulting LLC",
+        "start_date": "2011",
+        "end_date": "present",
+        "description": "PHP developer and consultant specializing in Drupal back-end development including site configuration and custom module creation. Creating full websites and performing short-term and long-term contract work."
+      },
+      {
+        "job_title": "Director of Technology",
+        "company": "webslingerz",
+        "start_date": "2007",
+        "end_date": "2011",
+        "description": "Led all development for a web consulting company. Created and maintained websites and web applications for large corporations, major universities, public institutions, and private organizations."
+      },
+      {
+        "job_title": "Lead Server Developer",
+        "company": "Oasys Mobile (formerly Summus)",
+        "start_date": "2004",
+        "end_date": "2007",
+        "description": "Led PHP / MySQL development for a mobile content publishing company. Managed team of 6 PHP developers and 2 web UI developers, assigning tasks and solving complex design and coding problems."
+      },
+      {
+        "job_title": "Senior Software Engineer / Development Manager / Oracle Database Administrator",
+        "company": "Buildscape - a subsidiary of Dow Chemical",
+        "start_date": "1999",
+        "end_date": "2004",
+        "description": "Led PHP / Oracle development and database administration for a catalog and supply chain management solution. Led team of 3-10 developers, assigning tasks and solving complex design and coding problems."
+      },
+      {
+        "job_title": "Senior Internet Applications Developer",
+        "company": "Interpath Communications (formerly TriNet Services)",
+        "start_date": "1998",
+        "end_date": "1999",
+        "description": "Sole developer on large-scale E-Commerce site for sale of Ericsson cell phone accessories using Microsoft SiteServer, ASP, JavaScript, MS SQL Server, CyberCash, and Taxware."
+      },
+      {
+        "job_title": "Mechanical Engineer",
+        "company": "Caterpillar",
+        "start_date": "1996",
+        "end_date": "1998",
+        "description": "Responsible for overall design of the Operator Station of a compact construction machine, including coordination of work by other mechanical and electrical designers."
+      },
+      {
+        "job_title": "Mechanical Engineer",
+        "company": "Russell Athletic",
+        "start_date": "1993",
+        "end_date": "1996",
+        "description": "Designed automated sewing equipment."
+      }
+    ],
+    "skills": [
+      "PHP",
+      "Drupal",
+      "JavaScript",
+      "Ajax",
+      "jQuery",
+      "CSS",
+      "HTML",
+      "SQL",
+      "Oracle PL/SQL",
+      "Python",
+      "Bourne shell scripting",
+      "WAP",
+      "ASP",
+      "VB Script",
+      "MySQL",
+      "Oracle",
+      "PostgreSQL",
+      "Microsoft SQL Server",
+      "Web 2.0",
+      "Mobile websites",
+      "Object-oriented Programming (OOP)",
+      "Model-View-Controller (MVC) frameworks",
+      "Wordpress",
+      "Zope",
+      "Plone",
+      "Subversion",
+      "CVS",
+      "SOAP",
+      "XML-RPC",
+      "Apache",
+      "Microsoft IIS",
+      "Unix",
+      "Linux",
+      "BSD",
+      "Solaris",
+      "Mac OS X",
+      "Windows"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "21.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/4f6fbd3b076e439ca996de042cc33a93.pdf",
+    "candidate_id": 38
+  },
+  {
+    "full_name": "Jason Winnebeck",
+    "email": "gillius-job@gillius.org",
+    "phone": null,
+    "job_title": "Principal Software Engineer",
+    "location": "Rochester, NY",
+    "education": [
+      {
+        "degree": "MS, Computer Science",
+        "university": "Rochester Institute of Technology",
+        "start_year": null,
+        "end_year": 2010
+      },
+      {
+        "degree": "BS, Computer Science",
+        "university": "Rochester Institute of Technology",
+        "start_year": null,
+        "end_year": 2003
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Principal Software Engineer",
+        "company": "Apple",
+        "start_date": "2/1/2021",
+        "end_date": "present",
+        "description": "Technical lead of a cross-functional team creating an internal web microservices application. Led software development process by introducing code reviews and automated testing. Java 17 Spring Boot Webflux backend with Angular frontend, DynamoDB and MySQL databases, hosted in AWS."
+      },
+      {
+        "job_title": "Contract - Software Engineer",
+        "company": "Nespon IT Services",
+        "start_date": "4/2020",
+        "end_date": "1/2021",
+        "description": null
+      },
+      {
+        "job_title": "Contract - Sr Java Developer",
+        "company": "Wellington Steele and Associates",
+        "start_date": "8/2013",
+        "end_date": "4/2020",
+        "description": "Lead Developer and Architect for enterprise sales quoting applications team. Development of code and team best practices for supporting microservices. Migration of REST microservices from custom embedded Tomcat to Spring Boot 2 architecture."
+      },
+      {
+        "job_title": "Senior Staff Engineer",
+        "company": "Wipro | Fullstride Cloud Services",
+        "start_date": "11/2011",
+        "end_date": "08/2013",
+        "description": "Lead software design and development process for multiple projects primarily under Office of Naval Research funding. Java framework for a modular vehicle diagnostics and telematics system."
+      },
+      {
+        "job_title": "Staff Engineer",
+        "company": "Rochester Institute of Technology",
+        "start_date": "12/2003",
+        "end_date": "10/2011",
+        "description": "Lead software design and development process for multiple projects. Java framework for vehicle diagnostics and telematics system. Introduced and facilitated Agile programming (Scrum model)."
+      },
+      {
+        "job_title": "Software Co-op",
+        "company": "Rochester Institute of Technology",
+        "start_date": "5/2002",
+        "end_date": "11/2002",
+        "description": "Started design and coding for vehicle monitoring application and maintainer's interface"
+      },
+      {
+        "job_title": "Web Application Developer Co-op",
+        "company": "Williams",
+        "start_date": "5/2001",
+        "end_date": "8/2001",
+        "description": "Used JSP, JDBC, Oracle DB, JavaScript, CSS, and HTML to create intranet web applications"
+      }
+    ],
+    "skills": [
+      "Java 17",
+      "Groovy",
+      "Spring Boot",
+      "Spring Data",
+      "Hibernate",
+      "JPA",
+      "Spring MVC",
+      "Webflux",
+      "JAX-RS",
+      "JAX-WS",
+      "AWS",
+      "EKS",
+      "DynamoDB",
+      "RDS",
+      "MySQL",
+      "Aurora",
+      "Lambda",
+      "S3",
+      "EC2",
+      "NLB",
+      "IAM",
+      "CloudWatch",
+      "Pulumi",
+      "CloudFormation",
+      "Oracle RDBMS",
+      "Redis",
+      "Lua",
+      "MongoDB",
+      "Microsoft SQL Server",
+      "HTML",
+      "CSS",
+      "REST",
+      "JSON",
+      "OpenAPI",
+      "SOAP",
+      "JavaScript",
+      "TypeScript",
+      "Angular",
+      "React",
+      "OpenID Connect",
+      "OAuth 2",
+      "JWT",
+      "Docker",
+      "Kubernetes",
+      "OpenLens",
+      "GIT",
+      "Mercurial",
+      "Azure DevOps",
+      "GitHub Enterprise",
+      "JIRA",
+      "Fisheye",
+      "Crucible",
+      "Jenkins",
+      "TeamCity",
+      "Python",
+      "C/C++"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "22.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/5162b5b5074e4c27854b47d9433db9f7.pdf",
+    "candidate_id": 39
+  },
+  {
+    "full_name": "Jake Mofa",
+    "email": "Jakemofa@gmail.com",
+    "phone": "2093627518",
+    "job_title": "Software Engineer",
+    "location": "San leandro, United States",
+    "education": [
+      {
+        "degree": "Associate in Science",
+        "university": "San Joaquin Delta College",
+        "start_year": null,
+        "end_year": 2022
+      },
+      {
+        "degree": "Bachelor's Degree",
+        "university": "San Jose State University",
+        "start_year": null,
+        "end_year": 2024
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer",
+        "company": "Vendo",
+        "start_date": "Nov 2022",
+        "end_date": "Present",
+        "description": "Lead(s) a team of 5 developers, Conducting, Orchestrating, and implementing development scripts within the respective timeline. Utilized REST API with respective to SP API, and Amazon Ads API, Within PHP back-end Development scripts in order to populate specific data within the respective React Front-end. Streamlined and used Docker and Kubernetes in order to launch our containerized Front-end and Back-end application."
+      },
+      {
+        "job_title": "Database Expert",
+        "company": "Iron Mountain",
+        "start_date": "Apr 2022",
+        "end_date": "Nov 2022",
+        "description": "Maintained maximum organization with NoSQL cloud service, by properly sorting project components on work tables using data visualization. Participated in the maintenance and quality assurance of NoSQL ECO projects, after accurate quality assessment, then deployed to the offshore team. Conducted the flow of the database, using Automation built with python, to swiftly back up company data to the cloud."
+      },
+      {
+        "job_title": "Product Expert",
+        "company": "Irobot(Bds Solution)",
+        "start_date": "Oct 2021",
+        "end_date": "Apr 2022",
+        "description": "Conducted regression testing, analyzed results, and submitted observations to the development team. Orchestrated and developed holistic systems for IT management and Process-eccentric BPM. Identified possible system enhancements to improve functionality and streamline administration."
+      },
+      {
+        "job_title": "Backend Developer",
+        "company": "Fashionista africa",
+        "start_date": "Feb 2020",
+        "end_date": "Oct 2021",
+        "description": "Initialized containerized Django Framework with Docker, in order to build Python development scripts for maintaining the server-side components. Implemented API, integration in order to fetch PostgreSQL queries, to populate data within the back-end to portray the website. Optimized PostgreSQL queries for heavy parts of the website, which improved website responsiveness and reduced the database cost by 20%"
+      },
+      {
+        "job_title": "Assistant Jr Software Engineer",
+        "company": "Gaz Du Cameroun",
+        "start_date": "Mar 2018",
+        "end_date": "Feb 2020",
+        "description": "Designed and maintained streamlined, reusable, and reliable code for use within distributed cloud environments(AWS, PostgreSQL, NoSQL). Efficiently deployed and integrated software engineered by our team and updated integration/deployment scripts to improve continuous integration practices. Maintained CI/CD streamlines, by establishing a service to test code quality by going through Source, Build, Test then deploy, integrating new code for development and deployment."
+      }
+    ],
+    "skills": [
+      "Python",
+      "Node.js",
+      "React",
+      "JavaScript",
+      "Typescript",
+      "JQuery",
+      "Django",
+      "Flask",
+      "Git",
+      "Gitbash",
+      "HTML5",
+      "CSS3",
+      "MySQL",
+      "NoSQL",
+      "API/REST",
+      "Kubernetes",
+      "CI/CD",
+      "Pandas",
+      "Numpy",
+      "OOP",
+      "Debugging",
+      "SSH",
+      "AWS",
+      "Azure",
+      "Docker",
+      "Linux",
+      "Terminal Bash",
+      "Bootstrap",
+      "PHP",
+      "Jira",
+      "C#"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "PCEP - Certified Entry-Level Python Programmer",
+        "organization": "PCEP"
+      },
+      {
+        "certificate_name": "Crash Course on Python certificate",
+        "organization": "Google, issued by Coursera"
+      },
+      {
+        "certificate_name": "Google IT Automation with Python Professional Certificate",
+        "organization": "Google"
+      },
+      {
+        "certificate_name": "PCAP – Certified Associate in Python Programming certification",
+        "organization": "PCAP"
+      },
+      {
+        "certificate_name": "Meta Back-end Developer Professional Certificate",
+        "organization": "Meta"
+      },
+      {
+        "certificate_name": "Introduction to APIs in Google",
+        "organization": "Google"
+      },
+      {
+        "certificate_name": "Javascript Deeper Dive Cert",
+        "organization": "scrimba"
+      },
+      {
+        "certificate_name": "Front End Developer Career Path cert",
+        "organization": null
+      }
+    ],
+    "languages": [],
+    "source_file": "23.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/04e08d666bb54c8783eada461736cb9b.pdf",
+    "candidate_id": 40
+  },
+  {
+    "full_name": "Bobby Chen",
+    "email": "chenbobby168@gmail.com",
+    "phone": null,
+    "job_title": "Software Engineer (Payments)",
+    "location": null,
+    "education": [
+      {
+        "degree": "B.A. in Applied Mathematics",
+        "university": "Harvard University",
+        "start_year": 2018,
+        "end_year": 2022
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer (Payments)",
+        "company": "Airbnb",
+        "start_date": "Aug 2022",
+        "end_date": "Present",
+        "description": "Increased 2023 revenue from reservations by $1M+ by reducing false positives in risk detection. Designed and built a user verification challenge to prevent credit card chargeback fraud. Handled on-call and incidents related to online payments processing and hourly data pipelines. Productionized ML models for risk detection into Airbnb's financial fraud defense system."
+      },
+      {
+        "job_title": "Software Engineering Intern (Infrastructure)",
+        "company": "Airbnb",
+        "start_date": "May 2021",
+        "end_date": "Aug 2021",
+        "description": "Designed and built an internal developer tool with 500+ WAU that samples payloads from live Airbnb web traffic and anonymizes data for safe testing and training. Automated the generation of documentation for 100+ services and their RPC APIs."
+      },
+      {
+        "job_title": "Software Engineer",
+        "company": "Dagster",
+        "start_date": "Sept 2020",
+        "end_date": "March 2021",
+        "description": "Contributed open-sourced code to Dagster, a cloud-native data pipeline orchestrator. Interviewed data engineers and ML engineers from companies, including Apple, DoorDash, and Drizly, to understand pain points in their existing data infrastructure. Operated testing environments for deploying Dagster data pipelines on AWS, GCP, and Azure. Built demos for prospective customers to showcase how Dagster scales horizontally on the cloud."
+      },
+      {
+        "job_title": "Technical Marketing Intern",
+        "company": "Intel",
+        "start_date": "June 2020",
+        "end_date": "August 2020",
+        "description": "Published documentation and technical marketing copy for Intel hardware plugins on Kubernetes. Designed and delivered a marketing demo to showcase 5x Redis performance (operations per second) when using Intel Optane Persistent Memory compared to disk. Answered customer questions about Intel's open source projects at KubeCon EU 2020."
+      },
+      {
+        "job_title": "Software Engineering Intern",
+        "company": "DataCamp",
+        "start_date": "May 2018",
+        "end_date": "July 2018",
+        "description": "Reduced search query latency by 83% and improved relevancy and typo resistance by replacing a naive SQL query with Algolia Search API. Decreased the main website's page load time by reducing JavaScript bundle size by 15%."
+      }
+    ],
+    "skills": [
+      "Java",
+      "Python",
+      "JavaScript/TypeScript",
+      "SQL",
+      "Linux",
+      "Docker/Kubernetes",
+      "AWS"
+    ],
+    "certifications": [],
+    "languages": [
+      "Mandarin Chinese"
+    ],
+    "source_file": "24.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/42038d5e06714d3fad22f2784b3af0e4.pdf",
+    "candidate_id": 41
+  },
+  {
+    "full_name": "MICHELE DE GIROLAMO",
+    "email": null,
+    "phone": null,
+    "job_title": "APPLIED GEOPHYSICS GEOLOGIST",
+    "location": null,
+    "education": [
+      {
+        "degree": "MASTER'S DEGREE IN GEOPHYSICAL SCIENCE",
+        "university": "University of Bari Aldo Moro",
+        "start_year": 2017,
+        "end_year": 2020
+      },
+      {
+        "degree": "THREE-YEARS DEGREE IN GEOLOGICAL SCIENCE",
+        "university": "University of Bari Aldo Moro",
+        "start_year": 2009,
+        "end_year": 2017
+      },
+      {
+        "degree": "SCIENTIFIC HIGH SCHOOL DIPLOMA",
+        "university": "Scientific high school \"R.Bonghi\"",
+        "start_year": 2001,
+        "end_year": 2006
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "TRAINING INTERNSHIP",
+        "company": "GEOPROSYS SRL",
+        "start_date": "12/2019",
+        "end_date": "05/2020",
+        "description": "GEOPHYSICAL SURVEYS IN THE ARCHAEOLOGICAL FIELD AND USE OF MAGNETOTELLURICS TOOLS"
+      },
+      {
+        "job_title": "TRAINING INTERNSHIP",
+        "company": "GEOPROSPECTOR SRL",
+        "start_date": "05/2017",
+        "end_date": "08/2017",
+        "description": "GPR SURVEYS ON OLIVE TREES FOR THE EARLY DIAGNOSIS OF XILELLA FASTIDIOSA"
+      }
+    ],
+    "skills": [
+      "geophysic",
+      "Geoelectric studies",
+      "Ground Penetrating Radar studies",
+      "electromagnetic studies",
+      "ERT model interpretation",
+      "GPR model and map interpretation",
+      "electromagnetic map interpretation",
+      "ERT processing",
+      "GPR processing",
+      "supervise and management of MT station",
+      "Res3Dinv",
+      "Res2Dinv",
+      "Electre Pro",
+      "Prosys II",
+      "MatGPR",
+      "Reflex2DQuick",
+      "ADU08e",
+      "ADUClient",
+      "QGis",
+      "Surfer",
+      "Google Earth Pro",
+      "JOSM",
+      "Windows",
+      "programming (Matlab, Fortran)",
+      "Ms Office (IC3)",
+      "Adobe Photoshop",
+      "Adobe Illustrator",
+      "Autocad",
+      "Hardware",
+      "use of DOS"
+    ],
+    "certifications": [],
+    "languages": [
+      "Italian",
+      "English"
+    ],
+    "source_file": "25.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/5f29028646244db580a90329588b8aba.pdf",
+    "candidate_id": 42
+  },
+  {
+    "full_name": "Ben Maxwell",
+    "email": "ben24.maxwell@gmail.com",
+    "phone": "07504 922553",
+    "job_title": "Software Engineer",
+    "location": "Mount Vernon, G32 9QW",
+    "education": [
+      {
+        "degree": "BSc (Honours) Computing",
+        "university": "Glasgow Caledonian University",
+        "start_year": 2019,
+        "end_year": 2021
+      },
+      {
+        "degree": "HND & HNC",
+        "university": "City of Glasgow College",
+        "start_year": 2017,
+        "end_year": 2019
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer",
+        "company": "Arcadis IBI Group",
+        "start_date": "2021",
+        "end_date": "Present",
+        "description": "Working as a Full-stack developer within a UX team for Transport Scotland, handling the implementation and design of the user experience for a back-office solution using Angular and .NET Core. Worked on a React/.NET Core project for the NTA to provide a transport route management system for rural areas of Ireland. Contributed to the development of an open-source Python plugin for QGIS to model flood risk. Automated the resource forecasting process to reduce the time required from business analysts to create detailed forecasts of resource expenses. Created a WPF application to segment images for use with one of Arcadis IBI's road network systems. Researched and explored ideas for an image segmentation convolutional neural network. Conducted extensive testing of frontend solutions using Cypress, Selenium and Jest resulting in fewer bugs reaching production."
+      },
+      {
+        "job_title": "Bartender",
+        "company": "Driftwood Bar",
+        "start_date": "2020",
+        "end_date": "2021",
+        "description": "Maintaining stock levels to prevent shortages and ensure all menu items are available. Welcoming and greeting guests to provide a pleasant atmosphere and deliver satisfactory customer service. Working with a small team of bar staff to ensure smooth operation. Taking part in bar promotions to sell products to customers and boost sales of less popular products."
+      },
+      {
+        "job_title": "IT Assistant",
+        "company": "Railway Engineering Associates Ltd",
+        "start_date": "2016",
+        "end_date": "2017",
+        "description": "Tasked to aid with the implementation of a new technology system. General maintenance of PC equipment including troubleshooting hardware and maintaining critical hardware used to run bridge simulations. Database organisation and converting documents into database records."
+      }
+    ],
+    "skills": [
+      "C# (.NET Core, .NET MVC, WPF)",
+      "TypeScript (React, Angular)",
+      "JavaScript (React Native, Electron)",
+      "HTML/CSS/Sass",
+      "SQL (MySQL, T-SQL)",
+      "VBA",
+      "Java (Spring, Android)",
+      "PHP (Drupal, Laravel)",
+      "Bash/Batch",
+      "Cloud (Azure)",
+      "CI/CD (Git, Azure, Jira, Docker)"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "26.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/9efa0788b96146c78254fc6f99558af0.pdf",
+    "candidate_id": 43
+  },
+  {
+    "full_name": "Cecilia (Fan Yi) Yue",
+    "email": "cyueproductdesign@gmail.com",
+    "phone": "(425) 326-8298",
+    "job_title": "Product Designer",
+    "location": "San Francisco, CA",
+    "education": [
+      {
+        "degree": "UX/UI Bootcamp",
+        "university": "Springboard",
+        "start_year": 2021,
+        "end_year": 2021
+      },
+      {
+        "degree": "Masters of Accounting",
+        "university": "University of Waterloo",
+        "start_year": 2017,
+        "end_year": 2017
+      },
+      {
+        "degree": "Bachelors of Accounting and Financial Management",
+        "university": "University of Waterloo",
+        "start_year": 2012,
+        "end_year": 2016
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Freelance Product Designer",
+        "company": "Freelance",
+        "start_date": "March 2021",
+        "end_date": "Present",
+        "description": "Provided consulting services for an accounting e-commerce start up to improve their onboarding process. Performed a heuristic analysis and recommended potential solutions which improved click through rates by 15%."
+      },
+      {
+        "job_title": "Product Designer",
+        "company": "Beyond Books",
+        "start_date": "July 2021",
+        "end_date": "Present",
+        "description": "Designed an accounting task management system from end to end as the sole designer. Currently collaborating with an engineer and product designer to launch to market."
+      },
+      {
+        "job_title": "Senior Accountant",
+        "company": "Zendesk",
+        "start_date": "October 2018",
+        "end_date": "June 2021",
+        "description": "Led process improvements within the accounting organization which led to 35% time savings and a more efficient work flow across global teams. Oversaw the software capitalization process and partnered with engineering and design leads to translate technical projects to the accounting team for bookkeeping."
+      },
+      {
+        "job_title": "Senior Accountant",
+        "company": "Deloitte",
+        "start_date": "September 2017",
+        "end_date": "September 2018",
+        "description": "Led over 10 audits within the private technology space. Communicated with company executives on a regular basis and advised them on accounting guidance and the application to their business to help assess risks and opportunities."
+      }
+    ],
+    "skills": [
+      "rapid ideation",
+      "user flows",
+      "wireframes",
+      "sketches",
+      "mockups",
+      "style guides",
+      "design systems",
+      "prototyping",
+      "Figma",
+      "Principle",
+      "HTML/CSS",
+      "data analysis",
+      "heuristic evaluation",
+      "usability testing",
+      "A/B testing",
+      "Figma",
+      "FigJam",
+      "Adobe Suite",
+      "Sketch",
+      "Principle"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "27.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/fd9d0fd0c92e47bd90799dc7a5bbcdca.pdf",
+    "candidate_id": 44
+  },
+  {
+    "full_name": "Nithin Narayanan",
+    "email": "nithin19.n@gmail.com",
+    "phone": "+919497373381",
+    "job_title": "Project Coordinator-International Training & Support",
+    "location": null,
+    "education": [
+      {
+        "degree": "Diploma in Information Technology",
+        "university": "NTTF",
+        "start_year": null,
+        "end_year": null
+      },
+      {
+        "degree": "BCA (Master in Computer Application)",
+        "university": "Alagappa University",
+        "start_year": 2007,
+        "end_year": 2010
+      },
+      {
+        "degree": "MCA (Master in Computer Application)",
+        "university": "Karpaga Vinayaga College of Engineering",
+        "start_year": 2010,
+        "end_year": 2013
+      },
+      {
+        "degree": "MBA (Master in Business Administration)",
+        "university": "Pondicherry University",
+        "start_year": 2018,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Project Coordinator",
+        "company": "Glosoft Technologies",
+        "start_date": "2017",
+        "end_date": "present",
+        "description": "Product training and marketing. Initiate and control surveys to assess customer requirements and dedication. Promotional activities of the products. Develop project strategies, project schedules, task lists for team members. Technical Support and troubleshooting of Software. Ensure to meet the various quality standard. Social Media marketing. Online support to international centers."
+      },
+      {
+        "job_title": "Data Support Engineer (UK-Non-Voice)",
+        "company": "Morgan McKinley Services",
+        "start_date": "2015",
+        "end_date": "2017",
+        "description": "Prepares for customer inquiries by studying products. Records customer inquiries by documenting inquiry and response in customers' accounts. Collecting and processing new data. Ensure all data is kept up to date and in sync - accurately. Listen to customers' questions and concerns, and provide answers or responses through chats and calls."
+      },
+      {
+        "job_title": "IT Consultant",
+        "company": "Thoughts Technologies",
+        "start_date": "2014",
+        "end_date": "2015",
+        "description": "Software development, Testing and Delivering. Determine and coordinate online and onsite events like webinars, seminars and customer events. Plan and implement software product launch. Influence and communicate with clients to drive global program alignment and satisfaction. Marketing of software products."
+      }
+    ],
+    "skills": [
+      "Object Oriented Programming",
+      "Software Implementation best practice",
+      "Website development",
+      "Analytical thinking",
+      "Solution provider",
+      "Product development",
+      "Life cycle management",
+      "Technical support",
+      "Sales",
+      "Key account management",
+      "Product Marketing",
+      "Training"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "28.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/5b06f5be74b9430fb577fd3a53db5302.pdf",
+    "candidate_id": 45
+  },
+  {
+    "full_name": null,
+    "email": "name@gmail.com",
+    "phone": "(203)-888-8888",
+    "job_title": "Client Support Analyst",
+    "location": "4 Mount Road, Flowers, NY 27821",
+    "education": [
+      {
+        "degree": "Master of Science in Information Technology",
+        "university": "Frank G. Zarb School of Business, Hofstra University",
+        "start_year": null,
+        "end_year": 2015
+      },
+      {
+        "degree": "Bachelor of Technology, Biotechnology",
+        "university": "Jaypee Institute of Information Technology University, India",
+        "start_year": null,
+        "end_year": 2008
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Data Analyst Intern",
+        "company": "Wolters Kluwer (Information Services & Publishing)",
+        "start_date": "May 2015",
+        "end_date": "August 2015",
+        "description": "Analyzed user search data of users accessing WK products to understand their search patterns and context. Identified & applied Statistical Similarity Methods to classify user search into similar and dissimilar searches. Computed, analyzed and produced reports on user search patterns and search abandonment metrics using R & MS SQL Server."
+      },
+      {
+        "job_title": "Account Manager, Sales & Marketing",
+        "company": "Proquest Solutions Pvt. Ltd. / Aashna Cloudtech Pvt. Ltd.",
+        "start_date": "June 2009",
+        "end_date": "November 2010",
+        "description": "Accountable for complete sales cycle from lead generation to closure of SaaS based CRM and ERP solutions. Acquired new clients based on 'value based selling', by identifying critical requirements & proposing apt software solutions. Estimated time & cost of software implementation & end-user training & negotiated to gain best possible profit margins. Followed long-term account strategies to increase profits & ensured end-user support for customer satisfaction."
+      },
+      {
+        "job_title": "Associate Clinical Data Coordinator, Data Validation",
+        "company": "Quintiles Technologies (India) Pvt. Ltd.",
+        "start_date": "June 2008",
+        "end_date": "April 2009",
+        "description": "Validated the clinical data and performed quality control by identifying any discrepancies present in the data using Oracle Clinical Database. Resolved the system generated discrepancies and coordinated with the site coordinator to close the unresolved discrepancies generated by the system."
+      }
+    ],
+    "skills": [
+      "TSQL",
+      "SQL Server",
+      "MS Access",
+      "MySQL",
+      "HTML",
+      "C",
+      "R",
+      "RapidMiner",
+      "IBM SPSS",
+      "Minitab",
+      "MS Excel",
+      "SAP BW",
+      "SAP ERP",
+      "SAP Predictive Analysis",
+      "SAP Project Management",
+      "Windows",
+      "Mac",
+      "Ubuntu"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "29.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/20328a59cf20498ca67bb58f56006c3a.pdf",
+    "candidate_id": 46
+  },
+  {
+    "full_name": "Anuj Chaturvedi",
+    "email": "anujchat20@iitk.ac.in",
+    "phone": "+91-8697258568",
+    "job_title": "Software Developer",
+    "location": null,
+    "education": [
+      {
+        "degree": "MBA",
+        "university": "Indian Institute of Technology, Kanpur",
+        "start_year": 2020,
+        "end_year": 2022
+      },
+      {
+        "degree": "B.Tech Computer Science Engineering",
+        "university": "Government College of Engineering and Ceramic Technology",
+        "start_year": 2013,
+        "end_year": 2017
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Developer",
+        "company": "Amdocs Development Centre India LLP",
+        "start_date": "February 2020",
+        "end_date": "September 2020",
+        "description": "Java Developer, Enhancements using Scrum Ceremonies, Scrum testing, UAT support, Defect fixing, giving demo, documentation"
+      },
+      {
+        "job_title": "Software Engineer I",
+        "company": "Mitratech India LLP",
+        "start_date": "July 2019",
+        "end_date": "October 2019",
+        "description": "Java Developer, Defect fixing, Team building, documentation of setup issues"
+      },
+      {
+        "job_title": "Project Engineer",
+        "company": "Wipro Ltd.",
+        "start_date": "February 2018",
+        "end_date": "June 2019",
+        "description": "Python Developer, Enhancements and Defect fixing, giving demo, Java Developer, Defect fixing, documentation"
+      }
+    ],
+    "skills": [],
+    "certifications": [
+      {
+        "certificate_name": "Ethical Hacking Industry Oriented Training",
+        "organization": "WebTek Labs Pvt. Ltd."
+      }
+    ],
+    "languages": [],
+    "source_file": "30.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/0bd31eab70e4434da511eb775380ae0a.pdf",
+    "candidate_id": 47
+  },
+  {
+    "full_name": "Angel Gjuzelov",
+    "email": "guzelovangel@gmail.com",
+    "phone": "078-366-858",
+    "job_title": null,
+    "location": "Iljo Shopov 86, Strumica, Macedonia",
+    "education": [
+      {
+        "degree": null,
+        "university": "Faculty of Computer Science and Engineering",
+        "start_year": 2014,
+        "end_year": 2020
+      },
+      {
+        "degree": null,
+        "university": "Economic-legal field",
+        "start_year": 2010,
+        "end_year": 2014
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Internship",
+        "company": "Infinite Solutions",
+        "start_date": "JUNE 2018",
+        "end_date": "AUGUST 2018",
+        "description": "Worked on a web application about Time Attendance Management & Access Control with MVC.NET, HTML, CSS, JAVASCRIPT, MYSQL"
+      }
+    ],
+    "skills": [
+      "Web Development - JavaScript, ReactJS, Redux, Firebase, Material UI, NodeJS, HTML, CSS, Bootstrap",
+      "Digital Marketing - Facebook & Instagram Ads, Google Analytics, SEO, Chatbots",
+      "Creative",
+      "Self-motivation",
+      "Multitasking",
+      "Teamwork"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "The Complete Full-Stack JavaScript Course",
+        "organization": null
+      },
+      {
+        "certificate_name": "Social Media Marketing",
+        "organization": null
+      },
+      {
+        "certificate_name": "English Course",
+        "organization": "ABC Academy for Foreign Languages"
+      }
+    ],
+    "languages": [],
+    "source_file": "31.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/8ef0f2f846bf4833985cdd522237956e.pdf",
+    "candidate_id": 48
+  },
+  {
+    "full_name": null,
+    "email": null,
+    "phone": null,
+    "job_title": null,
+    "location": null,
+    "education": [],
+    "experience": [],
+    "skills": [],
+    "certifications": [],
+    "languages": [],
+    "source_file": "32.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/0786ee90df6c47d8a7a9a783310e8915.pdf",
+    "candidate_id": 49
+  },
+  {
+    "full_name": "Benjamin Robson",
+    "email": "benjamin.h.robson@gmail.com",
+    "phone": null,
+    "job_title": "Software Engineer",
+    "location": "Helsinki, Finland",
+    "education": [
+      {
+        "degree": "MSc Computer Science",
+        "university": "Aalto University",
+        "start_year": null,
+        "end_year": 2023
+      },
+      {
+        "degree": "BSc Computer Science",
+        "university": "Queen Mary, University Of London",
+        "start_year": 2018,
+        "end_year": 2021
+      },
+      {
+        "degree": "International Baccalaureate Diploma",
+        "university": "International School of Helsinki",
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software Engineer",
+        "company": "Instagram",
+        "start_date": "October 2021",
+        "end_date": "April 2023",
+        "description": "Built, shipped, and scaled products to billions of users, increasing company top line metrics, revenue, and impressions. Worked alongside mobile engineers, designers, legal, product marketing, data science, product managers, and multiple partner teams."
+      },
+      {
+        "job_title": "Software Engineer Intern",
+        "company": "Meta",
+        "start_date": "June 2020",
+        "end_date": "September 2020",
+        "description": "WhatsApp and Javascript Infra teams. Building github.com/facebook/metro (react native JS bundler). Improved daily productivity of engineers on the team by 2x, by improving cold/warm starts of their JS tooling"
+      },
+      {
+        "job_title": "Researcher Intern",
+        "company": "Microsoft Research Lab",
+        "start_date": "June 2019",
+        "end_date": "September 2019",
+        "description": "AI and Research group. Winner of Hack Cambridge 2019. Building (under NDA) feature which extends search in Office products"
+      },
+      {
+        "job_title": "Software Developer",
+        "company": "Supervisor Cloud",
+        "start_date": "June 2018",
+        "end_date": "July 2018",
+        "description": "Created prototypes for a web app which allowed for the intuitive and easy creation of E2E and load tests at scale"
+      },
+      {
+        "job_title": "Software Developer (Part-Time)",
+        "company": "ResQ Club",
+        "start_date": "July 2017",
+        "end_date": "December 2017",
+        "description": "Maintaining the resq.club website. Advertising campaigns (i.e. introducing Apple Pay to Finland), and A/B testing"
+      },
+      {
+        "job_title": "Software Developer",
+        "company": "AppGyver",
+        "start_date": "July 2017",
+        "end_date": "December 2017",
+        "description": "Created E2E testing infrastructure for customer applications and the app development platform. Created customer applications and custom components. Created integrations to our testing infrastructure such as monitoring screens, IoT for alerts and chat notifications."
+      }
+    ],
+    "skills": [
+      "Javascript",
+      "Python",
+      "Docker",
+      "Figma",
+      "Product development",
+      "Design",
+      "Prototyping",
+      "Developer tooling"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "33.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/8d96ab13290e4e89a550133d212b70e9.pdf",
+    "candidate_id": 50
+  },
+  {
+    "full_name": "James Clark",
+    "email": "support@qwikresume.com",
+    "phone": "(123) 456 7899",
+    "job_title": "Cloud Engineer",
+    "location": "Los Angeles",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "State University",
+        "start_year": 2019,
+        "end_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Cloud Engineer",
+        "company": "Seaside Innovations",
+        "start_date": "May 2021",
+        "end_date": "Ongoing",
+        "description": "Supported AWS Cloud instances and used AWS command-line Interface to manage and configure various AWS products. Wrote AWS Cloud Formation templates to create custom-sized VPC, subnets, NAT to ensure successful deployment of applications. Implemented roles and groups for users and resources using AWS Identity Access Management (IAM) and also managed network security using Security Groups, and IAM. Provided highly durable and available data by using S3 data store, versioning, lifecycle policies, and create AMIs for mission-critical production servers for backup. Documented system configurations, Instance, OS, and AMI build practices, backup procedures, troubleshooting guides, and keep infrastructure and architecture drawings current with changes. Utilized Amazon Glacier for archiving data."
+      },
+      {
+        "job_title": "Cloud Engineer",
+        "company": "Cactus Creek Solutions",
+        "start_date": "May 2020",
+        "end_date": "May 2021",
+        "description": "Participates in cloud architecture, design, implementation, and operations of infrastructure. Work with stakeholders to understand requirements and translates into appropriate technical specifications for additions or changes to our infrastructure and/or services. Maintain the security of the Infrastructure by monitoring our systems against intrusive attacks or other malicious actions, and coordinating the periodic audit of systems against established security guidelines. Troubleshoots and resolves technical issues with infrastructure and/or services provided by third parties. Monitor, maintain, troubleshoot, and create Vworkspace VDI containers as well as diagnose performance and availability of the VDI corporate infrastructure servers and networks. Monitor and maintain the performance and availability of corporate cloud servers and network infrastructure Develop, document, and maintain operational processes and procedures."
+      }
+    ],
+    "skills": [
+      "Communication",
+      "Interpersonal Skills",
+      "Implementation Skills",
+      "Python Programming",
+      "Java Development"
+    ],
+    "certifications": [],
+    "languages": [
+      "English",
+      "Spanish",
+      "Mandarin"
+    ],
+    "source_file": "34.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/e702b92a3f864886b5342f2cafd035c5.pdf",
+    "candidate_id": 22
+  },
+  {
+    "full_name": "Rajesh Kumar",
+    "email": "rajesh_kumar5003@yahoo.com",
+    "phone": "+91 814 755 3109",
+    "job_title": "AWS Cloud DevOps Engineer",
+    "location": null,
+    "education": [
+      {
+        "degree": "Bachelor of Science in Information Technology",
+        "university": "KUVEMPU UNIVERSITY",
+        "start_year": null,
+        "end_year": 2010
+      },
+      {
+        "degree": "Higher Diploma In Information Technology",
+        "university": null,
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "DevOps Engineer",
+        "company": "QS Quacquarelli Symonds",
+        "start_date": "March 2020",
+        "end_date": "Present",
+        "description": "Managing AWS Infrastructure for the organization and its different vertices, AWS cost optimization, building and deploying complete application architecture with AWS best practices, keeping AWS cloud secure with various AWS services, managing on-premise data centers and other datacenters with OVH cloud/Telemaxx & Croc Cloud"
+      },
+      {
+        "job_title": "Senior DevOps Engineer",
+        "company": "NR Group",
+        "start_date": "August 2017",
+        "end_date": "March 2020",
+        "description": "Managing AWS cloud infrastructure for more than six verticals within organization, setup and deployment of multiple cloud architecture, managing securities of AWS cloud infrastructures, leading a team of 5+ system engineers, managing hybrid cloud with AWS, managing Unix/Linux platform for web apps, designing and implementation of public and private facing apps and websites, migration from on-premise infrastructure to AWS cloud"
+      },
+      {
+        "job_title": "Web Engineer",
+        "company": "Simplotel Technology Pvt Ltd",
+        "start_date": "April 2016",
+        "end_date": "May 2017",
+        "description": "Help onboarding all clients on Simplotel platform, support and maintenance of Simplotel CRM, AWS EC2, AWS RDS and MySQL database, managing AWS infrastructure and cost optimization, configuration of VPC, security groups, launching instances, databases and storage in AWS"
+      },
+      {
+        "job_title": "Technical Support Engineer",
+        "company": "Yahoo India Pvt Ltd",
+        "start_date": "August 2017",
+        "end_date": "March 2020",
+        "description": "Managing support function for Yahoo Small Business products, replicate errors and escalate to engineering team, installation and troubleshooting of CMS and 3rd party design tools, managing web hosting, SEO, business email and web analytics tools, troubleshooting servers, MySQL databases, and DNS issues"
+      },
+      {
+        "job_title": "Training Specialist",
+        "company": "Aegis Limited",
+        "start_date": "December 2011",
+        "end_date": "January 2015",
+        "description": "Reconciliation of training reports, generate performance and KPI based reports, building knowledge tools, implement improvement strategies, working with business unit leaders to craft support strategies, analyze business operations data, build annual training programs"
+      }
+    ],
+    "skills": [
+      "AWS Cloud",
+      "Citrix Xen-center",
+      "Linux/Windows Server Management",
+      "Team management",
+      "DevOps",
+      "Kubernetes",
+      "DevSecOps",
+      "Training & Development",
+      "Jenkins",
+      "Docker",
+      "Git",
+      "Apache",
+      "Nginx",
+      "Tomcat",
+      "Python",
+      "MySQL",
+      "PostgreSQL",
+      "MongoDB",
+      "Nagios",
+      "Zabbix",
+      "Prometheus",
+      "Grafana"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Cyber Security Awareness",
+        "organization": "iHASCO"
+      },
+      {
+        "certificate_name": "GDPR Essentials",
+        "organization": "iHASCO"
+      }
+    ],
+    "languages": [],
+    "source_file": "35.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/d1042c7ebc244047a4b07b89e9027590.pdf",
+    "candidate_id": 51
+  },
+  {
+    "full_name": "Neil Acosta",
+    "email": "contact@neilacostait.com",
+    "phone": null,
+    "job_title": "Senior Cloud Security",
+    "location": null,
+    "education": [
+      {
+        "degree": "BS in Cybersecurity and Information Assurance",
+        "university": "Western Governors University",
+        "start_year": null,
+        "end_year": null
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Cloud Security",
+        "company": "CyberPro Solutions",
+        "start_date": "September 2022",
+        "end_date": "April 2024",
+        "description": "Implemented automation of various security operations in DevSecOps CI/CD pipeline through automation of SCA, Secret, Container, SAST & DAST scans. Using Wiz, Aqua, JFrog, Prisma Cloud and Snyk. Developed and maintained a robust artifact management system using JFrog and Wiz. Implemented cloud security best practices and designed secure architectures for multi-cloud environments (AWS, Azure, GCP). Conducted regular code analysis and vulnerability assessments using Snyk. Developed and maintained security automation scripts and templates for Infrastructure as Code (IaC) frameworks. Successfully implemented automation of vulnerability management through AWS Systems Manager & Amazon Inspector."
+      },
+      {
+        "job_title": "Senior Cloud Security",
+        "company": "Bmotik",
+        "start_date": "November 2019",
+        "end_date": "October 2022",
+        "description": "Configured, implemented, design and managed cloud-native technologies and services including virtual machines, web servers, tunnels, CDN, load balancer, Apache server, database server, SSL/TLS, cloud firewalls, and WAF using AWS, Azure and GCP. Improved the security posture of critical systems by implementing a Continuous Monitoring and Continuous Diagnostic program. Increased cloud migration of company-owned applications by 60% introducing cloud-based solutions to customers. Deployed Cloud Security Solutions (Azure FW, Prisma Palo Alto Networks, Fortinet and crowdstrike)."
+      },
+      {
+        "job_title": "Cloud Systems Engineer",
+        "company": "Publitec Solutions SAS",
+        "start_date": "August 2017",
+        "end_date": "September 2019",
+        "description": "Helped the server to increase its uptime from 90% to 99% by setting up a monitoring system. Configured several cloud services to deliver a functional web application with a 99.999% SLA. Implemented Cloud solutions using Azure and AWS and moved data from on-prem to the cloud to increase uptime, enhance customer experience and reduce costs by 40%. Automated infrastructure deployment and management using Infrastructure as Code (IaC) tools."
+      },
+      {
+        "job_title": "System Administrator",
+        "company": "Bogota Social Television",
+        "start_date": "August 2015",
+        "end_date": "July 2017",
+        "description": "Provided technical support to over 200 users, installing & configuring computer hardware, software, and networks. Automated routine Linux administration tasks using shell scripting (Bash) and configuration management tools. Improved network performance and reliability by installing, maintaining, and troubleshooting internal office network and phone system equipment. Ensured data security and system uptime by installing and supporting a wide range of hardware and software."
+      }
+    ],
+    "skills": [
+      "Cloud Security Architecture",
+      "Cloud Engineer",
+      "Governance, & Support",
+      "Vulnerability Management",
+      "Cloud Security Automation",
+      "Incident Response",
+      "Security Asset Hardening",
+      "Governance Risk & Compliance (GRC)",
+      "System Security Planning (SSP)",
+      "Threat Modeling & Risk Assessments",
+      "Security Operations",
+      "Information Security Program Management",
+      "Network Administration",
+      "Systems Engineering",
+      "Linux Administration",
+      "FinOps"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Certified Information Security Manager® (CISM)",
+        "organization": null
+      },
+      {
+        "certificate_name": "Certificate of Cloud Security Knowledge – CCSK",
+        "organization": null
+      },
+      {
+        "certificate_name": "CompTIA PenTest+",
+        "organization": "CompTIA"
+      },
+      {
+        "certificate_name": "CompTIA Security+",
+        "organization": "CompTIA"
+      },
+      {
+        "certificate_name": "AWS Certified Developer",
+        "organization": "AWS"
+      },
+      {
+        "certificate_name": "Microsoft Certified: Azure Administrator",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "Google Cloud Engineer - Associate",
+        "organization": "Google"
+      },
+      {
+        "certificate_name": "Oracle Cloud Infrastructure Certified Architect",
+        "organization": "Oracle"
+      },
+      {
+        "certificate_name": "Oracle Cloud Infrastructure Cloud Operations",
+        "organization": "Oracle"
+      },
+      {
+        "certificate_name": "Oracle Autonomous Database Cloud",
+        "organization": "Oracle"
+      },
+      {
+        "certificate_name": "IBM Cybersecurity Analyst Professional",
+        "organization": "IBM"
+      },
+      {
+        "certificate_name": "Aviatrix Multi-cloud Network and Security",
+        "organization": "Aviatrix"
+      },
+      {
+        "certificate_name": "Linux Certified System Administrator (LFCS)",
+        "organization": "Linux Foundation"
+      },
+      {
+        "certificate_name": "Cloud Engineer",
+        "organization": "The Linux Foundation"
+      }
+    ],
+    "languages": [],
+    "source_file": "36.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/fe933908920d4f3eb3d0f66c069be7e6.pdf",
+    "candidate_id": 52
+  },
+  {
+    "full_name": "Karam Khaled Albataineh",
+    "email": "karamkb26@gmail.com",
+    "phone": "+962 798476848",
+    "job_title": "Software & DevOps Engineer",
+    "location": "Amman, 11118, Jordan",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "Yarmouk University",
+        "start_year": 2019,
+        "end_year": 2023
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Software & DevOps Engineer",
+        "company": "Optimum Partners",
+        "start_date": "Feb 2024",
+        "end_date": "Aug 2024",
+        "description": "Worked on DevOps tasks, utilizing tools such as Docker, Linux, and GitHub. Developed and maintained .NET applications using C# API and Domain-Driven Design. Implemented minimal APIs with PostgreSQL integration. Conducted unit testing to ensure reliability and maintainability."
+      },
+      {
+        "job_title": "Software Engineer Intern",
+        "company": "Atypon",
+        "start_date": "Mar 2023",
+        "end_date": "Aug 2023",
+        "description": "Explored Java programming, data structures, algorithms, and design patterns. Gained DevOps experience with Git, shell scripting, Docker, Agile, Maven, AWS. Practiced clean code principles and unit testing in a Linux environment."
+      }
+    ],
+    "skills": [
+      "C++",
+      "C#",
+      "Java",
+      "Python",
+      "PHP",
+      "Git",
+      "GitHub Actions",
+      "Linux",
+      "Terraform",
+      "AWS",
+      "Jenkins",
+      "Nginx",
+      "Docker",
+      "Kubernetes",
+      "Pulumi",
+      "Maven",
+      "REST APIs",
+      "MySQL",
+      "SQLite",
+      "PostgreSQL"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "HashiCorp Certified: Terraform Associate (003)",
+        "organization": "HashiCorp"
+      }
+    ],
+    "languages": [],
+    "source_file": "37.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/83b46821d58442fda62f7eb0c85de89e.pdf",
+    "candidate_id": 53
+  },
+  {
+    "full_name": "Dale-Kurt Murray",
+    "email": "hello@dalekurtmurray.com",
+    "phone": "+1 876 345 7375",
+    "job_title": "Solutions Architect",
+    "location": null,
+    "education": [],
+    "experience": [
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Reelio Labs Inc.",
+        "start_date": "2015",
+        "end_date": "Present",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Implement solution architecture for deploying docker containers with integration of a Continuous Integration/Continuous Deployment solution for deployment workflow. Implement remote access solution to private resources for Development and GA teams. Update Docker images for upgrade and security patches."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Dowoodle Inc.",
+        "start_date": "May 2016",
+        "end_date": "Present",
+        "description": "Contracted to revised current solution architecture deployed on Amazon Web Services. Implement a Continuous Integration/Continuous Deployment solution and revise the development workflow and deployment procedure for the Development team. Implement a scalable, redundant Docker cluster using ECS, ELB, EC2 and Route 53. Migrate Cassandra database from third-party to first-party hosting within the AWS Solution Architecture."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Enloop Inc.",
+        "start_date": "2016",
+        "end_date": "Present",
+        "description": "Contracted to train the Operations and Development team on using Docker, revise the current solution architecture deployed on Amazon Web Services for efficiency and automated deployment using AWS, third-party services and CI/CD solution. Implement a Continuous Integration/Continuous Deployment solution and revise the development workflow and deployment procedure for the Development team for development, staging and production environments."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Method Mill",
+        "start_date": "January 2016",
+        "end_date": "November 2016",
+        "description": "Contracted to deploy a managed cluster for deploying containerized micro services, support existing services and infrastructure, as well as scale, automate and improve the AWS resources. Build a scalable, redundant Docker cluster with per-service network segments inside of Amazon's AWS VPC."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Epimax",
+        "start_date": "January 2016",
+        "end_date": "October 2016",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Build a scalable, redundant Docker cluster supported by Apache Mesos, Marathon and ZooKeeper."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "National Democratic Institute",
+        "start_date": "January 2016",
+        "end_date": "August 2016",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Implement solution architecture for deploying docker containers with integration of a Continuous Integration/Continuous Deployment solution for deployment workflow. Implement remote access solution to private resources for Development and GA teams. Update Docker images for upgrade and security patches."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Borealis IT",
+        "start_date": "August 2015",
+        "end_date": "December 2015",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Deployment orchestration of infrastructure resources with AWS CloudFormation. Containerize in development web applications (Go and NodeJS) for various deployment environments. Operation support for microservice developers."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Nomadic Systems LLC",
+        "start_date": "October 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to lead migration of cloud based Point-of-Sale from Amazon Web Services to DigitalOcean. Developed and coordinated the migration strategy for infrastructure resources, assets and services. Designed and implemented solution architecture for migration."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Canvs (formerly Mashwork)",
+        "start_date": "September 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to provide systems administration, monitoring, maintenance, deployments, troubleshooting and automation services. Deployment orchestration to AWS infrastructure. Amazon infrastructure management. Administrated medium scale server environments running multiple technologies. Implemented and maintained Ansible configuration management."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Aviata Development",
+        "start_date": "August 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to train Development team in the use of Docker in a production environment. Containerize web applications (Scala, NodeJS and Play framework) for the various deployment environments. Train operations team in Docker platform, administration and operations."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Golf Match",
+        "start_date": "September 2015",
+        "end_date": "October 2015",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Containerize PHP and NodeJS web applications using Docker. Worked with the development teams to package and automate their code for deployment into the various environments deploy to AWS Elastic Beanstalk."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Quantum Bio",
+        "start_date": "May 2015",
+        "end_date": "September 2015",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Managed and maintained ongoing changes to configuration in Ansible. Containerize web applications (PHP and NodeJS) for the various deployment environments. Worked with the development teams to package and automate their code for deployment into the various environments."
+      }
+    ],
+    "skills": [
+      "Amazon AWS",
+      "UNIX/Linux (RedHat and Debian Variants)",
+      "MongoDB",
+      "Cassandra",
+      "Redis",
+      "CouchDB",
+      "ElasticSearch",
+      "Jenkins CI",
+      "Circle CI",
+      "Ansible",
+      "Puppet",
+      "Git",
+      "SVN",
+      "Apache",
+      "Nginx",
+      "Bash",
+      "Ruby",
+      "Python",
+      "PHP",
+      "Docker",
+      "OpenVPN",
+      "Java",
+      "Tomcat",
+      "Terracotta",
+      "Mesosphere DC/OS",
+      "Spark",
+      "Chronos",
+      "Apache Mesos",
+      "Bamboo",
+      "Zookeeper",
+      "Marathon",
+      "AWS CloudFormation",
+      "Go",
+      "NodeJS",
+      "Scala",
+      "Play Framework",
+      "Datadog",
+      "New Relic"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "38.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/43117f56912a4911b4ed50c876868002.pdf",
+    "candidate_id": 54
+  },
+  {
+    "full_name": "Richard Peres",
+    "email": "richardperes.info@gmail.com",
+    "phone": "+41 782 315 072",
+    "job_title": "Senior Cloud Engineer",
+    "location": "Vaud, Switzerland",
+    "education": [
+      {
+        "degree": "IT Engineer's Degree",
+        "university": "Polytech Nice-Sophia Antipolis",
+        "start_year": 2018,
+        "end_year": 2021
+      },
+      {
+        "degree": "Master's Degree 'MAE'",
+        "university": "I.A.E of Nice",
+        "start_year": 2020,
+        "end_year": 2021
+      },
+      {
+        "degree": "IT Diploma (ADIT)",
+        "university": "University of Nice",
+        "start_year": 2016,
+        "end_year": 2018
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior Cloud Engineer",
+        "company": "SOPHiA Genetics",
+        "start_date": "11-2024",
+        "end_date": null,
+        "description": ""
+      },
+      {
+        "job_title": "DevSecOps / Cloud Engineer",
+        "company": "Alpian",
+        "start_date": "01-23",
+        "end_date": "06-24",
+        "description": "Platform Administration of GKE clusters, GCP infrastructure development using Terraform, GitOps automated deployments, DevSecOps support and evangelization, Cloud Architecture design, CI flows creation, Helm charts maintenance, Terraform modules development, Cloud Assets implementation, on-call incident handling, Grafana implementation, MQ system migration, security assessment participation"
+      },
+      {
+        "job_title": "Cloud & DevOps Engineer",
+        "company": "3rd-Eyes Analytics",
+        "start_date": "07-22",
+        "end_date": "10-22",
+        "description": "Administration of Azure Kubernetes clusters (AKS), Azure infrastructure development using Terraform, CI/CD migration from Jenkins to GitLab, Disaster Recovery procedure creation, GitOps deployment of fintech solution"
+      },
+      {
+        "job_title": "Cloud Engineer Consultant",
+        "company": "Deloitte",
+        "start_date": "09-21",
+        "end_date": "07-22",
+        "description": "Consulting in Cloud & DevOps topics, Target Operating Model & Landing Zone definition, Multi-cloud strategy documentation, DevSecOps organization adoption framework for public organizations, Banks, Insurance clients"
+      },
+      {
+        "job_title": "Cloud & DevOps Engineer",
+        "company": "Orange",
+        "start_date": "2020",
+        "end_date": "2021",
+        "description": "Big Data Software Development for Cloud application, Development of 2 Kubernetes operators: Casskop & Nifikop, SCRUM Product Management, feature implementation, testing, deployment on GCP"
+      },
+      {
+        "job_title": "Freelance Web Developer",
+        "company": "PR Consulting",
+        "start_date": "2019",
+        "end_date": "2021",
+        "description": "Created PR Consulting website, IT Consulting, Webmaster & Website creation, Front & Back End development, SEO assessments and implementation, B2B/B2C work, Company management and administration"
+      },
+      {
+        "job_title": "Web Developer",
+        "company": "Web Alliance",
+        "start_date": "03-18",
+        "end_date": "06-18",
+        "description": "Internship as Web developer, PHP, WordPress, PrestaShop development, SEO/SEA integration, Websites migration and optimization"
+      }
+    ],
+    "skills": [
+      "GCP",
+      "Azure",
+      "AWS",
+      "Cloud Architecture",
+      "Infrastructure As Code",
+      "Terraform",
+      "Google Kubernetes Engine",
+      "Azure Kubernetes Service",
+      "Kubernetes",
+      "Docker",
+      "DevOps",
+      "CI/CD",
+      "GitHub Actions",
+      "GitLab",
+      "ArgoCD",
+      "Linux",
+      "Bash",
+      "Python",
+      "Grafana",
+      "OWASP",
+      "IAM",
+      "Microservice Architecture",
+      "Go",
+      "Java",
+      "MongoDB",
+      "InfluxDB",
+      "Cassandra",
+      "NodeJS",
+      "REST APIs",
+      "GraphQL APIs"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Certified Kubernetes Security Specialist (CKS)",
+        "organization": "CNCF"
+      },
+      {
+        "certificate_name": "Hashicorp Terraform Associate",
+        "organization": "Hashicorp"
+      },
+      {
+        "certificate_name": "Certified Kubernetes Administrator (CKA)",
+        "organization": "CNCF"
+      },
+      {
+        "certificate_name": "Certified Kubernetes Application Developer (CKAD)",
+        "organization": "CNCF"
+      },
+      {
+        "certificate_name": "Microsoft Certified: Azure Fundamentals (AZ-900)",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "Google Cloud Platform Fundamentals",
+        "organization": "Google"
+      },
+      {
+        "certificate_name": "GitLab Certified Associate",
+        "organization": "GitLab"
+      },
+      {
+        "certificate_name": "Google Digital Active (Web Marketing)",
+        "organization": "Google"
+      }
+    ],
+    "languages": [
+      "French - native",
+      "English - fluent",
+      "Japanese - notions",
+      "Spanish - notions",
+      "Italian - notions"
+    ],
+    "source_file": "39.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/2082d69c61064a7184dba7da2a3ea112.pdf",
+    "candidate_id": 55
+  },
+  {
+    "full_name": "Shreyas Ramesh",
+    "email": "shreyas.vfd263@gmail.com",
+    "phone": "(716) 547-1727",
+    "job_title": "Azure DevSecOps Engineer",
+    "location": null,
+    "education": [
+      {
+        "degree": "Master of Science in Cybersecurity",
+        "university": "University at Buffalo, The State University of New York",
+        "start_year": 2023,
+        "end_year": 2024
+      },
+      {
+        "degree": "Bachelor of Technology in Information Technology",
+        "university": "Jawaharlal Nehru Institute of Technology",
+        "start_year": 2016,
+        "end_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Azure DevSecOps Engineer",
+        "company": "Hudson Insurance group",
+        "start_date": "June 2024",
+        "end_date": "Present",
+        "description": "Engineered and automated Azure infrastructure provisioning using Terraform scripts. Spearheaded implementation of Datadog monitoring across Azure infrastructure. Led offshore security team in deploying advanced Datadog monitoring controls. Streamlined patch management processes. Developed Datadog monitors including REST API monitoring. Identified and remediated critical cloud vulnerabilities using Wiz. Built and managed CI/CD pipelines on Azure DevOps."
+      },
+      {
+        "job_title": "Azure DevOps Engineer",
+        "company": "Value Momentum",
+        "start_date": "December 2020",
+        "end_date": "July 2023",
+        "description": "Built end-to-end Azure environments with multiple resources. Created Azure DevOps CI/CD pipelines with automated testing and security compliance checks. Architected SRE-focused dashboard in Azure Monitor using KQL. Automated Powershell scripts for 200+ servers. Ensured 24x7x365 uptime of critical SaaS systems. Enabled production releases and collaborated with cross-functional teams."
+      }
+    ],
+    "skills": [
+      "Azure",
+      "Docker",
+      "Kubernetes",
+      "Linux",
+      "Terraform",
+      "Azure DevOps",
+      "Azure Entra ID",
+      "Git",
+      "Wiz",
+      "AWS",
+      "Ansible",
+      "Gitlab",
+      "Azure Security Center",
+      "Windows Active Directory",
+      "Splunk",
+      "Datadog",
+      "Wireshark",
+      "SonarQube",
+      "Synck",
+      "Tanium",
+      "Wazuh",
+      "Burpsuite",
+      "Metasploit",
+      "Palo Alto firewalls",
+      "CIS CAT",
+      "Nessus",
+      "OWASP Zap",
+      "Python",
+      "Powershell",
+      "Bash",
+      "HTML/CSS",
+      "SQL"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "AZ 400: Microsoft Certified DevOps Engineer Expert",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "AZ 500: Microsoft Certified Azure Security Engineer",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "AZ 104: Microsoft Certified Azure Administrator Associate",
+        "organization": "Microsoft"
+      },
+      {
+        "certificate_name": "CompTIA Security+",
+        "organization": "CompTIA"
+      }
+    ],
+    "languages": [],
+    "source_file": "40.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/cb12bb01d82e4f588ed6cae53893ca64.pdf",
+    "candidate_id": 56
+  },
+  {
+    "full_name": "Alexander Scott",
+    "email": "support@qwikresume.com",
+    "phone": "(123) 456 7899",
+    "job_title": "Build & Release Engineer/DevOps Engineer",
+    "location": "Los Angeles",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "University of Technology",
+        "start_year": 2018,
+        "end_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Build & Release Engineer/DevOps Engineer",
+        "company": "Seaside Innovations",
+        "start_date": "May 2022",
+        "end_date": "Ongoing",
+        "description": "Interacting with client teams to understand client deployment requests. Coordinating with the development, database administration, QA, and IT operations teams to ensure there are no resource conflicts. Responsible for working with the source control tools such as Team Foundation Server and git. Building the scripts using Maven build tools in Jenkins to move from one environment to another. Primary duties include building and deploying the Java applications onto different environments like dev, QA, UAT, and production. Analyze, resolve, compile, and deploy errors related to code development, branching, merging, and building of source code along with Linux administration. Implementing a continuous deployment(CD) pipeline involving Jenkins and Chef to complete the automation from commit to deployment."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Cactus Creek Solutions",
+        "start_date": "May 2020",
+        "end_date": "May 2022",
+        "description": "Created detailed documentation of the complex build and release process, the post-release activities process, Jira workflow, and the release notes. Implemented best practices of agile methodology to speed up the delivery process efficiently. Worked with SVN to manage source code repositories and performed branching, merging, and tagging depending on the requirement. Performed SVN to git migration and implemented & maintained the branching and build/release strategies utilizing git."
+      }
+    ],
+    "skills": [
+      "DevOps",
+      "Build Release Engineer",
+      "AWS",
+      "Linux"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "41.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/ef99a525fb404f4d90e0dc0fdfbd16f2.pdf",
+    "candidate_id": 22
+  },
+  {
+    "full_name": "Robert Haye",
+    "email": "haye.robert@yahoo.com",
+    "phone": "+385 98 904 9913",
+    "job_title": "Developer",
+    "location": "Zagreb, Croatia",
+    "education": [
+      {
+        "degree": "B.Sc. Web & Mobile Computing",
+        "university": "RIT Croatia, Zagreb Campus",
+        "start_year": 2022,
+        "end_year": null
+      },
+      {
+        "degree": "Masters of Business Administration",
+        "university": "Chapman University",
+        "start_year": 2020,
+        "end_year": 2022
+      },
+      {
+        "degree": "BA Business Administration",
+        "university": "American Military University",
+        "start_year": 2015,
+        "end_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Full-stack Developer",
+        "company": "ArisGlobal",
+        "start_date": "06/2023",
+        "end_date": "01/2024",
+        "description": "Developed and maintained web applications with a focus on both front-end and back-end technologies. Collaborated with cross-functional teams to gather and define project requirements. Conducted thorough testing, including unit, integration, and end-to-end testing, to identify and resolve bugs and ensure software reliability. Implemented and maintained version control systems (e.g., Git) to manage codebase and facilitate team collaboration."
+      },
+      {
+        "job_title": "Supply Administration and Operations Specialist",
+        "company": "United States. Marine Corps",
+        "start_date": "12/2012",
+        "end_date": "05/2018",
+        "description": "Supervised the execution and documentation of more than $3.5 million in organizational expenditures"
+      }
+    ],
+    "skills": [
+      "HTML",
+      "CSS/SASS",
+      "JavaScript",
+      "TypeScript",
+      "Redux",
+      "php",
+      "React.js",
+      "Node.js",
+      "Git/GitHub",
+      "SQL/NoSQL",
+      "Java",
+      "Teamwork",
+      "Leadership",
+      "Customer Service",
+      "Attention to detail",
+      "Negotiation",
+      "Presentation",
+      "Adaptability",
+      "Results-oriented"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "42.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/3bd6491f2ccc48ecb1fba646db590bf5.pdf",
+    "candidate_id": 57
+  },
+  {
+    "full_name": null,
+    "email": null,
+    "phone": null,
+    "job_title": "Senior DevOps Engineer",
+    "location": null,
+    "education": [
+      {
+        "degree": "Master's Degree",
+        "university": "Gdansk University of Technology",
+        "start_year": 2011,
+        "end_year": 2012
+      },
+      {
+        "degree": "Bachelor's Degree",
+        "university": "Gdansk University of Technology",
+        "start_year": 2007,
+        "end_year": 2011
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Senior DevOps Engineer",
+        "company": "Intel Corporation",
+        "start_date": "Feb 2019",
+        "end_date": "Now",
+        "description": "Acting as technical leader of the infrastructure team. Hosting on premise IaaS with VMware and Ansible. Driving cross-team project regarding detailed service monitoring with Prometheus and Elastic stack."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Staples Solutions",
+        "start_date": "Aug 2018",
+        "end_date": "Jan 2019",
+        "description": "Automated deployments of developed applications on Azure Kubernetes System with API management backend. Database schema release management using Liquibase and DacPac."
+      },
+      {
+        "job_title": "Solution Validation Engineer DevOps",
+        "company": "Intel Corporation",
+        "start_date": "Jun 2017",
+        "end_date": "Jul 2018",
+        "description": "Managing Linux/Windows systems. VMware administrator. Developer of workload scripts for validated products."
+      },
+      {
+        "job_title": "System programmer",
+        "company": "Intel Corporation",
+        "start_date": "Jan 2013",
+        "end_date": "Jun 2017",
+        "description": "Accountability for website and database hosting in Europe. Integration of IT solutions into the customer's environment."
+      },
+      {
+        "job_title": "IT System admin student",
+        "company": "Intel Corporation",
+        "start_date": "Apr 2011",
+        "end_date": "Dec 2012",
+        "description": "First line of IT support for local Intel engineers. Managing backup and recovery NetBackup infrastructure."
+      },
+      {
+        "job_title": "Part-time job in IT department",
+        "company": "Polski Rejestr Statków",
+        "start_date": "Feb 2010",
+        "end_date": "Jul 2010",
+        "description": null
+      }
+    ],
+    "skills": [
+      "Ansible",
+      "Salt",
+      "Azure CLI",
+      "ARM templates",
+      "Kubernetes",
+      "Helm",
+      "GitLab CI",
+      "GitHub actions",
+      "Jenkins",
+      "JCasC",
+      "bash",
+      "PowerShell",
+      "Python",
+      "Prometheus",
+      "Elastic stack",
+      "Kibana",
+      "Grafana",
+      "VMware vSphere"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "43.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/a6aad3adad16418da8a8f6170d261a01.pdf",
+    "candidate_id": 49
+  },
+  {
+    "full_name": "Ava Davis",
+    "email": "support@qwikresume.com",
+    "phone": "(123) 456 7899",
+    "job_title": "AWS Devops Engineer",
+    "location": "Los Angeles",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "University of California",
+        "start_year": 2016,
+        "end_year": 2018
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Jr. AWS Devops Engineer",
+        "company": "Pineapple Enterprises",
+        "start_date": "Jan/2020",
+        "end_date": "Ongoing",
+        "description": "Managed network security using load balancers, auto-scaling, and security groups to optimize performance. Enhanced existing automation scripts developed in Shell, Perl, Ruby, and Python for improved efficiency. Utilized Puppet and Chef for configuration management across diverse environments. Wrote Puppet manifests in Ruby for effective deployment and monitoring of applications. Maintained multiple testing and production environments in AWS, monitoring key metrics for optimal performance. Configured and managed VPC networking for secure and efficient AWS deployments. Streamlined release processes by merging branches and resolving conflicts in Git and Subversion."
+      },
+      {
+        "job_title": "AWS Devops Engineer",
+        "company": "Summit Peak Industries",
+        "start_date": "Jan/2018",
+        "end_date": "Jan/2020",
+        "description": "Developed and refined software release management processes to enhance project delivery. Provided day-to-day support for GIT/Bitbucket/TFS across various projects, ensuring smooth operations. Facilitated the migration of physical Linux/Windows servers to AWS cloud, improving scalability. Built and configured AWS services including EC2, RDS, and S3, ensuring robust cloud infrastructure. Automated backup processes for Linux systems, ensuring data integrity in S3."
+      }
+    ],
+    "skills": [
+      "Cloud Computing Expertise",
+      "Microservices Architecture",
+      "Serverless Architecture",
+      "Application Deployment",
+      "Load Balancing Techniques"
+    ],
+    "certifications": [],
+    "languages": [
+      "English",
+      "Polish",
+      "Arabic"
+    ],
+    "source_file": "44.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/f17628d8ed6b4964a5c7c67ccf7f0cb9.pdf",
+    "candidate_id": 22
+  },
+  {
+    "full_name": "Siddiqui Mohammed",
+    "email": "ER@o2inc.net",
+    "phone": "949 379 3951",
+    "job_title": "DevOps Engineer",
+    "location": null,
+    "education": [
+      {
+        "degree": "Master's in computers and Information Systems",
+        "university": "DePaul University",
+        "start_year": null,
+        "end_year": 2012
+      },
+      {
+        "degree": "Bachelor of Technology in IT Engineering",
+        "university": "JNTU",
+        "start_year": null,
+        "end_year": 2010
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Verizon",
+        "start_date": "09/2018",
+        "end_date": "09/2022",
+        "description": "Deploy and monitor scalable infrastructure on AWS using EC2, S3, and EBS & configuration management. Automating scripts for build, deployment, maintenance and related tasks using Jenkins, Docker, Maven, Python and Bash. Create entire AWS infra from scratch and help application team host apps on cloud platform."
+      },
+      {
+        "job_title": "DevOps / Windows Engineer",
+        "company": "Synchrony Finance",
+        "start_date": "02/2017",
+        "end_date": "06/2018",
+        "description": "Extensive requirement gathering with users to test each functionality of new application POC VS performance. Act as first point of contact for technical issues and triage issues between different tiers. Define SLA's for data delivery and IT response time."
+      },
+      {
+        "job_title": "Production / Middleware Support Engineer",
+        "company": "Comcast",
+        "start_date": "02/2016",
+        "end_date": "02/2017",
+        "description": "Provided support for WebLogic/Java based applications primarily running with Oracle11g/12c on UNIX based Operating systems. Migration of data, users and their orders for web-based order management enterprise metro Ethernet application."
+      },
+      {
+        "job_title": "Production Support Engineer/Analyst",
+        "company": "Bank of America",
+        "start_date": "02/2013",
+        "end_date": "02/2016",
+        "description": "Analyze, maintain, develop and improve BOA in house ETL ledger and sub ledger applications. First point of contact for business queries and data analysis. Assist Finance analysts in their BAU activities to ensure company balance sheet is accurately produced."
+      }
+    ],
+    "skills": [
+      "Java",
+      "SQL",
+      "Python",
+      "Shell Scripting",
+      "HTML",
+      "UNIX",
+      "Windows",
+      "Weblogic",
+      "IIS Apache",
+      "Microsoft SQL server",
+      "Oracle",
+      "Jira",
+      "Remedy",
+      "Service now",
+      "Autosys iXp",
+      "Eclipse",
+      "TOAD",
+      "Informatica",
+      "Subversion",
+      "GIT",
+      "Ant",
+      "Maven",
+      "Jenkins",
+      "Puppet",
+      "Ansible",
+      "Terraform",
+      "Docker",
+      "Kubernetes",
+      "AWS",
+      "Azure"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "45.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/91843a211625477eaf4d8b0de65aea3a.pdf",
+    "candidate_id": 58
+  },
+  {
+    "full_name": "Shreyas Ramesh",
+    "email": "ramesh3@buffalo.edu",
+    "phone": "+1 (716) 547-1727",
+    "job_title": "DevOps Engineer",
+    "location": null,
+    "education": [
+      {
+        "degree": "Masters in Cybersecurity",
+        "university": "University at Buffalo, The State University of New York",
+        "start_year": null,
+        "end_year": 2024
+      },
+      {
+        "degree": "Bachelor of Technology in Information Technology",
+        "university": "JNTUH",
+        "start_year": null,
+        "end_year": 2020
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Azure DevOps Engineer",
+        "company": "Value Momentum",
+        "start_date": "December 2020",
+        "end_date": "July 2023",
+        "description": "Built 16 end-to-end environments consisting of multiple key azure resources including virtual machines, cloud services, storage accounts and CosmosDBs. Facilitated 129 production release deployments from a DevOps perspective. Analysed and triaged 250+ real time production issues focusing on application recovery. Performed chaos tests to understand system vulnerabilities and created alerts on splunk improving mean time to resolution by 20 percent. Integrated multiple websites with SAML integration to enable single sign on for ease of user access and enhanced security measure. Implemented LDAP to manage user identities across multiple systems centralizing user authentication experience. Owned the process and drove the implementation for a commercial web application architected on AKS. Automated quality check scripts to run on 200+ servers using Powershell automation. Mentored 25 junior team members on best practices and Azure infrastructure. Documented process and technical nuances highlighting best practices for site reliability for a commercial web application and authored 50+ technical documents. Collaborated with 20 cross-functional teams, each specializing in different levels of escalations. Recognised for delivery excellence by automating and deploying automation scripts at scale for 200+ servers, reducing manual effort by 50+ hours."
+      },
+      {
+        "job_title": "Content Developer",
+        "company": "Weekend Thrill",
+        "start_date": "May 2018",
+        "end_date": "December 2019",
+        "description": "Authored and published over 200 travel-related blogs and guides, implementing effective SEO techniques resulting in a 23 percent increase in website traffic from customers."
+      }
+    ],
+    "skills": [
+      "Python",
+      "Linux Shell scripting",
+      "Azure VM",
+      "Azure Kubernetes service",
+      "Azure Functions",
+      "Application insights",
+      "Azure data factory",
+      "Azure DevOps",
+      "SQL server",
+      "MySQL",
+      "Powershell",
+      "Splunk",
+      "Dynatrace",
+      "Datadog",
+      "Windows Server",
+      "Redhat Enterprise Linux 7+",
+      "Ubuntu 18+",
+      "Kali Linux"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "CompTIA Security+",
+        "organization": null
+      },
+      {
+        "certificate_name": "Azure Fundamentals AZ 900",
+        "organization": null
+      },
+      {
+        "certificate_name": "Azure Administrator AZ 104",
+        "organization": null
+      }
+    ],
+    "languages": [],
+    "source_file": "46.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/0ea8f7e25c1841eb8720d0a13123049c.pdf",
+    "candidate_id": 59
+  },
+  {
+    "full_name": "Anton Markelov",
+    "email": "doublic@gmail.com",
+    "phone": "+35794414153",
+    "job_title": "Platform Engineer / DevOps Engineer",
+    "location": "Limassol, Cyprus",
+    "education": [],
+    "experience": [
+      {
+        "job_title": "Lead DevOps Engineer",
+        "company": "Prisma Labs",
+        "start_date": "08/2022",
+        "end_date": "present",
+        "description": "Building resilient and highly scalable IT infrastructure. Developing tools (chatbots, scripts) to enable other engineers to set up parts of the infrastructure by themselves. Set up the process of managing infrastructure as a code from scratch. Developing a strategic roadmap for infrastructure growth."
+      },
+      {
+        "job_title": "Lead Platform engineer",
+        "company": "UnitedTraders",
+        "start_date": "08/2016",
+        "end_date": "08/2022",
+        "description": "Managing organization IT infrastructure. Developing and maintaining an infrastructure platform, allowing developers to make all steps of SDLC by themselves. Consulting and tutoring engineers about the usage of modern infrastructure tools. Managing a small team (3 onsite and 3 out-staff engineers)."
+      },
+      {
+        "job_title": "Tutor",
+        "company": "Hexlet",
+        "start_date": "11/2021",
+        "end_date": "06/2022",
+        "description": "Developing webinars for students, project reviewing, consulting, helping with course-related questions"
+      },
+      {
+        "job_title": "DevOps Intern",
+        "company": "Express42",
+        "start_date": "05/2016",
+        "end_date": "08/2016",
+        "description": "Studying DevOps practices and working with company clients."
+      }
+    ],
+    "skills": [
+      "Python",
+      "Go",
+      "Bash",
+      "TypeScript",
+      "AWS",
+      "Kubernetes",
+      "Helm",
+      "Terraform",
+      "Prometheus",
+      "Grafana",
+      "ELK",
+      "Ansible",
+      "Linux",
+      "Docker"
+    ],
+    "certifications": [],
+    "languages": [
+      "Russian",
+      "English"
+    ],
+    "source_file": "47.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/e898df41bf8e472d997538a8ec3ccdde.pdf",
+    "candidate_id": 60
+  },
+  {
+    "full_name": "Dale-Kurt Murray",
+    "email": "hello@dalekurtmurray.com",
+    "phone": "+1 876 345 7375",
+    "job_title": "Solutions Architect",
+    "location": null,
+    "education": [],
+    "experience": [
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Reelio Labs Inc.",
+        "start_date": "2015",
+        "end_date": "Present",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Implement solution architecture for deploying docker containers with integration of a Continuous Integration/Continuous Deployment solution for deployment workflow. Implement remote access solution to private resources for Development and GA teams. Update Docker images for upgrade and security patches."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Dowoodle Inc.",
+        "start_date": "May 2016",
+        "end_date": "Present",
+        "description": "Contracted to revised current solution architecture deployed on Amazon Web Services. Implement a Continuous Integration/Continuous Deployment solution and revise the development workflow and deployment procedure for the Development team. Implement a scalable, redundant Docker cluster using ECS, ELB, EC2 and Route 53. Migrate Cassandra database from third-party to first-party hosting within the AWS Solution Architecture."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Enloop Inc.",
+        "start_date": "2016",
+        "end_date": "Present",
+        "description": "Contracted to train the Operations and Development team on using Docker, revise the current solution architecture deployed on Amazon Web Services for efficiency and automated deployment using AWS, third-party services and CI/CD solution. Implement a Continuous Integration/Continuous Deployment solution and revise the development workflow and deployment procedure for the Development team for development, staging and production environments."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Method Mill",
+        "start_date": "January 2016",
+        "end_date": "November 2016",
+        "description": "Contracted to deploy a managed cluster for deploying containerized micro services, support existing services and infrastructure, as well as scale, automate and improve the AWS resources. Build a scalable, redundant Docker cluster with per-service network segments inside of Amazon's AWS VPC."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Epimax",
+        "start_date": "January 2016",
+        "end_date": "October 2016",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Build a scalable, redundant Docker cluster supported by Apache Mesos, Marathon and ZooKeeper."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "National Democratic Institute",
+        "start_date": "January 2016",
+        "end_date": "August 2016",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Implement solution architecture for deploying docker containers with integration of a Continuous Integration/Continuous Deployment solution for deployment workflow. Implement remote access solution to private resources for Development and GA teams. Update Docker images for upgrade and security patches."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Borealis IT",
+        "start_date": "August 2015",
+        "end_date": "December 2015",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Deployment orchestration of infrastructure resources with AWS CloudFormation. Containerize in development web applications (Go and NodeJS) for various deployment environments. Operation support for microservice developers."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Nomadic Systems LLC",
+        "start_date": "October 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to lead migration of cloud based Point-of-Sale from Amazon Web Services to DigitalOcean. Developed and coordinated the migration strategy for infrastructure resources, assets and services. Designed and implemented solution architecture for migration."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Canvs (formerly Mashwork)",
+        "start_date": "September 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to provide systems administration, monitoring, maintenance, deployments, troubleshooting and automation services. Deployment orchestration to AWS infrastructure. Amazon infrastructure management. Administrated medium scale server environments running multiple technologies. Implemented and maintained Ansible configuration management."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Aviata Development",
+        "start_date": "August 2015",
+        "end_date": "November 2015",
+        "description": "Contracted to train Development team in the use of Docker in a production environment. Containerize web applications (Scala, NodeJS and Play framework) for the various deployment environments. Train operations team in Docker platform, administration and operations."
+      },
+      {
+        "job_title": "DevOps Engineer",
+        "company": "Golf Match",
+        "start_date": "September 2015",
+        "end_date": "October 2015",
+        "description": "Contracted to audit and revise the current solution architecture on Amazon Web Services. Containerize PHP and NodeJS web applications using Docker. Worked with the development teams to package and automate their code for deployment into the various environments deploy to AWS Elastic Beanstalk."
+      },
+      {
+        "job_title": "Solutions Architect & DevOps Engineer",
+        "company": "Quantum Bio",
+        "start_date": "May 2015",
+        "end_date": "September 2015",
+        "description": "Contracted to implement a managed cluster for deploying containerized micro services. Managed and maintained ongoing changes to configuration in Ansible. Containerize web applications (PHP and NodeJS) for the various deployment environments. Worked with the development teams to package and automate their code for deployment into the various environments."
+      }
+    ],
+    "skills": [
+      "Amazon AWS",
+      "UNIX/Linux",
+      "MongoDB",
+      "Cassandra",
+      "Redis",
+      "CouchDB",
+      "ElasticSearch",
+      "Jenkins",
+      "Circle CI",
+      "Ansible",
+      "Puppet",
+      "Git",
+      "SVN",
+      "Apache",
+      "Nginx",
+      "Bash",
+      "Ruby",
+      "Python",
+      "PHP",
+      "Docker",
+      "OpenVPN",
+      "Java",
+      "Tomcat",
+      "Terracotta",
+      "Mesosphere DC/OS",
+      "Spark",
+      "Chronos",
+      "Apache Mesos",
+      "Bamboo",
+      "Zookeeper",
+      "Marathon",
+      "CloudFormation",
+      "Go",
+      "NodeJS",
+      "Scala",
+      "Play Framework",
+      "Datadog",
+      "New Relic"
+    ],
+    "certifications": [],
+    "languages": [],
+    "source_file": "48.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/4a6308e995584a5ca6cba8ff3bb86b9e.pdf",
+    "candidate_id": 54
+  },
+  {
+    "full_name": "Ethan Martinez",
+    "email": "support@qwikresume.com",
+    "phone": "(123) 456 7899",
+    "job_title": "AWS Devops Engineer",
+    "location": "Los Angeles",
+    "education": [
+      {
+        "degree": "Bachelor of Science in Computer Science",
+        "university": "University of Technology",
+        "start_year": 2012,
+        "end_year": 2015
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Assistant AWS Devops Engineer I",
+        "company": "Seaside Innovations",
+        "start_date": "Jan/2019",
+        "end_date": "Ongoing",
+        "description": "Engaged in continuous improvement initiatives to enhance DevOps processes and tools. Automated deployment processes and managed continuous integration workflows to enhance development efficiency. Designed and implemented robust AWS solutions for scalability and high availability. Collaborated with cross-functional teams to align DevOps practices with business goals. Integrated third-party tools like Datadog and Splunk for enhanced monitoring capabilities. Performed security audits and implemented best practices for IAM and data protection. Developed and maintained documentation for infrastructure and deployment processes."
+      },
+      {
+        "job_title": "AWS Devops Engineer",
+        "company": "Cactus Creek Solutions",
+        "start_date": "Jan/2015",
+        "end_date": "Jan/2019",
+        "description": "Led the development of CI/CD pipelines using AWS services, significantly reducing deployment times. Managed Ubuntu Linux and Windows servers on AWS EC2, optimizing performance and cost. Implemented configuration management using Puppet for consistent environment setups. Deployed and configured AWS services including RDS, EBS, and Elastic Load Balancer to enhance application performance. Designed VPC architectures to ensure secure and scalable network environments."
+      }
+    ],
+    "skills": [
+      "Networking Expertise",
+      "Event-driven Architecture",
+      "Container Orchestration",
+      "Server Management",
+      "Virtualization Technologies"
+    ],
+    "certifications": [],
+    "languages": [
+      "English",
+      "Mandarin",
+      "Italian"
+    ],
+    "source_file": "49.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/9dbb399ecfb449b78c8122a65da4f0f7.pdf",
+    "candidate_id": 22
+  },
+  {
+    "full_name": "Martin Donat",
+    "email": "resumesbot@mail.com",
+    "phone": "872-871-9271",
+    "job_title": "Scrum Master",
+    "location": "512 Moore Street, Indigo Valley, San Diego, California",
+    "education": [
+      {
+        "degree": "Bachelor in Management",
+        "university": "San Diego University",
+        "start_year": null,
+        "end_year": 2015
+      }
+    ],
+    "experience": [
+      {
+        "job_title": "Scrum Master",
+        "company": "NTT Data Services",
+        "start_date": "JUN 2019",
+        "end_date": "JAN 2020",
+        "description": "Implemented and enforced Scrum principles and practices, facilitated continuous improvement (CI), and identified and removed team impediments. Supported the Product Owner with documentation of User Stories and Acceptance criteria. Monitored team backlog daily and ensured it accurately reflects the current state of the sprint."
+      },
+      {
+        "job_title": "Scrum Master",
+        "company": "World Mark",
+        "start_date": "JUN 2015",
+        "end_date": "JUN 2019",
+        "description": "Facilitated daily scrums, stand-ups, and meetings. Monitored and tracked project progress and performance against project plans, reporting status to project stakeholders through structured communication. Managed risks to delivery. Established and actively managed all project and key stakeholder expectations and relationships."
+      }
+    ],
+    "skills": [
+      "Exceptional communication and networking skills",
+      "Team collaboration",
+      "Independent work",
+      "Working under pressure",
+      "Multitasking",
+      "Following instructions",
+      "Quality delivery",
+      "Meeting facilitation",
+      "Forecasting",
+      "Agile coaching",
+      "Agile estimating and planning"
+    ],
+    "certifications": [
+      {
+        "certificate_name": "Certified Scrum Master (CSM)",
+        "organization": null
+      },
+      {
+        "certificate_name": "Professional Scrum Master (PSM)",
+        "organization": null
+      },
+      {
+        "certificate_name": "SAFe 4.0 Scrum Master (SSM)",
+        "organization": null
+      },
+      {
+        "certificate_name": "PMI Agile Certified Practitioner (PMI-ACP)",
+        "organization": null
+      },
+      {
+        "certificate_name": "SAFe Scaled Agilist",
+        "organization": null
+      },
+      {
+        "certificate_name": "Professional Scrum Developer-I",
+        "organization": "Scrum.org"
+      }
+    ],
+    "languages": [],
+    "source_file": "50.pdf",
+    "resume_url": "file:///E:/Scan-CV/Backend/media/cv/93735705f849405f9fd3638f679b39af.pdf",
+    "candidate_id": 61
+  }
+]

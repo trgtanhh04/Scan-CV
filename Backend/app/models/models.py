@@ -152,13 +152,14 @@ class Attachment(Base):
     candidate  = relationship("Candidate", back_populates="attachments")
 
     __table_args__ = (
-        # truy vấn "CV mới nhất của 1 ứng viên" nhanh hơn
         Index("idx_att_candidate_type_created", "candidate_id", "mime_type", "created_at"),
     )
 
     def __repr__(self) -> str:
-        return f"<Attachment id={self.id} cand={self.candidate_id} type={self.type!r} provider={self.storage_provider!r}>"
-
+        return (
+            f"<Attachment id={self.id} cand={self.candidate_id} "
+            f"name={self.original_name!r} storage={self.storage!r} path={self.path!r}>"
+        )
 
 # ---------------- Bootstrap ----------------
 def create_all(url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):

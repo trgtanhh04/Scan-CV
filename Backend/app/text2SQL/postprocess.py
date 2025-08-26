@@ -1,7 +1,7 @@
 
 from __future__ import annotations
-import sqlglot.expressions as exp
 import sqlglot
+import sqlglot.expressions as exp
 from typing import Optional, List
 import re
 

@@ -23,3 +23,5 @@ langchain-google-genai==2.1.9
 langgraph>=0.2.45,<0.3.0
 mistralai==0.1.7
 streamlit==1.35.0
+langgraph==0.6.6
+gpt4all==2.8.2

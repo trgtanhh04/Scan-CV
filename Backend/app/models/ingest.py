@@ -1,17 +1,20 @@
-# ingest.py — ingest JSON CV vào schema lean
+# ingest.py — ingest JSON CV vào schema lean (UPD: idempotent m2m)
 from __future__ import annotations
 from datetime import date
 import re
 import sys
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
+
 import fitz
 import dateparser
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.models.models import (
     get_engine, create_all, SessionLocal,
     Candidate, Educations, Experience,
-    Skill, Language, candidate_skills, candidate_languages, Certification, Attachment
+    Skill, Language, candidate_skills, candidate_languages,
+    Certification, Attachment
 )
 
 CVS_PATH = "../../raw/cvs"
@@ -94,100 +97,140 @@ def find_or_create_candidate(db: Session, payload: dict) -> Candidate:
     return cand
 
 
+# --------- small utils (robust typing/clean) ---------
+def _as_list(x: Any) -> List[Any]:
+    """Đảm bảo luôn trả về list (None/str/dict -> list hợp lệ)."""
+    if x is None:
+        return []
+    if isinstance(x, list):
+        return x
+    if isinstance(x, (str, dict)):
+        return [x]
+    return []
+
+def _clean_str(x: Any) -> Optional[str]:
+    """Chuẩn hoá chuỗi: strip, rỗng -> None."""
+    if x is None:
+        return None
+    if not isinstance(x, str):
+        x = str(x)
+    x = x.strip()
+    return x or None
+
+def _uniq_norm_list(strings: Optional[List[Any]]) -> List[str]:
+    """Khử trùng theo casefold để tránh lỗi lặp (e.g., 'JavaScript' vs 'javascript')."""
+    out, seen = [], set()
+    for s in strings or []:
+        if s is None:
+            continue
+        s2 = _clean_str(s)
+        if not s2:
+            continue
+        key = s2.casefold()
+        if key not in seen:
+            seen.add(key)
+            out.append(s2)
+    return out
+
+# --------- idempotent link helpers (ON CONFLICT DO NOTHING) ---------
+def link_skill(db: Session, candidate_id: int, skill_id: int) -> None:
+    stmt = (
+        pg_insert(candidate_skills)
+        .values(candidate_id=candidate_id, skill_id=skill_id)
+        .on_conflict_do_nothing(constraint="uq_candidate_skill")
+    )
+    db.execute(stmt)
+
+def link_language(db: Session, candidate_id: int, language_id: int) -> None:
+    stmt = (
+        pg_insert(candidate_languages)
+        .values(candidate_id=candidate_id, language_id=language_id)
+        .on_conflict_do_nothing(constraint="uq_candidate_language")
+    )
+    db.execute(stmt)
+
 # ---------- main upsert ----------
-def upsert_candidate_from_json(db: Session, cv: dict) -> Candidate:
+def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
+    """
+    Nhận dict JSON từ extract_info(text, llm).
+    - Chịu lỗi mềm với field thiếu/sai kiểu.
+    - Đúng tên quan hệ: cand.educations, cand.experience, cand.certifications.
+    - Merge many-to-many (skills, languages) idempotent bằng ON CONFLICT DO NOTHING.
+    """
     cand = find_or_create_candidate(db, cv)
 
-    # core fields
-    cand.full_name = cv.get("full_name")
-    cand.email     = cv.get("email")
-    cand.phone     = cv.get("phone")
-    cand.job_title = cv.get("job_title")
-    cand.location  = cv.get("location")
-
+    # -------- core fields --------
+    cand.full_name = _clean_str(cv.get("full_name"))
+    cand.email     = _clean_str(cv.get("email"))
+    cand.phone     = _clean_str(cv.get("phone"))
+    cand.job_title = _clean_str(cv.get("job_title"))
+    cand.location  = _clean_str(cv.get("location"))
     db.flush()
 
-    # --- Education (replace all) ---
-    cand.education.clear()
-    for e in cv.get("education", []):
+    # -------- education (replace-all) --------
+    edu_list = _as_list(cv.get("education"))
+    cand.educations.clear()
+    for e in edu_list:
+        if not isinstance(e, dict):
+            continue
         edu = Educations(
-            candidate_id=cand.id,
-            degree=e.get("degree"),
-            university=e.get("university"),
-            start_year=e.get("start_year") if isinstance(e.get("start_year"), int) else None,
-            end_year=e.get("end_year") if isinstance(e.get("end_year"), int) else None,
+            candidate_id = cand.id,
+            degree       = _clean_str(e.get("degree")),
+            university   = _clean_str(e.get("university")),
+            start_year   = e.get("start_year") if isinstance(e.get("start_year"), int) else None,
+            end_year     = e.get("end_year")   if isinstance(e.get("end_year"), int)   else None,
         )
-        cand.education.append(edu)
+        cand.educations.append(edu)
 
-    # --- Experience (replace all) ---
-    cand.experience.clear()
-    for xp in cv.get("experience", []):
-        sd, s_cur = normalize_date(xp.get("start_date"))
-        ed, e_cur = normalize_date(xp.get("end_date"))
+    # -------- experience (replace-all) --------
+    exp_list = _as_list(cv.get("experience"))
+    cand.experience.clear()  # tên quan hệ là 'experience' (số ít) theo models.py
+    for xp in exp_list:
+        if not isinstance(xp, dict):
+            continue
+        sd, s_cur = normalize_date(_clean_str(xp.get("start_date")))
+        ed, e_cur = normalize_date(_clean_str(xp.get("end_date")))
         ex = Experience(
-            candidate_id=cand.id,
-            company=xp.get("company"),
-            job_title=xp.get("job_title"),
-            start_date=sd,
-            end_date=ed,
-            is_current=bool(s_cur or e_cur),
-            description=xp.get("description"),
+            candidate_id = cand.id,
+            job_title    = _clean_str(xp.get("job_title")),
+            company      = _clean_str(xp.get("company")),
+            start_date   = sd,
+            end_date     = ed,
+            is_current   = bool(s_cur or e_cur),
+            description  = _clean_str(xp.get("description")),
         )
         cand.experience.append(ex)
 
-    # --- Certifications: replace all ---
+    # -------- certifications (replace-all) --------
+    cert_list = _as_list(cv.get("certifications"))
     cand.certifications.clear()
-    for c in cv.get("certifications", []) or []:
+    for c in cert_list:
+        if not isinstance(c, dict):
+            continue
         cert = Certification(
-            candidate_id=cand.id,
-            certificate_name=(c.get("certificate_name") or None),
-            organization=(c.get("organization") or None),
+            candidate_id     = cand.id,
+            certificate_name = _clean_str(c.get("certificate_name")),
+            organization     = _clean_str(c.get("organization")),
         )
         cand.certifications.append(cert)
 
-    # --- Skills (merge) ---
-    # Lấy set skill_id hiện có để tránh trùng
-    existing_skill_ids = {
-        r[0] for r in db.execute(
-            candidate_skills.select().where(candidate_skills.c.candidate_id == cand.id)
-        )
-    }
-    for name in cv.get("skills", []):
+    # -------- skills (idempotent merge) --------
+    skills_list = _uniq_norm_list(_as_list(cv.get("skills")))
+    for name in skills_list:
         try:
             s = get_or_create_skill(db, name)
-        except ValueError:
+            link_skill(db, cand.id, s.id)  # ON CONFLICT DO NOTHING
+        except Exception:
             continue
-        if s.id not in existing_skill_ids:
-            db.execute(candidate_skills.insert().values(candidate_id=cand.id, skill_id=s.id))
-            existing_skill_ids.add(s.id)
 
-    # --- Languages (merge) ---
-    existing_lang_ids = {
-        r[0] for r in db.execute(
-            candidate_languages.select().where(candidate_languages.c.candidate_id == cand.id)
-        )
-    }
-    for name in cv.get("languages", []):
+    # -------- languages (idempotent merge) --------
+    lang_list = _uniq_norm_list(_as_list(cv.get("languages")))
+    for name in lang_list:
         try:
             l = get_or_create_language(db, name)
-        except ValueError:
+            link_language(db, cand.id, l.id)  # ON CONFLICT DO NOTHING
+        except Exception:
             continue
-        if l.id not in existing_lang_ids:
-            db.execute(candidate_languages.insert().values(candidate_id=cand.id, language_id=l.id))
-            existing_lang_ids.add(l.id)
-
-    # if source_file:
-    #     # ví dụ lưu ngay record, public_url sẽ được build ở tầng service upload
-    #     att = Attachment(
-    #         candidate_id=cand.id,
-    #         type="cv",
-    #         storage_provider="local",
-    #         object_key=source_file,     # bạn có thể đổi thành "{cand.id}/{uuid}.pdf"
-    #         public_url=None,            # set ở chỗ upload/serve hoặc build từ BASE_PUBLIC_URL
-    #         original_filename=source_file,
-    #         mime_type="application/pdf",
-    #     )
-    #     cand.attachments.append(att)
 
     db.flush()
     return cand
@@ -201,7 +244,12 @@ SAMPLE = {
     "job_title": "Software Engineer",
     "location": None,
     "education": [
-        {"degree": "B.Sc. Information Systems", "university": "University of Santo Tomas", "start_year": None, "end_year": 2014}
+        {
+            "degree": "B.Sc. Information Systems",
+            "university": "University of Santo Tomas",
+            "start_year": None,
+            "end_year": 2014
+        }
     ],
     "experience": [
         {"job_title": "Software Engineer", "company": "Infor, PSSC, Inc.", "start_date": "Sep 2019", "end_date": "Present",
@@ -219,7 +267,6 @@ SAMPLE = {
     "languages": []
 }
 
-
 def insert_candidate_to_db(db: Session, cv: dict) -> Candidate:
     try:
         cand = upsert_candidate_from_json(db, cv)
@@ -232,11 +279,9 @@ def insert_candidate_to_db(db: Session, cv: dict) -> Candidate:
 def main(db_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
     engine = create_all(db_url)
     SessionLocal.configure(bind=engine)
-
     with SessionLocal() as db:
         cand = insert_candidate_to_db(db, SAMPLE)
         print(f"Upserted candidate id={cand.id} email={cand.email}")
-
 
 if __name__ == "__main__":
     url = sys.argv[1] if len(sys.argv) > 1 else "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"

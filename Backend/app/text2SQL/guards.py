@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Any, Optional
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy import create_engine, text as sa_text
-from schema_utils import SchemaSummary
+from .schema_utils import SchemaSummary
 
 SAFE_SELECT = re.compile(r"^\s*select\b", re.IGNORECASE | re.DOTALL)
 FORBIDDEN   = re.compile(r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke)\b", re.IGNORECASE)
