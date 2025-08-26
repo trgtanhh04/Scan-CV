@@ -14,11 +14,14 @@ from langgraph.graph import END
 # ---- State định nghĩa ----
 class CandidateState(dict):
     question: str
+    pre_judge: str
+    post_judge: str
     route: str
     sql_query: str
     sql_result: list
     vector_result: list
     final_answer: str
+
 
 def router_condition(state):
     if state["route"] == "SQL":
@@ -44,17 +47,17 @@ def sql_node(state: CandidateState, llm, engine):
     state["final_answer"] = f"Kết quả SQL: {state['sql_result']}"
     return state
 
-def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection):
-    results = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit=3)
+def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
+    results = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     state["vector_result"] = results
     state["final_answer"] = f"Kết quả VectorDB: {results}"
     return state
 
 def summarizer_node(state: CandidateState, llm):
     if state["route"] == "SQL":
-        context = f"Kết quả SQL: {state.get('sql_result', [])}"
+        context = f"SQL result: {state.get('sql_result', [])}"
     else:
-        context = f"Kết quả VectorDB: {state.get('vector_result', [])}"
+        context = f"VectorDB result: {state.get('vector_result', [])}"
 
     prompt = ChatPromptTemplate.from_template("""
     You are a recruiting assistant. 
@@ -62,19 +65,20 @@ def summarizer_node(state: CandidateState, llm):
     And the system (either Postgres or Qdrant vector database) will return a raw answer: {context}
     
     Answer to the admin only include the main context of the answer in a short, natural, and understandable way.
+    If there is no answer returned, just say "I don't know".
     """)
     response = llm.invoke(prompt.format(question=state["question"], context=context))
     state["final_answer"] = response.content.strip()
     return state
 
 # ---- Build Flow ----
-def build_flow(llm, engine, embedding_model, qdrant_db, collection):
+def build_flow(llm, engine, embedding_model, qdrant_db, collection, limit, search_threshold=0.75):
     graph = StateGraph(CandidateState)
 
     # Add nodes
     graph.add_node("router", lambda state: router_node(state, llm))
     graph.add_node("sql", lambda state: sql_node(state, llm, engine))
-    graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection))
+    graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
     graph.add_node("summarizer", lambda state: summarizer_node(state, llm))
 
     # Conditional edge từ router
@@ -100,3 +104,5 @@ def build_flow(llm, engine, embedding_model, qdrant_db, collection):
     graph.set_entry_point("router")
 
     return graph.compile()
+
+# ---- Run thử ----

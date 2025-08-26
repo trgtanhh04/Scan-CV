@@ -5,11 +5,40 @@ from sqlalchemy import create_engine, text
 import json
 import re
 
-
-
 def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
     return fixed_query
+
+def pre_retrieval_judge(question:str, llm):
+    pre_retrieval_prompt = ChatPromptTemplate.from_template("""
+    You are a classification system. From each admin's text:
+    Answer 'Casual' if it is a casual chat or greeting.
+    Answer 'HR' if the admin wants to find information about the candidates applying for the company.
+    Admin's text: {question}
+    """)
+    response = llm.invoke(pre_retrieval_prompt.format(question=question))
+    return response.content.strip()
+
+def post_retrieval_judge(question:str, information: str, llm):
+    post_retrieval_prompt = ChatPromptTemplate.from_template("""
+    You are a judgement system. For each user question and the information returned from the database:
+    Answer 'Satisfactory' if the information returned from the database is relevant and answers the question.
+    Answer 'Unsatisfactory' if there is no information returned.
+    Question: {question}
+    Information returned from vector database: {information}
+    """)
+    response = llm.invoke(post_retrieval_prompt.format(question=question, information=information))
+    return response.content.strip()
+
+def rewrite_query(question: str, llm):
+    prompt = ChatPromptTemplate.from_template("""
+    The user asked a question but the database returned no satisfactory result.
+    Please rewrite the question in a clearer and alternative way, keeping the intent the same.
+    Original question: {question}
+    """)
+    response = llm.invoke(prompt.format(question=question))
+    return response.content.strip()
+
 
 def route_query(question: str, llm):
     router_prompt = ChatPromptTemplate.from_template("""
@@ -21,7 +50,6 @@ def route_query(question: str, llm):
         """)
     response = llm.invoke(router_prompt.format(question=question))
     return response.content.strip()
-
 
 
 def generate_sql(question: str, llm):
@@ -38,7 +66,7 @@ def generate_sql(question: str, llm):
     return response.content.strip()
 
 
-def generate_vector_query(question: str, llm, collection_name):
+def generate_vector_query(question: str, llm, collection_name, limit):
     vector_prompt = ChatPromptTemplate.from_template("""
         You are a TEXT2VECTORQUERY system. 
         Your job is to translate user questions into a valid Qdrant query in JSON format. 
@@ -52,15 +80,18 @@ def generate_vector_query(question: str, llm, collection_name):
         - Always return a valid JSON object only, no extra text.
                                                      
         collection_name: {collection_name}
+        limit: {limit}
 
         Schema:
         Example schema for skill :
         {{
-            "id": "skill-{{candidate_id}}-{{skill}}", 
+            "id": "skill-15.pdf-{{skill}}-{{uuid.uuid4().hex[:8]}}", 
             "vector": embed_query(skill),          
             "payload": {{
-                "type": "skill",                   
-                "candidate_id": "123",             
+                "type": "skill",
+                "skill": skill,
+                "job_title": "Data Engineer",
+                "source_file": "15.pdf",                               
                 "candidate_name": "Pooya Karimian"
             }}
         }}
@@ -68,11 +99,14 @@ def generate_vector_query(question: str, llm, collection_name):
         Example schema for experience:
         Given exp_text as "{{exp.get('job_title', '')}} at {{exp.get('company', '')}} ({{exp.get('start_date', '')}} - {{exp.get('end_date', '')}}) {{exp.get('description', '')}}"
         {{
-            "id": "exp-{{candidate_id}}-{{hash(exp_text)}}",  
+            "id": "exp-{{filename}}-{{exp.get('company', 'unknown')}}--{{uuid.uuid4().hex[:8]}}",  
             "vector": embed_query(exp_text),          
             "payload": {{
                 "type": "experience",   
-                "experience": exp_text,                
+                "experience": exp_text,    
+                "experience_detail": exp dict,  
+                "job_title": "Data Enginner",
+                "source_file": "15.pdf",                                                
                 "candidate_id": "123",             
                 "candidate_name": "Pooya Karimian"
             }}
@@ -88,7 +122,7 @@ def generate_vector_query(question: str, llm, collection_name):
               {{"key": "type", "match": {{"value": "skill"}}}}
             ]
           }},
-          "limit": 5
+          "limit": {limit}
         }}
         or
         {{
@@ -100,14 +134,14 @@ def generate_vector_query(question: str, llm, collection_name):
               {{"key": "type", "match": {{"value": "skill"}}}}
             ]
           }},
-          "limit": 5
+          "limit": {limit}
         }}
 
         Question: {question}
         Return only raw JSON, no explanation.
     """)
 
-    response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name))
+    response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name, limit=limit))
     response = response.content.strip()
     cleaned = re.sub(r"^```json\s*|\s*```$", "", response.strip())
     return cleaned.strip()
@@ -136,7 +170,7 @@ def build_filter(filter_json: dict) -> Filter:
                   should=should_conditions or None,
                   must_not=must_not_conditions or None)
 
-def execute_vector_query(plan: dict, client: QdrantClient, embedding_model):
+def execute_vector_query(plan: dict, client: QdrantClient, embedding_model, search_threshold=0.75):
     """
     Execute a vector DB query based on JSON plan (search or scroll)
     plan format ví dụ:
@@ -164,12 +198,13 @@ def execute_vector_query(plan: dict, client: QdrantClient, embedding_model):
 
     elif action == "search":
         qdrant_filter = build_filter(plan.get("search_filter", {}))
-        query_text = plan["query_vector"]
-        query_vector = query_vector = embedding_model.embed_query(query_text) 
+        query_text = plan["query_text"]
+        query_vector  = embedding_model.embed_query(query_text) 
 
         results = client.search(
             collection_name=collection_name,
             query_vector=query_vector,
+            score_threshold=search_threshold,
             limit=limit,
             query_filter=qdrant_filter
         )
@@ -178,11 +213,9 @@ def execute_vector_query(plan: dict, client: QdrantClient, embedding_model):
     else:
         raise ValueError(f"Unknown action type: {action}")
     
-def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=3):
-    output = generate_vector_query(query, llm, collection)
+def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=3, search_threshold=0.75):
+    output = generate_vector_query(query, llm, collection, limit)
     plan = json.loads(output)
-    # print(plan)
-    results = execute_vector_query(plan, qdrant_db, embedding_model)
+    print(plan)
+    results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold)
     return results
-
-
