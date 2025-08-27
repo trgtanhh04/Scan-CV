@@ -53,22 +53,35 @@ def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collectio
     state["final_answer"] = f"Kết quả VectorDB: {results}"
     return state
 
-def summarizer_node(state: CandidateState, llm):
-    if state["route"] == "SQL":
-        context = f"SQL result: {state.get('sql_result', [])}"
-    else:
-        context = f"VectorDB result: {state.get('vector_result', [])}"
+# def summarizer_node(state: CandidateState, llm):
+#     if state["route"] == "SQL":
+#         context = f"SQL result: {state.get('sql_result', [])}"
+#     else:
+#         context = f"VectorDB result: {state.get('vector_result', [])}"
 
-    prompt = ChatPromptTemplate.from_template("""
-    You are a recruiting assistant. 
-    The admin will ask a question: {question}
-    And the system (either Postgres or Qdrant vector database) will return a raw answer: {context}
+#     prompt = ChatPromptTemplate.from_template("""
+#     You are a recruiting assistant. 
+#     The admin will ask a question: {question}
+#     And the system (either Postgres or Qdrant vector database) will return a raw answer: {context}
     
-    Answer to the admin only include the main context of the answer in a short, natural, and understandable way.
-    If there is no answer returned, just say "I don't know".
-    """)
-    response = llm.invoke(prompt.format(question=state["question"], context=context))
-    state["final_answer"] = response.content.strip()
+#     Answer to the admin only include the main context of the answer in a short, natural, and understandable way.
+#     If there is no answer returned, just say "I don't know".
+#     """)
+#     response = llm.invoke(prompt.format(question=state["question"], context=context))
+#     state["final_answer"] = response.content.strip()
+#     return state
+    
+def summarizer_node(state: CandidateState, llm=None):
+    sql_result = state.get("sql_result", [])
+    vector_result = state.get("vector_result", [])
+
+    if sql_result:  # Ưu tiên SQL
+        state["final_answer"] = sql_result
+    elif vector_result:  # Nếu không có SQL thì trả Vector
+        state["final_answer"] = vector_result
+    else:
+        state["final_answer"] = "I don't know"
+
     return state
 
 # ---- Build Flow ----
