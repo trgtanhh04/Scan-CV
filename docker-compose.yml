@@ -1,48 +1,72 @@
+# version: '3.8'
+
+# services:
+#   backend:
+#     build:
+#       context: ./Backend
+#       dockerfile: Dockerfile
+#     container_name: scan_cv_backend
+#     restart: unless-stopped
+#     environment:
+#       - DATABASE_URL=postgresql://postgres:postgres@db:5432/scan_cv
+#       - ENVIRONMENT=development
+#       - DEEPSEEK_API_KEY=your_deepseek_api_key
+#     ports:
+#       - "8000:8000"
+#     volumes:
+#       - ./Backend:/app
+#   pgadmin:
+#     image: dpage/pgadmin4
+#     container_name: scan_cv_pgadmin
+#     depends_on:
+#       - db
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#       PGADMIN_DEFAULT_PASSWORD: admin
+#     ports:
+#       - "8080:80"
+#     networks:
+#       - app-network
+#   frontend:
+#     build:
+#       context: ./Frontend
+#       dockerfile: Dockerfile
+#     container_name: scan_cv_frontend
+#     restart: unless-stopped
+#     environment:
+#       - API_BASE_URL=http://backend:8000
+#     ports:
+#       - "8501:8501"
+#     depends_on:
+#       - backend
+#     volumes:
+#       - ./Frontend:/app
+#     networks:
+#       - app-network
+
+#   db:
+#     image: postgres:15
+#     container_name: scan_cv_db
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: scan_cv
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     networks:
+#       - app-network
+
+# networks:
+#   app-network:
+#     driver: bridge
+
+# volumes:
+#   postgres_data:
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: ./Backend
-      dockerfile: Dockerfile
-    container_name: scan_cv_backend
-    restart: unless-stopped
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/scan_cv
-      - ENVIRONMENT=development
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./Backend:/app
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: scan_cv_pgadmin
-    depends_on:
-      - db
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "8080:80"
-    networks:
-      - app-network
-  frontend:
-    build:
-      context: ./Frontend
-      dockerfile: Dockerfile
-    container_name: scan_cv_frontend
-    restart: unless-stopped
-    environment:
-      - API_URL=http://backend:8000
-    ports:
-      - "8501:8501"
-    depends_on:
-      - backend
-    volumes:
-      - ./Frontend:/app
-    networks:
-      - app-network
-
   db:
     image: postgres:15
     container_name: scan_cv_db
@@ -56,6 +80,55 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+
+  # backend:
+  #   build:
+  #     context: ./Backend
+  #     dockerfile: Dockerfile
+  #   container_name: scan_cv_backend
+  #   restart: unless-stopped
+  #   environment:
+  #     # BE kết nối DB trong network docker
+  #     - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/scan_cv
+  #     # Khóa LLM
+  #     - DEEPSEEK_API_KEY=
+  #     # Link public để người dùng click mở CV (trình duyệt ở máy host)
+  #     - PUBLIC_BASE_URL=http://localhost:8000
+  #     # (nếu app cho phép) MEDIA_ROOT nên là đường dẫn trong container, vd /app/media
+  #     - MEDIA_ROOT=/app/media
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     # mount toàn bộ code để dev nhanh
+  #     - ./Backend:/app
+  #     # folder media chung (nếu muốn tách)
+  #     - ./media:/app/media
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - app-network
+  #   command: >
+  #     bash -lc "uvicorn app.api.main:app --host 0.0.0.0 --port 8000"
+
+  # frontend:
+  #   build:
+  #     context: ./Frontend
+  #     dockerfile: Dockerfile
+  #   container_name: scan_cv_frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     # FE gọi BE qua hostname 'backend' trong cùng network
+  #     - API_BASE_URL=http://backend:8000
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - backend
+  #   volumes:
+  #     - ./Frontend:/app
+  #   networks:
+  #     - app-network
+  #   command: >
+  #     bash -lc "streamlit run admin/main.py --server.port 8501 --server.address 0.0.0.0"
 
 networks:
   app-network:

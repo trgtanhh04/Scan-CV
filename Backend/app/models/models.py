@@ -1,4 +1,5 @@
 # models.py — lean schema for Text2SQL
+import os
 from sqlalchemy import (
     Column, Integer, String, ForeignKey, Date, Text,
     Table, UniqueConstraint, Index, DateTime, func, create_engine
@@ -9,10 +10,14 @@ from sqlalchemy.types import Boolean
 # ---------------- Base / Engine helpers ----------------
 Base = declarative_base()
 
-def get_engine(url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv"):
+def get_engine(url: str = None):
+    if url is None:
+        url = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv")
     return create_engine(url, future=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, future=True)
+engine = get_engine()
+SessionLocal.configure(bind=engine)
 
 # ---------------- Association tables (many-to-many) ----------------
 candidate_skills = Table(

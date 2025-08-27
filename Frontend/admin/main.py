@@ -92,19 +92,28 @@ def header():
 
 def call_upload(file):
     url = f"{st.session_state.api_base}/cv/upload"
-    resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=120)
-    resp.raise_for_status();  return resp.json()
-
+    try:
+        resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=120)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"Upload error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            st.error(f"Response: {e.response.text}")
+        raise
+    
 def call_query(question):
-    """
-    UI gửi thêm provider/model để backend chọn LLM:
-      body = {"question": "...", "provider": "deepseek"|"openai", "model": "deepseek-chat|gpt-4o-mini|..."}
-    Nếu backend bạn chưa hỗ trợ, chỉ cần bỏ qua 2 field này (UI vẫn hoạt động).
-    """
     url = f"{st.session_state.api_base}/query"
     body = {"question": question, "provider": st.session_state.provider, "model": st.session_state.model}
-    resp = requests.post(url, json=body, timeout=180)
-    resp.raise_for_status();  return resp.json()
+    try:
+        resp = requests.post(url, json=body, timeout=180)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"Query error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            st.error(f"Response: {e.response.text}")
+        raise
 
 # ---------------- Views ----------------
 def view_upload():
@@ -121,7 +130,9 @@ def view_upload():
         with st.spinner("Đang tải và xử lý..."):
             for f in up or []:
                 try:
+                    st.write("Start upload")
                     data = call_upload(f)
+                    st.write(data)
                     results.append({
                         "candidate_id": data.get("candidate_id"),
                         "full_name": data.get("full_name"),
@@ -130,6 +141,7 @@ def view_upload():
                         "source_file": f.name
                     })
                 except Exception as e:
+                    st.write("Exception:", str(e))
                     results.append({"source_file": f.name, "error": str(e)})
         st.success(f"Đã xử lý {len(results)} file.")
         st.markdown("#### Kết quả")
@@ -162,7 +174,7 @@ def view_search():
                     df = pd.DataFrame(rows, columns=cols if cols else None)
                     if "resume_url" in df.columns:
                         df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-                    st.dataframe(df, use_container_width=True, hide_index=True)
+                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
 
                 with st.expander("Trials / Diagnostics", expanded=False):
                     st.json(trials or [])
@@ -192,3 +204,5 @@ if __name__ == "__main__" or True:
         view_search()
     else:
         view_settings()
+
+# streamlit run main.py 

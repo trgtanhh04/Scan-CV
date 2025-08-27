@@ -20,8 +20,9 @@ langchain-community>=0.3.0,<0.4.0
 langchain-core>=0.3.68,<0.4.0
 langchain-qdrant==0.1.4
 langchain-google-genai==2.1.9
-langgraph>=0.2.45,<0.3.0
 mistralai==0.1.7
 streamlit==1.35.0
 langgraph==0.6.6
 gpt4all==2.8.2
+langchain_deepseek==0.1.0
+python-multipart==0.0.5

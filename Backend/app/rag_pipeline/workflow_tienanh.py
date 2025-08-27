@@ -16,7 +16,8 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 
 # === Local modules ===
-from rag_modules import route_query, generate_sql, search_vector
+# from rag_modules import route_query, generate_sql, search_vector
+from app.rag_pipeline.rag_modules import route_query, generate_sql, search_vector
 
 # === text2SQL modules ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -195,18 +196,23 @@ def build_flow(embedding_model, qdrant_db: QdrantClient, collection: str, *, pub
 
     return graph.compile()
 
+
+embedding_model = FakeEmbeddings(size=768)  # thay cho GPT4AllEmbeddings()
+qdrant = QdrantClient(url="http://localhost:6333")  # nếu chưa chạy cũng không sao, route có thể về SQL
+public_base_url = None  # hoặc "http://localhost:8000"
+app = build_flow(embedding_model, qdrant, collection="cvs", public_base_url=public_base_url)
+
+
 if __name__ == "__main__":
     # Embedding + Qdrant (nếu chưa có thì dummy để test route SQL)
     # embedding_model = GPT4AllEmbeddings()  # hoặc model embeddings bạn dùng
     # qdrant = QdrantClient(url="http://localhost:6333")  # nếu chưa chạy Qdrant, route sẽ đi SQL
-    embedding_model = FakeEmbeddings(size=768)  # thay cho GPT4AllEmbeddings()
-    qdrant = QdrantClient(url="http://localhost:6333")  # nếu chưa chạy cũng không sao, route có thể về SQL
+    # embedding_model = FakeEmbeddings(size=768)  # thay cho GPT4AllEmbeddings()
+    # qdrant = QdrantClient(url="http://localhost:6333")  # nếu chưa chạy cũng không sao, route có thể về SQL
 
-
-
-    # Build graph (public_base_url: nếu đang chạy FastAPI serve /media, set http://localhost:8000)
-    public_base_url = None  # hoặc "http://localhost:8000"
-    app = build_flow(embedding_model, qdrant, collection="cvs", public_base_url=public_base_url)
+    # # Build graph (public_base_url: nếu đang chạy FastAPI serve /media, set http://localhost:8000)
+    # public_base_url = None  # hoặc "http://localhost:8000"
+    # app = build_flow(embedding_model, qdrant, collection="cvs", public_base_url=public_base_url)
 
     # Hỏi đáp
     state = {"question": "List candidates with the job title 'Software Engineer'."}

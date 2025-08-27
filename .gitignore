@@ -3,3 +3,6 @@
 *.env
 *__pycache__/
 Backend/media/cv
+media
+Backend/CV-MEDIA
+Backend/media
