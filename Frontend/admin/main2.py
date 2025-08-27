@@ -5,6 +5,10 @@ import requests
 import pandas as pd
 import streamlit as st
 
+import os
+BASE_URL = "http://localhost:8000/cvs"
+
+
 DEFAULT_API = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="CV Manager", page_icon="📄", layout="wide")
@@ -208,7 +212,7 @@ def view_search():
                                 payload = item["payload"]
                                 rows.append({
                                     "Candidate": payload.get("candidate_name"),
-                                    "Skill": payload.get("skill"),
+                                    # "Skill": payload.get("skill"),
                                     "Job Title": payload.get("job_title"),
                                     "Source File": payload.get("source_file"),
                                     "Score": round(item.get("score", 0), 4),
@@ -216,7 +220,7 @@ def view_search():
                             df = pd.DataFrame(rows)
                             # st.dataframe(df, use_container_width=True)
                             if "Source File" in df.columns:
-                                df["Source File"] = df["Source File"].apply(lambda u: f"[Open]({u})" if u else "")
+                                df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
                             st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
 
                         # ---- Experience
@@ -228,6 +232,15 @@ def view_search():
                                     st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
                                     st.write(f"**Description:** {exp['experience_detail']['description']}")
                                     st.caption(f"📄 Source: {exp['source_file']}")
+
+                                    source_file = exp.get("source_file")
+                            if source_file:
+                                file_url = f"{BASE_URL}/{source_file}"
+                                st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
+                                    
+                                    # ---- Resume file (nếu có)
+                                    # if exp.get("resume_url"):
+                                    #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
 
                 else:
                     st.error("Không xác định được loại kết quả (sql/vector).")

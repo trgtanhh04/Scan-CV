@@ -21,6 +21,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmb
 from qdrant_client import QdrantClient
 from sqlalchemy import create_engine
 
+from fastapi.staticfiles import StaticFiles
+
+
+
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 
@@ -36,6 +40,8 @@ flow = build_flow(deepseek, engine, embedding, qdrant, COLLECTION_NAME, limit=50
 
 
 app = FastAPI(title="CV Manager API")
+
+app.mount("/cvs", StaticFiles(directory="raw/cvs"), name="cvs")
 
 # Ensure MEDIA_ROOT exists before mounting static files
 import os
