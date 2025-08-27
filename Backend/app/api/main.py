@@ -47,7 +47,7 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
             shutil.copyfileobj(file.file, f)
 
         # 1) process_cvs của RAG
-
+        
         # 2) process_cvs của Text2Sql
         results = process_cvs_sql(
             input_dir=temp_dir,
