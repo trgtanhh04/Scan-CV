@@ -7,7 +7,7 @@ import tempfile, shutil, os, uuid
 from fastapi.staticfiles import StaticFiles
 
 from app.models.models import SessionLocal
-from app.rag_pipeline.workflow_tienanh import app as workflow_app   # graph build sẵn
+from app.rag_pipeline.workflow import flow   # graph build sẵn
 from app.text2SQL.process_cvs_sql import process_cvs_sql       
 
 from config.config import DEEPSEEK_API_KEY
@@ -74,15 +74,19 @@ class QueryRequest(BaseModel):
 @app.post("/query")
 async def query_api(request: QueryRequest):
     state = {"question": request.question}
-    result = workflow_app.invoke(state)
+    result = flow.invoke(state)
     return {
         "question": request.question,
         "provider": request.provider,
         "model": request.model,
+        "route": result.get("route"),
         "sql": result.get("sql_query"),
         "columns": result.get("columns"),
         "rows": result.get("sql_result"),
         "trials": result.get("trials"),
+        "final_answer": result.get("final_answer"),
+        "vector_query": result.get("vector_query"),
+        "vector_result": result.get("vector_result"),
         "final_answer": result.get("final_answer"),
     }
 

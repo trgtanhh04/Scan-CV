@@ -150,34 +150,119 @@ def view_upload():
             df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
         st.dataframe(df, use_container_width=True, hide_index=True)
 
+# def view_search():
+#     header()
+#     st.markdown("### Search Candidates (Text2SQL)")
+#     q = st.text_input("Câu hỏi", placeholder="e.g. List candidates with the job title 'Software Engineer'.")
+#     run = st.button("Run Query", type="primary")
+#     if run and q.strip():
+#         with st.spinner("Đang sinh SQL & thực thi..."):
+#             try:
+#                 data = call_query(q.strip())
+#                 sql  = data.get("sql") or "-- no sql --"
+#                 cols = data.get("columns", [])
+#                 rows = data.get("rows", [])
+#                 trials = data.get("trials", [])
+
+#                 st.markdown('<div class="sqlbox">', unsafe_allow_html=True)
+#                 st.code(sql, language="sql")
+#                 st.markdown('</div>', unsafe_allow_html=True)
+
+#                 if not rows:
+#                     st.warning("Không tìm thấy kết quả.")
+#                 else:
+#                     df = pd.DataFrame(rows, columns=cols if cols else None)
+#                     if "resume_url" in df.columns:
+#                         df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
+#                     st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+#                 with st.expander("Trials / Diagnostics", expanded=False):
+#                     st.json(trials or [])
+#             except Exception as e:
+#                 st.error(f"Lỗi khi gọi API: {e}")
+
 def view_search():
     header()
-    st.markdown("### Search Candidates (Text2SQL)")
+    st.markdown("### Search Candidates (Text2SQL / VectorDB)")
+
     q = st.text_input("Câu hỏi", placeholder="e.g. List candidates with the job title 'Software Engineer'.")
     run = st.button("Run Query", type="primary")
+
     if run and q.strip():
-        with st.spinner("Đang sinh SQL & thực thi..."):
+        with st.spinner("Đang thực thi..."):
             try:
                 data = call_query(q.strip())
-                sql  = data.get("sql") or "-- no sql --"
-                cols = data.get("columns", [])
-                rows = data.get("rows", [])
-                trials = data.get("trials", [])
+                route = data.get("route")   # backend trả về "sql" hoặc "vector"
 
-                st.markdown('<div class="sqlbox">', unsafe_allow_html=True)
-                st.code(sql, language="sql")
-                st.markdown('</div>', unsafe_allow_html=True)
+                # ----------------------------
+                # CASE 1: SQL Query
+                # ----------------------------
+                if route == "SQL":
+                    sql  = data.get("sql") or "-- no sql --"
+                    cols = data.get("columns", [])
+                    rows = data.get("rows", [])
+                    trials = data.get("trials", [])
 
-                if not rows:
-                    st.warning("Không tìm thấy kết quả.")
+                    st.subheader("🗄️ SQL Query")
+                    st.code(sql, language="sql")
+
+                    if not rows:
+                        st.warning("Không tìm thấy kết quả.")
+                    else:
+                        df = pd.DataFrame(rows, columns=cols if cols else None)
+                        if "resume_url" in df.columns:
+                            df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
+                        st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+                    with st.expander("Trials / Diagnostics", expanded=False):
+                        st.json(trials or [])
+
+                # ----------------------------
+                # CASE 2: Vector Search
+                # ----------------------------
+                elif route == "VECTOR":
+                    vector_query  = data.get("vector_query")
+                    vector_result = data.get("vector_result", [])
+
+                    st.subheader("🔎 Vector Query")
+                    st.code(vector_query, language="json")
+
+                    if not vector_result:
+                        st.warning("Không tìm thấy kết quả.")
+                    else:
+                        first = vector_result[0]
+
+                        # ---- Skill
+                        if first.get("payload", {}).get("type") == "skill":
+                            rows = []
+                            for item in vector_result:
+                                payload = item["payload"]
+                                rows.append({
+                                    "Candidate": payload.get("candidate_name"),
+                                    "Skill": payload.get("skill"),
+                                    "Job Title": payload.get("job_title"),
+                                    "Source File": payload.get("source_file"),
+                                    "Score": round(item.get("score", 0), 4),
+                                })
+                            df = pd.DataFrame(rows)
+                            # st.dataframe(df, use_container_width=True)
+                            if "Source File" in df.columns:
+                                df["Source File"] = df["Source File"].apply(lambda u: f"[Open]({u})" if u else "")
+                            st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+                        # ---- Experience
+                        elif first.get("type") == "experience":
+                            st.subheader("📌 Candidate Experiences")
+                            for exp in vector_result:
+                                with st.expander(f"{exp['experience_detail']['job_title']} @ {exp['experience_detail']['company']}"):
+                                    st.write(f"**Candidate:** {exp['candidate_name']}")
+                                    st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
+                                    st.write(f"**Description:** {exp['experience_detail']['description']}")
+                                    st.caption(f"📄 Source: {exp['source_file']}")
+
                 else:
-                    df = pd.DataFrame(rows, columns=cols if cols else None)
-                    if "resume_url" in df.columns:
-                        df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                    st.error("Không xác định được loại kết quả (sql/vector).")
 
-                with st.expander("Trials / Diagnostics", expanded=False):
-                    st.json(trials or [])
             except Exception as e:
                 st.error(f"Lỗi khi gọi API: {e}")
 
