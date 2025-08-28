@@ -83,7 +83,11 @@ def generate_vector_query(question: str, llm, collection_name, limit):
         limit: {limit}
 
         Schema:
-        Example schema for skill :
+                                                     
+        Skill points schema (per-skill embedding).
+        Skill vector stores one vector per individual skill term (e.g., “Python”), 
+        with lightweight candidate/context metadata for fast semantic search on skills.. 
+        Example schema for skill point schema:
         {{
             "id": "skill-15.pdf-{{skill}}-{{uuid.uuid4().hex[:8]}}", 
             "vector": embed_query(skill),          
@@ -95,7 +99,9 @@ def generate_vector_query(question: str, llm, collection_name, limit):
                 "candidate_name": "Pooya Karimian"
             }}
         }}
-                                                     
+        Experience points schema (per-experience embedding).
+        Embeds a composed experience string (role, company, time range, description to enable semantic retrieval of rich work history, plus detailed metadata for display. 
+        Don't confuse the job_title in the payload with the job_title in experience_detail. The former is the candidate's current job title, while the latter is part of the experience                                    
         Example schema for experience:
         Given exp_text as "{{exp.get('job_title', '')}} at {{exp.get('company', '')}} ({{exp.get('start_date', '')}} - {{exp.get('end_date', '')}}) {{exp.get('description', '')}}"
         {{
@@ -106,8 +112,7 @@ def generate_vector_query(question: str, llm, collection_name, limit):
                 "experience": exp_text,    
                 "experience_detail": exp dict,  
                 "job_title": "Data Enginner",
-                "source_file": "15.pdf",                                                
-                "candidate_id": "123",             
+                "source_file": "15.pdf",                                                         
                 "candidate_name": "Pooya Karimian"
             }}
         }}
@@ -136,6 +141,23 @@ def generate_vector_query(question: str, llm, collection_name, limit):
           }},
           "limit": {limit}
         }}
+                                                     
+        or if you need to write a sophisticated filter, e.g., searching for candidates with specific skills and experiences:
+        {{
+            "action": "search",
+            "collection_name": "candidates",
+            "query_text": "Data Engineer with Python skill",
+            "query_filter": {{
+                "must": [
+                    {{ "key": "type", "match": {{ "value": "experience" }} }},
+                    {{ "key": "experience", "match": {{ "value": "Data Engineer" }} }},
+                    {{ "key": "type", "match": {{ "value": "skill" }} }},
+                    {{ "key": "skill", "match": {{ "value": "Python" }} }}
+                ]
+            }},
+            "limit": {limit}
+        }}
+        If the user require a specific number of results ("Find 3 candidates who..."), you can override the predefined limit value (3 in the example).
 
         Question: {question}
         Return only raw JSON, no explanation.

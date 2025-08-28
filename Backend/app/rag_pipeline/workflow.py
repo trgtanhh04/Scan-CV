@@ -1,5 +1,5 @@
 # from rag_modules import route_query, generate_sql, search_vector
-
+# from app.rag_pipeline.rag_modules import route_query, generate_sql, search_vector
 # from langgraph.graph import StateGraph, END
 # from langgraph.graph.message import add_messages
 # from sqlalchemy import text
@@ -10,13 +10,13 @@
 # from langchain.prompts import ChatPromptTemplate
 # from sqlalchemy import create_engine, text
 # from langgraph.graph import END
-import os
+import os, sys
 import sys
 
 # === Third-party libraries ===
 from sqlalchemy import create_engine, text
 from qdrant_client import QdrantClient
-from langchain_community.embeddings import GPT4AllEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage
 from langchain_deepseek import ChatDeepSeek
@@ -65,6 +65,9 @@ llm_sql = LLM(_invoke)
 #     vector_result: list
 #     final_answer: str
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
+
 # ---- State định nghĩa ----
 # class CandidateState(dict):
 #     question: str
@@ -84,6 +87,7 @@ class CandidateState(dict):
     sql_query: str
     sql_result: list
     vector_result: list
+    vector_query: dict
     vector_query: dict
     final_answer: str
 
@@ -155,7 +159,10 @@ def sql_node(state: CandidateState, *, base_url: str | None = None):
 #     return state
 def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
     results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
+    results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     state["vector_result"] = results
+    state["vector_query"] = plan
+    # state["final_answer"] = f"Kết quả VectorDB: {results}"
     state["vector_query"] = plan
     # state["final_answer"] = f"Kết quả VectorDB: {results}"
     return state
@@ -226,7 +233,29 @@ def build_flow(llm, engine, embedding_model, qdrant_db, collection, limit, searc
 
     return graph.compile()
 
-# ---- Run thử ----
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY)
+# embedding = GPT4AllEmbeddings()
+embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
+# engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
+
+# qdrant = QdrantClient(path="../qdrant_gemini_db")
+# print("Collections hiện có:", qdrant.get_collections())
+
+
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
+qdrant = QdrantClient(path=db_path)
+COLLECTION_NAME = "candidates"
+
+
+
+flow = build_flow(llm, engine, embedding, qdrant, COLLECTION_NAME, limit=50)
+
+result = flow.invoke({"question": "Who has experience in Software Engineer?"})
+# source_files = [item["payload"].get("source_file") for item in result["final_answer"] if "payload" in item]
+print(result["final_answer"])
+print(result["vector_query"])
+
+qdrant.close()
 embedding_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
 qdrant = QdrantClient(path=db_path)
