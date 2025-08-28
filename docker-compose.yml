@@ -15,18 +15,18 @@
 #       - "8000:8000"
 #     volumes:
 #       - ./Backend:/app
-#   pgadmin:
-#     image: dpage/pgadmin4
-#     container_name: scan_cv_pgadmin
-#     depends_on:
-#       - db
-#     environment:
-#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
-#       PGADMIN_DEFAULT_PASSWORD: admin
-#     ports:
-#       - "8080:80"
-#     networks:
-#       - app-network
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: scan_cv_pgadmin
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "8080:80"
+  #   networks:
+  #     - app-network
 #   frontend:
 #     build:
 #       context: ./Frontend
@@ -64,6 +64,7 @@
 
 # volumes:
 #   postgres_data:
+#-----------------------------------------------
 version: '3.8'
 
 services:
@@ -78,6 +79,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: scan_cv_pgadmin
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
     networks:
       - app-network
 

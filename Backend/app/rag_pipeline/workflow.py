@@ -1,15 +1,3 @@
-# from rag_modules import route_query, generate_sql, search_vector
-# from app.rag_pipeline.rag_modules import route_query, generate_sql, search_vector
-# from langgraph.graph import StateGraph, END
-# from langgraph.graph.message import add_messages
-# from sqlalchemy import text
-# import os
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# from qdrant_client import QdrantClient
-# from langchain_community.embeddings import GPT4AllEmbeddings
-# from langchain.prompts import ChatPromptTemplate
-# from sqlalchemy import create_engine, text
-# from langgraph.graph import END
 import os, sys
 import sys
 
@@ -30,7 +18,6 @@ from langgraph.graph.message import add_messages
 # === Local modules ===
 # from rag_modules import route_query, generate_sql, search_vector
 from app.rag_pipeline.rag_modules import route_query, generate_sql, search_vector
-# from rag_modules import route_query, generate_sql, search_vector
 
 # === text2SQL modules ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -56,28 +43,8 @@ llm_sql = LLM(_invoke)
 
 # === WORKFLOW ===
 
-# ---- State định nghĩa ----
-# class CandidateState(dict):
-#     question: str
-#     route: str
-#     sql_query: str
-#     sql_result: list
-#     vector_result: list
-#     final_answer: str
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
-
-# ---- State định nghĩa ----
-# class CandidateState(dict):
-#     question: str
-#     pre_judge: str
-#     post_judge: str
-#     route: str
-#     sql_query: str
-#     sql_result: list
-#     vector_result: list
-#     final_answer: str
 
 class CandidateState(dict):
     question: str
@@ -105,16 +72,6 @@ def router_node(state: CandidateState, llm):
     state["route"] = route
     return state
 
-# def sql_node(state: CandidateState, llm, engine):
-#     sql_query = generate_sql(state["question"], llm)
-#     state["sql_query"] = sql_query
-
-#     with engine.connect() as conn:
-#         result = conn.execute(text(sql_query)).fetchall()
-#         state["sql_result"] = [dict(row._mapping) for row in result]
-
-#     state["final_answer"] = f"Kết quả SQL: {state['sql_result']}"
-#     return state
 def sql_node(state: CandidateState, *, base_url: str | None = None):
     """
     Giữ nguyên format state cũ: điền sql_query / columns / sql_result / trials.
@@ -152,11 +109,6 @@ def sql_node(state: CandidateState, *, base_url: str | None = None):
         return state
 
 
-# def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
-#     results = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
-#     state["vector_result"] = results
-#     state["final_answer"] = f"Kết quả VectorDB: {results}"
-#     return state
 def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
     results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
@@ -167,23 +119,6 @@ def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collectio
     # state["final_answer"] = f"Kết quả VectorDB: {results}"
     return state
 
-# def summarizer_node(state: CandidateState, llm):
-#     if state["route"] == "SQL":
-#         context = f"SQL result: {state.get('sql_result', [])}"
-#     else:
-#         context = f"VectorDB result: {state.get('vector_result', [])}"
-
-#     prompt = ChatPromptTemplate.from_template("""
-#     You are a recruiting assistant. 
-#     The admin will ask a question: {question}
-#     And the system (either Postgres or Qdrant vector database) will return a raw answer: {context}
-    
-#     Answer to the admin only include the main context of the answer in a short, natural, and understandable way.
-#     If there is no answer returned, just say "I don't know".
-#     """)
-#     response = llm.invoke(prompt.format(question=state["question"], context=context))
-#     state["final_answer"] = response.content.strip()
-#     return state
     
 def summarizer_node(state: CandidateState, llm=None):
     sql_result = state.get("sql_result", [])
@@ -233,42 +168,11 @@ def build_flow(llm, engine, embedding_model, qdrant_db, collection, limit, searc
 
     return graph.compile()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY)
-# embedding = GPT4AllEmbeddings()
-embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
-# engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
 
-# qdrant = QdrantClient(path="../qdrant_gemini_db")
-# print("Collections hiện có:", qdrant.get_collections())
-
-
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
-qdrant = QdrantClient(path=db_path)
-COLLECTION_NAME = "candidates"
-
-
-
-flow = build_flow(llm, engine, embedding, qdrant, COLLECTION_NAME, limit=50)
-
-result = flow.invoke({"question": "Who has experience in Software Engineer?"})
-# source_files = [item["payload"].get("source_file") for item in result["final_answer"] if "payload" in item]
-print(result["final_answer"])
-print(result["vector_query"])
-
-qdrant.close()
 embedding_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
 qdrant = QdrantClient(path=db_path)
-# cols = qdrant.get_collections().collections
-# print("Collections:", [c.name for c in cols])
-# info = qdrant.get_collection('candidates')
-# print("\nCollection info:")
-# from pprint import pprint
-# pprint(info.model_dump(), depth=2)
 COLLECTION_NAME = "candidates"
-# points, _ = qdrant.scroll(collection_name="candidates", limit=5, with_vectors=True)
-# for p in points:
-#     print("id:", p.id, "vector:", p.vector, "payload:", p.payload)
 public_base_url = None  # hoặc "http://localhost:8000"
 flow = build_flow(llm_chat, engine, embedding_model, qdrant, COLLECTION_NAME, limit=50, public_base_url=public_base_url)
 
@@ -282,7 +186,4 @@ flow = build_flow(llm_chat, engine, embedding_model, qdrant, COLLECTION_NAME, li
 #     print("No result found.")
 # else:
 #     print(result["final_answer"])
-# print(result["sql_result"])
-# print(result["sql_query"])
-
 # qdrant.close()
