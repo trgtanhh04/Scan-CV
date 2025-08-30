@@ -111,7 +111,7 @@ def sql_node(state: CandidateState, *, base_url: str | None = None):
 
 def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
     results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
-    results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
+    # results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     state["vector_result"] = results
     state["vector_query"] = plan
     # state["final_answer"] = f"Kết quả VectorDB: {results}"
@@ -134,7 +134,7 @@ def summarizer_node(state: CandidateState, llm=None):
     return state
 
 # ---- Build Flow ----
-def build_flow(llm, engine, embedding_model, qdrant_db, collection, limit, search_threshold=0.3, public_base_url: str | None = None):
+def build_flow(llm, embedding_model, qdrant_db, collection, limit, search_threshold=0.3, public_base_url: str | None = None):
     graph = StateGraph(CandidateState)
 
     # Add nodes
@@ -169,12 +169,12 @@ def build_flow(llm, engine, embedding_model, qdrant_db, collection, limit, searc
     return graph.compile()
 
 
-embedding_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
-qdrant = QdrantClient(path=db_path)
-COLLECTION_NAME = "candidates"
-public_base_url = None  # hoặc "http://localhost:8000"
-flow = build_flow(llm_chat, engine, embedding_model, qdrant, COLLECTION_NAME, limit=50, public_base_url=public_base_url)
+# embedding_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
+# db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
+# qdrant = QdrantClient(path=db_path)
+# COLLECTION_NAME = "candidates"
+# public_base_url = None  # hoặc "http://localhost:8000"
+# flow = build_flow(llm_chat, embedding_model, qdrant, COLLECTION_NAME, limit=50, public_base_url=public_base_url)
 
 # result = flow.invoke({"question": "List all candidate names."})
 # # source_files = [item["payload"].get("source_file") for item in result["final_answer"] if "payload" in item]

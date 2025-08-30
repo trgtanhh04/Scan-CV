@@ -4,7 +4,9 @@ import os
 import requests
 import pandas as pd
 import streamlit as st
+from st_aggrid import AgGrid
 
+BASE_URL = "http://localhost:8000/cvs"
 DEFAULT_API = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="CV Manager", page_icon="📄", layout="wide")
@@ -66,14 +68,14 @@ def provider_badge():
     if st.session_state.provider == "deepseek":
         return (
             '<span class="badge">'
-            '<img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/deepseek.svg" />'
+            '<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/deepseek.webp" />'
             'DeepSeek'
             f' · {st.session_state.model}</span>'
         )
     else:
         return (
             '<span class="badge">'
-            '<img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/openai.svg" />'
+            '<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/openai-light.webp" />'
             'OpenAI'
             f' · {st.session_state.model}</span>'
         )
@@ -82,7 +84,7 @@ def header():
     c1, c2 = st.columns([0.78, 0.22])
     with c1:
         st.title("📄 CV Manager")
-        st.caption("Upload CV ➜ Extract ➜ Store ➜ Search (Text2SQL) ➜ Open Resume")
+        st.caption("Upload CV ➜ Extract ➜ Store ➜ Search (Text2SQL / VectorDB) ➜ Open Resume")
     with c2:
         st.markdown(f"""
         <div class="card-light"><b>API</b><br>{st.session_state.api_base}</div>
@@ -93,7 +95,7 @@ def header():
 def call_upload(file):
     url = f"{st.session_state.api_base}/cv/upload"
     try:
-        resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=120)
+        resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=(10, 600))
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
@@ -123,63 +125,80 @@ def view_upload():
 
     up = st.file_uploader("Chọn CVs (PDF)", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed")
     st.write("")
-    btn = st.button("Upload & Ingest", type="primary", use_container_width=True, disabled=not up)
+    run = st.button("Upload & Ingest", type="primary", use_container_width=True, disabled=not up)
 
-    if btn:
-        results = []
-        with st.spinner("Đang tải và xử lý..."):
-            for f in up or []:
-                try:
-                    st.write("Start upload")
-                    data = call_upload(f)
-                    st.write(data)
-                    results.append({
-                        "candidate_id": data.get("candidate_id"),
-                        "full_name": data.get("full_name"),
-                        "resume_url": data.get("file_url") or data.get("resume_url"),
-                        "attachment_id": data.get("attachment_id"),
-                        "source_file": f.name
-                    })
-                except Exception as e:
-                    st.write("Exception:", str(e))
-                    results.append({"source_file": f.name, "error": str(e)})
-        st.success(f"Đã xử lý {len(results)} file.")
-        st.markdown("#### Kết quả")
-        df = pd.DataFrame(results)
-        if "resume_url" in df.columns:
-            df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-        st.dataframe(df, use_container_width=True, hide_index=True)
+    if not run:
+        return
 
-# def view_search():
-#     header()
-#     st.markdown("### Search Candidates (Text2SQL)")
-#     q = st.text_input("Câu hỏi", placeholder="e.g. List candidates with the job title 'Software Engineer'.")
-#     run = st.button("Run Query", type="primary")
-#     if run and q.strip():
-#         with st.spinner("Đang sinh SQL & thực thi..."):
-#             try:
-#                 data = call_query(q.strip())
-#                 sql  = data.get("sql") or "-- no sql --"
-#                 cols = data.get("columns", [])
-#                 rows = data.get("rows", [])
-#                 trials = data.get("trials", [])
+    files = up or []
+    total = len(files)
+    if total == 0:
+        st.info("Hãy chọn ít nhất 1 file PDF.")
+        return
 
-#                 st.markdown('<div class="sqlbox">', unsafe_allow_html=True)
-#                 st.code(sql, language="sql")
-#                 st.markdown('</div>', unsafe_allow_html=True)
+    results = []
+    # Khối hiển thị tiến độ và trạng thái
+    status = st.empty()
+    prog = st.progress(0)
+    list_container = st.container()  # chỗ log ngắn từng file (tuỳ thích)
 
-#                 if not rows:
-#                     st.warning("Không tìm thấy kết quả.")
-#                 else:
-#                     df = pd.DataFrame(rows, columns=cols if cols else None)
-#                     if "resume_url" in df.columns:
-#                         df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-#                     st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+    ok = 0
+    for i, f in enumerate(files, start=1):
+        status.write(f"🔄 Đang xử lý **{i}/{total}**: `{f.name}` …")
+        prog.progress(i/total)
 
-#                 with st.expander("Trials / Diagnostics", expanded=False):
-#                     st.json(trials or [])
-#             except Exception as e:
-#                 st.error(f"Lỗi khi gọi API: {e}")
+        try:
+            data = call_upload(f)
+            ok += 1
+            # gom dữ liệu hiển thị
+            results.append({
+                "Source file": f.name,
+                "Candidate ID": data.get("candidate_id"),
+                "Full name": data.get("full_name"),
+                "Resume": data.get("file_url") or data.get("resume_url"),
+                "Attachment ID": data.get("attachment_id"),
+                "Error": None
+            })
+            st.toast(f"✅ {f.name} xong", icon="✅")
+            with list_container:
+                st.write(f"✅ `{f.name}` uploaded.")
+        except Exception as e:
+            results.append({
+                "Source file": f.name,
+                "Candidate ID": None,
+                "Full name": None,
+                "Resume": None,
+                "Attachment ID": None,
+                "Error": str(e)
+            })
+            st.toast(f"❌ {f.name} lỗi", icon="❌")
+            with list_container:
+                st.write(f"❌ `{f.name}` lỗi: {e}")
+
+    # Hoàn tất
+    prog.empty()
+    if ok == total:
+        status.success(f"🎉 Hoàn tất {ok}/{total} file.")
+    else:
+        status.warning(f"Hoàn tất {ok}/{total} file (một số file lỗi).")
+
+    # Bảng kết quả
+    st.markdown("#### Kết quả")
+    df = pd.DataFrame(results)
+    if "Resume" in df.columns:
+        df["Resume"] = df["Resume"].apply(
+            lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
+        )
+
+    st.markdown(
+        df.to_html(escape=False, index=False),
+        unsafe_allow_html=True
+    )
+
+    with st.expander("🔎 Debug uploads (raw JSON)", expanded=False):
+        st.json(results)
+            
+
 
 def view_search():
     header()
@@ -239,7 +258,7 @@ def view_search():
                                 payload = item["payload"]
                                 rows.append({
                                     "Candidate": payload.get("candidate_name"),
-                                    "Skill": payload.get("skill"),
+                                    # "Skill": payload.get("skill"),
                                     "Job Title": payload.get("job_title"),
                                     "Source File": payload.get("source_file"),
                                     "Score": round(item.get("score", 0), 4),
@@ -247,7 +266,7 @@ def view_search():
                             df = pd.DataFrame(rows)
                             # st.dataframe(df, use_container_width=True)
                             if "Source File" in df.columns:
-                                df["Source File"] = df["Source File"].apply(lambda u: f"[Open]({u})" if u else "")
+                                df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
                             st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
 
                         # ---- Experience
@@ -260,11 +279,21 @@ def view_search():
                                     st.write(f"**Description:** {exp['experience_detail']['description']}")
                                     st.caption(f"📄 Source: {exp['source_file']}")
 
+                                    source_file = exp.get("source_file")
+                            if source_file:
+                                file_url = f"{BASE_URL}/{source_file}"
+                                st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
+                                    
+                                    # ---- Resume file (nếu có)
+                                    # if exp.get("resume_url"):
+                                    #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
+
                 else:
                     st.error("Không xác định được loại kết quả (sql/vector).")
 
             except Exception as e:
                 st.error(f"Lỗi khi gọi API: {e}")
+
 
 def view_settings():
     header()

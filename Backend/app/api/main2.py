@@ -27,7 +27,6 @@ from fastapi.staticfiles import StaticFiles
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-
 # llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", api_key=GOOGLE_API_KEY)
 # embedding = GPT4AllEmbeddings()
 embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
@@ -37,7 +36,6 @@ db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gem
 qdrant = QdrantClient(path=db_path)
 COLLECTION_NAME = "candidates"
 flow = build_flow(deepseek, engine, embedding, qdrant, COLLECTION_NAME, limit=50)
-
 
 app = FastAPI(title="CV Manager API")
 
@@ -81,19 +79,21 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         )
 
         # 2) process_cvs của Text2Sql
-        # results = process_cvs_sql(
-        #     input_dir=temp_dir,
-        #     # output_file chỉ là log/tổng hợp – đặt ra ngoài Backend luôn cho thống nhất
-        #     output_file=str(MEDIA_ROOT / "batch_result.json"),
-        #     db=db, llm=deepseek, limit=1,
-        # )
+        results = process_cvs_sql(
+            input_dir=temp_dir,
+            # output_file chỉ là log/tổng hợp – đặt ra ngoài Backend luôn cho thống nhất
+            output_file=str(MEDIA_ROOT / "batch_result.json"),
+            db=db, 
+            llm=deepseek, 
+            limit=1,
+        )
 
         if not info:
             return {"error": "Không xử lý được"}
 
         return {
             "rag_info": info,      # JSON từ bước RAG
-           # "sql_info": results[0] # JSON từ bước Text2SQL
+            "sql_info": results[0] # JSON từ bước Text2SQL
         }
 
     except Exception as e:
@@ -132,6 +132,8 @@ async def query_api(request: QueryRequest):
     "route": result.get("route"),   # 👈 lấy route
     "sql": result.get("sql_query"),
     "rows": result.get("sql_result"),
+    "columns": result.get("columns"),
+    "trials": result.get("trials"),
     "vector_query": result.get("vector_query"),
     "vector_result": result.get("vector_result"),
     "final_answer": result.get("final_answer"),

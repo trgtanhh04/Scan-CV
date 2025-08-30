@@ -4,6 +4,7 @@ from qdrant_client import QdrantClient
 from sqlalchemy import create_engine, text
 import json
 import re
+from typing import Tuple, Literal
 
 def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
@@ -43,7 +44,7 @@ def rewrite_query(question: str, llm):
 def route_query(question: str, llm):
     router_prompt = ChatPromptTemplate.from_template("""
         You are a classification system. For each user question. 
-        Answer 'SQL' if it is related to structured data (full_name, email, phone, job_title) 
+        Answer 'SQL' if it is related to structured data (full_name, email, phone, job_title, certifications, languages, degree, ) 
         that is stored in a Postgresql database.
         Answer 'VECTOR' if the user question is related to skill and experience.
         Question: {question}
