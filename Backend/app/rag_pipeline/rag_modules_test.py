@@ -1,0 +1,228 @@
+from langchain.prompts import ChatPromptTemplate
+from qdrant_client.models import Filter, FieldCondition, MatchValue
+from qdrant_client import QdrantClient
+from sqlalchemy import create_engine, text
+import json
+import re
+from typing import Tuple, Literal
+
+# import os  
+
+# # from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
+# # from config.storage import MEDIA_ROOT, build_public_url 
+# from langchain_deepseek import ChatDeepSeek
+# from qdrant_client import QdrantClient
+# from langchain_google_genai import  GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+
+
+# DEEPSEEK_API_KEY='sk-700f6bb0b3b341bba6f9f7c4db53d028'
+
+
+# deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+
+# GOOGLE_API_KEY = 'AIzaSyBJ86qCzZw5qIVhhdb_VB28OaQz42Oj6GU'
+# embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", google_api_key=GOOGLE_API_KEY)
+# # engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
+
+# db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
+# qdrant = QdrantClient(path=db_path)
+# COLLECTION_NAME = "candidates"
+
+def fix_sql_quotes(query: str) -> str:
+    fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
+    return fixed_query
+
+# def pre_retrieval_judge(question:str, llm):
+#     pre_retrieval_prompt = ChatPromptTemplate.from_template("""
+#     You are a classification system. From each admin's text:
+#     Answer 'Casual' if it is a casual chat or greeting.
+#     Answer 'HR' if the admin wants to find information about the candidates applying for the company.
+#     Admin's text: {question}
+#     """)
+#     response = llm.invoke(pre_retrieval_prompt.format(question=question))
+#     return response.content.strip()
+
+# def post_retrieval_judge(question:str, information: str, llm):
+#     post_retrieval_prompt = ChatPromptTemplate.from_template("""
+#     You are a judgement system. For each user question and the information returned from the database:
+#     Answer 'Satisfactory' if the information returned from the database is relevant and answers the question.
+#     Answer 'Unsatisfactory' if there is no information returned.
+#     Question: {question}
+#     Information returned from vector database: {information}
+#     """)
+#     response = llm.invoke(post_retrieval_prompt.format(question=question, information=information))
+#     return response.content.strip()
+
+# def rewrite_query(question: str, llm):
+#     prompt = ChatPromptTemplate.from_template("""
+#     The user asked a question but the database returned no satisfactory result.
+#     Please rewrite the question in a clearer and alternative way, keeping the intent the same.
+#     Original question: {question}
+#     """)
+#     response = llm.invoke(prompt.format(question=question))
+#     return response.content.strip()
+
+
+def route_query(question: str, llm):
+    router_prompt = ChatPromptTemplate.from_template("""
+        You are a classification system. For each user question. 
+        Answer 'SQL' if it is related to structured data (full_name, email, phone, job_title, certifications, languages, degree, ) 
+        that is stored in a Postgresql database.
+        Answer 'VECTOR' if the user question is related to skill and experience.
+        Question: {question}
+        """)
+    response = llm.invoke(router_prompt.format(question=question))
+    print(response.content.strip())
+    return response.content.strip()
+
+
+def generate_sql(question: str, llm):
+    sql_prompt = ChatPromptTemplate.from_template("""
+        You are a TEXT2SQL system. Your job is to translate user question into a SQL query. 
+        This is your database schema:
+        candidates_info(id, full_name, email, phone, job_title)
+
+        Question: {question}
+        Return a valid SQL query. You don't have to add ```sql ``` in between the query. 
+        The value should be put in '', not "".
+        """)
+    response = llm.invoke(sql_prompt.format(question=question))
+    return response.content.strip()
+
+
+def generate_vector_query(question: str, llm, collection_name, limit):
+    vector_prompt = ChatPromptTemplate.from_template("""
+        You are a TEXT2VECTORQUERY system. 
+        Translate user questions into a valid Qdrant query in JSON format. 
+        Use one of two actions: "search" or "scroll".
+
+        Rules:
+        - If the question asks for attributes of a specific candidate (skills or experiences),
+          use "scroll" with a filter on candidate_name and type.
+        - If the question asks to find candidates by skill OR experience, 
+          use "search" with query_text and type filter (only one type per query).
+        - If the question asks to combine skills AND experiences 
+          (e.g., "candidates with Python skill and worked at Google"),
+          return an array of multiple queries, one for skills and one for experiences.
+        - Never mix type=skill and type=experience in the same query_filter.
+        - Always return raw JSON only, no explanation.
+
+        collection_name: {collection_name}
+        limit: {limit}
+
+        Question: {question}
+        Output format: JSON object OR array of JSON objects
+    """)
+
+    response = llm.invoke(vector_prompt.format(
+        question=question, collection_name=collection_name, limit=limit
+    ))
+    cleaned = re.sub(r"^```json\s*|\s*```$", "", response.content.strip())
+    return cleaned.strip()
+
+def build_filter(filter_json: dict):
+    """
+    Convert filter JSON (must, should, must_not) into Qdrant Filter object
+    """
+    if not filter_json:
+        return None
+
+    must_conditions, should_conditions, must_not_conditions = [], [], []
+
+    for cond in filter_json.get("must", []):
+        if "key" in cond and "match" in cond:
+            must_conditions.append(
+                FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+            )
+    for cond in filter_json.get("should", []):
+        if "key" in cond and "match" in cond:
+            should_conditions.append(
+                FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+            )
+    for cond in filter_json.get("must_not", []):
+        if "key" in cond and "match" in cond:
+            must_not_conditions.append(
+                FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+            )
+
+    return Filter(
+        must=must_conditions or None,
+        should=should_conditions or None,
+        must_not=must_not_conditions or None
+    )
+
+
+def execute_vector_query(plan, client: QdrantClient, embedding_model, search_threshold=0.75):
+    if isinstance(plan, list):  # nhiều query cần chạy rồi join
+        results_per_query = []
+        for subplan in plan:
+            results = execute_vector_query(subplan, client, embedding_model, search_threshold)
+            results_per_query.append(results)
+        
+        # join theo candidate_name (chỉ giữ những người có mặt ở tất cả queries)
+        sets = [set([r["payload"]["candidate_name"] for r in res if "payload" in r]) for res in results_per_query]
+        common_candidates = set.intersection(*sets)
+        
+        # gom full payload theo candidate
+        final = []
+        for res in results_per_query:
+            for r in res:
+                if r["payload"]["candidate_name"] in common_candidates:
+                    final.append(r)
+        return final
+    
+    # -------- trường hợp chỉ 1 query như cũ ----------
+    action = plan["action"]
+    collection_name = plan["collection_name"]
+    limit = plan.get("limit", 10)
+
+    if action == "scroll":
+        qdrant_filter = build_filter(plan.get("scroll_filter", {}))
+        points, _ = client.scroll(
+            collection_name=collection_name,
+            limit=limit,
+            scroll_filter=qdrant_filter
+        )
+        return [p.payload for p in points]
+
+    elif action == "search":
+        qdrant_filter = build_filter(plan.get("query_filter", {}))  # chú ý đổi thành query_filter
+        query_text = plan["query_text"]
+        query_vector  = embedding_model.embed_query(query_text) 
+
+        results = client.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            score_threshold=search_threshold,
+            limit=limit,
+            query_filter=qdrant_filter
+        )
+        return [{"payload": r.payload, "score": r.score} for r in results]
+
+    else:
+        raise ValueError(f"Unknown action type: {action}")
+
+def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=3, search_threshold=0.5):
+    output = generate_vector_query(query, llm, collection, limit)
+    plan = json.loads(output)
+    # print(plan)
+    results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold)
+    return results, plan
+
+
+
+
+# results, plan = search_vector(
+#     query="Find candidates with Python skill and had experience in Software",
+#     llm=deepseek,
+#     embedding_model=embedding,
+#     qdrant_db=qdrant,
+#     collection="candidates",
+#     limit=5
+# )
+
+# print("Query plan:", json.dumps(plan, indent=2))
+# for r in results:
+#     print(r)
+
+# qdrant.close()
