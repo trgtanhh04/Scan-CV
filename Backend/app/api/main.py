@@ -10,35 +10,24 @@ from app.models.models import SessionLocal
 # from app.rag_pipeline.workflow import flow   # graph build sẵn
 from app.rag_pipeline.workflow import build_flow 
 from app.text2SQL.process_cvs_sql import process_cvs_sql     
-from app.services.extract_cv import process_cv     
+from app.services.extract_cv import process_cv_rag
+from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs  
+from app.services.extract_cv import extract_text_from_pdf, extract_info
 
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
-from config.storage import MEDIA_ROOT, build_public_url 
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME
+from config.storage import MEDIA_ROOT 
 from langchain_deepseek import ChatDeepSeek
 from qdrant_client import QdrantClient
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from sqlalchemy import create_engine
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-
-embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
-# engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
-
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
-qdrant = QdrantClient(path=db_path)
-COLLECTION_NAME = "candidates"
-public_base_url = None  # hoặc "http://localhost:8000"
-flow = build_flow(deepseek, embedding, qdrant, COLLECTION_NAME, limit=50, public_base_url=public_base_url)
+embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
+qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
+flow = build_flow(deepseek, embedding_model, qdrant, QDRANT_COLLECTION, limit=50)
 
 app = FastAPI(title="CV Manager API")
-app.mount("/cvs", StaticFiles(directory="raw/cvs"), name="cvs")
-
-
-# Ensure MEDIA_ROOT exists before mounting static files
-import os
-os.makedirs(str(MEDIA_ROOT), exist_ok=True)
-app.mount("/media", StaticFiles(directory=str(MEDIA_ROOT)), name="media")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,29 +52,53 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         with open(temp_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        # 1) process_cvs của RAG
-        # info = process_cv(
+        # (1) get url from gcs
+        resume_url = upload_pdf_and_get_url_gcs(temp_path)
+
+        # (2) Extract 1 lần
+        text = extract_text_from_pdf(temp_path)
+        info = extract_info(text) or {}
+
+        # process_cvs của RAG
+        # _ = process_cv(
         #     file_path=temp_path,
         #     vector_db=qdrant,   
         #     embedding_model=embedding,
         #     collection_name="candidates"
         # )
-        # 2) process_cvs của Text2Sql
-        results = process_cvs_sql(
-            input_dir=temp_dir,
-            # output_file chỉ là log/tổng hợp – đặt ra ngoài Backend luôn cho thống nhất
-            output_file=str(MEDIA_ROOT / "batch_result.json"),
-            db=db, llm=deepseek, limit=1,
+
+        # (3) RAG 
+        rag_results = process_cv_rag(
+            file_path=temp_path,
+            vector_db=qdrant,
+            embedding_model=embedding_model,
+            collection_name="candidates",
+            pre_text=text,
+            pre_info=info,
+            resume_url=resume_url,
         )
 
-        if not results:
+        # (4) Text2SQL 
+        sql_results = process_cvs_sql(
+            input_dir=temp_dir,
+            output_file=str(MEDIA_ROOT / "batch_result.json"),
+            db=db,
+            limit=1,
+            single_file_path=temp_path,
+            pre_public_url=resume_url,
+            original_name=file.filename,
+            pre_text=text,
+            pre_info=info,
+        )
+
+        if not sql_results:
             return {"error": "Không xử lý được"}
         # return {
         #     "rag_info": info,      # JSON từ bước RAG
         #     "sql_info": results[0] # JSON từ bước Text2SQL
         # }
 
-        return results[0]
+        return sql_results[0]
 
     except Exception as e:
         import traceback; traceback.print_exc()
@@ -116,5 +129,5 @@ async def query_api(request: QueryRequest):
         "final_answer": result.get("final_answer"),
     }
 
-
+# giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
