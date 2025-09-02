@@ -3,8 +3,7 @@
     "full_name": "Alexander Antonison",
     "email": "alex@antonison-cg.com",
     "phone": "(256) 426-4379",
-    "job_title": "Data Professional | Consultant",
-    "location": "Nashville, TN",
+    "job_title": "Data Solutions Consultant",
     "education": [
       {
         "degree": "M.C.S Data Science",
@@ -25,49 +24,49 @@
         "company": "Antonison Consulting Group",
         "start_date": "June 2020",
         "end_date": "Present",
-        "description": "Help clients by providing solutions that foster growth and efficiency through Data Engineering and Architecture services."
+        "description": "Help clients by providing solutions that foster growth and efficiency through Data Engineering and Architecture services. Worked with various clients including MTSU Data Science Institute, Concert Genetics, Verana Health, and Picknic."
       },
       {
         "job_title": "Data Engineer",
         "company": "Verana Health",
         "start_date": "March 2021",
         "end_date": "November 2021",
-        "description": "Worked on building an ingestion platform that pulls in data from Electronic Health Record (EHR) systems and processes them into a common data model for further processing and analysis."
+        "description": "Worked on building an ingestion platform that pulls in data from Electronic Health Record (EHR) systems and processes them into a common data model. Built PySpark Data Quality modules, AWS Glue PySpark jobs, and application templates."
       },
       {
         "job_title": "Principal Machine Learning Engineer",
         "company": "Stratasan",
         "start_date": "October 2019",
         "end_date": "February 2021",
-        "description": "Started as Data Services Manager leading Data Engineering and Data Science team, transitioned to Principal Machine Learning Engineer to focus on scaling data products and supporting machine learning model development and deployment."
+        "description": "Started as Data Services Manager leading Data Engineering and Data Science teams, then transitioned to Principal Machine Learning Engineer. Established source control strategy, developed team members, provided technical guidance, and implemented data optimization solutions."
       },
       {
         "job_title": "Data Engineer -> Data Scientist",
         "company": "Axial Healthcare",
         "start_date": "July 2017",
         "end_date": "September 2019",
-        "description": "Worked on Data Operations team enhancing intake and processing of client data, transferred to Data Science team to streamline development, deployment, and management of models."
+        "description": "Worked on Data Operations team managing data intake and processing, then transferred to Data Science team focusing on streamlining model development, deployment, and management. Improved development efficiency and deployment processes."
       },
       {
         "job_title": "Data Engineer/Analyst",
         "company": "FreseniusRx",
         "start_date": "April 2015",
         "end_date": "July 2017",
-        "description": "Supported analytic groups through developing data pipelines, warehousing data, developing and maintaining reporting and dashboard solutions."
+        "description": "Supported analytic groups through developing data pipelines, warehousing data, and maintaining reporting solutions. Developed scheduled data pipelines using Talend and supported self-service analytics."
       },
       {
         "job_title": "System Analyst",
         "company": "Oilfield Instrumentation",
         "start_date": "August 2014",
         "end_date": "March 2015",
-        "description": "Worked in engineering department supporting development, testing, and troubleshooting field issues for software products."
+        "description": "Supported development, testing, and troubleshooting of software products. Optimized SQL reports, documented software issues, and provided technical support to customers."
       },
       {
         "job_title": "System Analyst",
         "company": "Wyle, CAS",
         "start_date": "May 2012",
         "end_date": "August 2014",
-        "description": "Worked as analyst in support of PATRIOT System Effectiveness Model (PSEM), a simulation model of the PATRIOT missile defense system."
+        "description": "Worked as an analyst supporting PATRIOT System Effectiveness Model (PSEM). Automated evaluation processes, developed automation scripts, and performed Verification and Validation activities."
       }
     ],
     "skills": [
@@ -84,19 +83,19 @@
       "Salesforce",
       "Snowflake",
       "AWS Lambda",
-      "AWS S3",
-      "AWS EC2",
-      "AWS Glue",
-      "AWS Step Functions",
-      "AWS Athena",
-      "AWS Redshift",
-      "AWS EMR",
-      "AWS IAM",
-      "AWS Quicksight",
-      "AWS ECR",
-      "AWS Fargate",
-      "AWS CloudWatch",
-      "Google BigQuery",
+      "S3",
+      "EC2",
+      "Glue",
+      "Step Functions",
+      "Athena",
+      "Redshift",
+      "EMR",
+      "IAM",
+      "Quicksight",
+      "ECR",
+      "Fargate",
+      "CloudWatch",
+      "BigQuery",
       "Google Cloud Storage",
       "Serverless",
       "Docker",
@@ -111,8 +110,7 @@
       "Tableau",
       "PowerBI",
       "SSRS",
-      "Excel PowerQuery",
-      "Excel PowerPivot",
+      "Excel",
       "RStudio Server Pro",
       "JupyterHub",
       "RMarkdown"
@@ -120,115 +118,7 @@
     "certifications": [],
     "languages": [],
     "source_file": "01.pdf",
-    "resume_url": "http://localhost:8000/media/cv/6e2be5c1e5af4a128a4ccc4820957aa4.pdf",
+    "resume_url": "https://storage.googleapis.com/cv-uploads-prod/resumes/8ba01fbd1e2740f1ae4f4b27fe6fc0d6/01.pdf",
     "candidate_id": 2
-  },
-  {
-    "full_name": "John Francis",
-    "email": "johnfrancis95815@gmail.com",
-    "phone": "+91-9488835026",
-    "job_title": "Data Engineer",
-    "location": "India",
-    "education": [
-      {
-        "degree": "Bachelors Degree in Engineering",
-        "university": null,
-        "start_year": null,
-        "end_year": null
-      }
-    ],
-    "experience": [
-      {
-        "job_title": "Data Engineer",
-        "company": "BatchService",
-        "start_date": "03/2024",
-        "end_date": "Present",
-        "description": "Optimized ETL processes for US real estate data, handling over 100 million records per batch. Focused on cost-efficiency and delivery speed. Implemented complex business logic to ensure the most reliable and up-to-date data for customers and data consumers."
-      },
-      {
-        "job_title": "Senior Data Engineer",
-        "company": "Loyalytics AI",
-        "start_date": "10/2023",
-        "end_date": "03/2024",
-        "description": "Led the design and implementation of a robust data lake architecture for GMG, integrating data from diverse sources such as SAP, SFTP, and REST APIs. Created a centralized, real-time data platform leveraging AWS Glue and Databricks. Spearheaded development of an internal ETL pipeline to consolidate data from various sources like GitHub and ClickUp."
-      },
-      {
-        "job_title": "Product Data Engineer",
-        "company": "Loyalytics AI",
-        "start_date": "04/2023",
-        "end_date": "10/2023",
-        "description": "Led the ETL setup for unstructured retail business data across all Loyalytics clients, building a robust data lake architecture using Delta Live Tables and Apache Kafka streaming services. Developed and self-managed a scalable, reusable data lifecycle framework that ingests various file types and integrates with Unity Catalog and Delta Live Tables."
-      },
-      {
-        "job_title": "Data Engineer",
-        "company": "Loyalytics AI",
-        "start_date": "08/2022",
-        "end_date": "04/2023",
-        "description": "Led ETL setup for diverse data sources like MySQL, Oracle DB, SQL Server, and Oracle Fusion. Migrated from Oracle Data Integrator to Azure Databricks and Azure Data Factory. Oversaw setup of ETL pipelines for SQL Server and Microsoft SharePoint data. Established robust data lake architecture using Azure Data Factory and Azure Databricks."
-      },
-      {
-        "job_title": "Software Engineer",
-        "company": "LiftOff LLC",
-        "start_date": "09/2020",
-        "end_date": "09/2021",
-        "description": "Various full stack and backend development projects focused on creating robust, user-friendly web applications. Contributed to frontend and backend development for mental healthcare platform. Developed APIs and features for personalized sneaker styling service and Ed-Tech business."
-      }
-    ],
-    "skills": [
-      "Python",
-      "JavaScript",
-      "SQL",
-      "HTML",
-      "CSS",
-      "Pyspark",
-      "Spark",
-      "Databricks",
-      "Delta Live Tables",
-      "Unity Catalog",
-      "AWS Glue",
-      "AWS S3",
-      "Azure Data Factory",
-      "Azure Storage Gen2",
-      "Fivetran",
-      "NumPy",
-      "Pandas",
-      "Docker",
-      "GIT",
-      "Medallion Architecture",
-      "Data Manipulation",
-      "Troubleshooting",
-      "Creative Problem Solving",
-      "Apache Spark Streaming",
-      "Role-Based Access Control (RBAC)",
-      "Big Data",
-      "Microsoft SQL Server",
-      "Data Lakes",
-      "Extract, Transform, Load (ETL)",
-      "Object-Relational Mapping (ORM)",
-      "JSON",
-      "Quality Control",
-      "Quality Assurance",
-      "Amazon EC2",
-      "Amazon S3",
-      "Amazon RDS",
-      "AWS Lambda",
-      "REST APIs",
-      "Node.js",
-      "MongoDB",
-      "Full-Stack Development",
-      "HTML5",
-      "Jupyter",
-      "PostgreSQL"
-    ],
-    "certifications": [
-      {
-        "certificate_name": "Databricks Data Engineering Associate Certification",
-        "organization": "Databricks"
-      }
-    ],
-    "languages": [],
-    "source_file": "02.pdf",
-    "resume_url": "http://localhost:8000/media/cv/35294c5b263f465395aaccf3f0260892.pdf",
-    "candidate_id": 5
   }
 ]

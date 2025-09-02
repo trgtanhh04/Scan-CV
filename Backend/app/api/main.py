@@ -23,9 +23,21 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
+<<<<<<< HEAD
 embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
 qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
 flow = build_flow(deepseek, embedding_model, qdrant, QDRANT_COLLECTION, limit=50)
+=======
+
+embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", google_api_key=GOOGLE_API_KEY)
+# engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
+
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
+qdrant = QdrantClient(path=db_path)
+COLLECTION_NAME = "candidates"
+public_base_url = None  # hoặc "http://localhost:8000"
+flow = build_flow(deepseek, embedding, qdrant, COLLECTION_NAME, limit=50, public_base_url=public_base_url)
+>>>>>>> 13ca069f6850a28a495f5ad1f18972b1a9d29ac9
 
 app = FastAPI(title="CV Manager API")
 

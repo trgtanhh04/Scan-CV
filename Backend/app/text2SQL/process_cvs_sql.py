@@ -2,105 +2,156 @@
 # ===== Batch ingest helpers (final) =====
 import os, uuid, shutil, mimetypes, json
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Callable
 from sqlalchemy.orm import Session
+import sys
 
-from app.services.info_extract import extract_text_from_pdf, extract_info
-from app.models.ingest import insert_candidate_to_db
-from config.storage import MEDIA_ROOT, CV_DIR, build_public_url  # <--- dùng config chung
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from services.extract_cv import extract_text_from_pdf, extract_info
+from models.ingest import insert_candidate_to_db
+from config.storage import MEDIA_ROOT
+from services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 
 # ---- Attachment ghi vào DB ----
+# def save_attachment_for_batch(
+#     db: Session,
+#     *,
+#     candidate_id: int,
+#     rel_path: str,
+#     original_name: Optional[str],
+#     storage: str = "local",
+#     public_url: Optional[str] = None,
+# ):
+#     """Ghi 1 bản ghi Attachment (đã có model Attachment)."""
+#     from app.models.models import Attachment  # import cục bộ tránh vòng lặp
+
+#     mime = mimetypes.guess_type(rel_path)[0] or "application/pdf"
+#     size = None
+#     try:
+#         size = (MEDIA_ROOT / rel_path).stat().st_size
+#     except Exception:
+#         pass
+
+#     att = Attachment(
+#         candidate_id=candidate_id,
+#         original_name=original_name,
+#         mime_type=mime,
+#         size_bytes=size,
+#         storage=storage,
+#         path=rel_path,
+#         public_url=public_url,
+#     )
+#     db.add(att)
+#     db.commit()
+#     db.refresh(att)
+#     return att
+
 def save_attachment_for_batch(
     db: Session,
     *,
     candidate_id: int,
-    rel_path: str,
+    object_key: str,                
     original_name: Optional[str],
-    storage: str = "local",
-    public_url: Optional[str] = None,
+    public_url: str,             
+    storage: str = "gcs",          
+    size_bytes: Optional[int] = None, 
 ):
-    """Ghi 1 bản ghi Attachment (đã có model Attachment)."""
-    from app.models.models import Attachment  # import cục bộ tránh vòng lặp
+    """
+    Lưu 1 Attachment trỏ tới file trên GCS:
+    - path: lưu object_key (vd: 'resumes/uuid/01.pdf')
+    - public_url: URL mở được (public hoặc signed)
+    - storage: 'gcs'
+    """
+    from app.models.models import Attachment  # tránh vòng lặp import
 
-    mime = mimetypes.guess_type(rel_path)[0] or "application/pdf"
-    size = None
-    try:
-        size = (MEDIA_ROOT / rel_path).stat().st_size
-    except Exception:
-        pass
+    guess_src = original_name or object_key
+    mime = mimetypes.guess_type(guess_src)[0] or "application/pdf"
 
     att = Attachment(
         candidate_id=candidate_id,
         original_name=original_name,
         mime_type=mime,
-        size_bytes=size,
-        storage=storage,
-        path=rel_path,
+        size_bytes=size_bytes, 
+        storage=storage,         # 'gcs'
+        path=object_key,         
         public_url=public_url,
     )
     db.add(att)
     db.commit()
     db.refresh(att)
-    return att
+
+
+def _object_key_from_gcs_url(url: str) -> Optional[str]:
+    # URL dạng: https://storage.googleapis.com/<bucket>/<object_key>
+    try:
+        parts = url.split("/", 4)
+        return parts[4] if len(parts) >= 5 else None
+    except Exception:
+        return None
 
 # ---- Pipeline ingest 1 folder ----
 def process_cvs_sql(
     input_dir: str,
     output_file: str,
     db: Session,
-    llm,
     limit: int = 1,
-):
-    """
-    - Quét *.pdf trong input_dir (tối đa 'limit')
-    - Copy sang MEDIA_ROOT/cv/{uuid}.pdf
-    - extract_text_from_pdf -> extract_info(llm) -> insert_candidate_to_db
-    - Lưu Attachment (public_url = http(s)://.../media/cv/<uuid>.pdf)
-    - Ghi file tổng hợp JSON (kết quả trích xuất)
-    """
+    *,
+    gcs_uploader: Callable[[str], str] = upload_pdf_and_get_url_gcs,
+    single_file_path: Optional[str] = None,
+    pre_public_url: Optional[str] = None,
+    original_name: Optional[str] = None,
+    pre_text: Optional[str] = None, 
+    pre_info: Optional[dict] = None,  
+) -> List[dict]:
     input_dir = str(input_dir)
     results: List[dict] = []
 
-    pdf_files = [f for f in os.listdir(input_dir) if f.lower().endswith(".pdf")]
-    pdf_files = pdf_files[:limit]
+    if single_file_path:
+        pdf_files = [Path(single_file_path).name]
+        input_dir = str(Path(single_file_path).parent)
+        limit = 1
+    else:
+        pdf_files = [f for f in os.listdir(input_dir) if f.lower().endswith(".pdf")]
 
-    for filename in pdf_files:
+    for filename in pdf_files[:limit]:
         src = Path(input_dir) / filename
         print(f"Processing {src}...")
 
-        # 1) copy vào MEDIA_ROOT/cv/{uuid}.pdf
-        ext = src.suffix.lower() or ".pdf"
-        fid = f"{uuid.uuid4().hex}{ext}"
-        dst = CV_DIR / fid
-        shutil.copyfile(src, dst)
-        rel_path = f"cv/{dst.name}"
+        # chỉ rút trích nếu chưa có pre_text / pre_info
+        text = pre_text if (pre_text is not None and src.samefile(single_file_path or src)) else extract_text_from_pdf(str(src))
+        info = pre_info if (pre_info is not None and src.samefile(single_file_path or src)) else (extract_info(text) or {})
 
-        # 2) trích xuất & LLM
-        text = extract_text_from_pdf(str(dst))
-        info = extract_info(text, llm)
-
-        # 3) upsert ứng viên
         cand = insert_candidate_to_db(db, info)
 
-        # 4) build URL public & lưu attachment
-        file_url = build_public_url(rel_path)  # <--- dùng config.storage
+        if pre_public_url and single_file_path and src.samefile(single_file_path):
+            file_url = pre_public_url
+        else:
+            file_url = gcs_uploader(str(src))
+
+        object_key = _object_key_from_gcs_url(file_url) or f"resumes/{uuid.uuid4().hex}.pdf"
+        # save_attachment_for_batch(
+        #     db=db,
+        #     candidate_id=cand.id,
+        #     object_key=object_key,
+        #     original_name=original_name or filename,
+        #     public_url=file_url,
+        # )
         save_attachment_for_batch(
             db=db,
             candidate_id=cand.id,
-            rel_path=rel_path,
+            object_key=object_key,       # ví dụ: 'resumes/128a65c5.../01.pdf'
             original_name=filename,
-            storage="local",
-            public_url=file_url,
+            public_url=file_url,              # ví dụ: 'https://storage.googleapis.com/.../01.pdf'
+            storage="gcs",
         )
 
-        # 5) tổng hợp trả về FE
-        rec = dict(info or {})
-        rec["source_file"] = filename
-        rec["resume_url"] = file_url
+        rec = dict(info)
+        rec["source_file"]  = original_name or filename
+        rec["resume_url"]   = file_url
         rec["candidate_id"] = cand.id
         results.append(rec)
 
-    # 6) lưu JSON tổng hợp (đặt ngoài Backend nếu muốn)
+    # 6) lưu JSON
     out_path = Path(output_file)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -117,15 +168,23 @@ if __name__ == "__main__":
 
     deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-    # DB session for local test
+    file_path = '../../raw/cvs/01.pdf'
+    text = extract_text_from_pdf(file_path)
+    info = extract_info(text) or {}
+
+    # DB session cho test local
     engine = create_all("postgresql+psycopg2://postgres:postgres@localhost:5432/scan_cv")
     SessionLocal.configure(bind=engine)
+
     with SessionLocal() as db:
         out = process_cvs_sql(
             input_dir=r"E:\Scan-CV\Backend\raw",
             output_file=str(MEDIA_ROOT / "batch_result.json"),
             db=db,
-            llm=deepseek,
             limit=10,
+            single_file_path=file_path,     # test chỉ 1 file
+            pre_text=text,                  # tái sử dụng text extract
+            pre_info=info,                  # tái sử dụng JSON extract
         )
         print(out[:2])
+# python process_cvs_sql.py
