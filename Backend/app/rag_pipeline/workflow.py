@@ -169,18 +169,18 @@ def build_flow(llm, embedding_model, qdrant_db, collection, limit, search_thresh
     return graph.compile()
 
 
-embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
-qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
-flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=50)
+# Test local
+if __name__ == "__main__":
+    embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
+    qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
+    flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=50)
 
-result = flow.invoke({"question": "Find all email of candidates in database"})
-# source_files = [item["payload"].get("source_file") for item in result["final_answer"] if "payload" in item]
-if isinstance(result["final_answer"], list) and result.get("sql_result"):
-    print("SQL result:", result["sql_result"])
-elif isinstance(result["final_answer"], list) and result.get("vector_result"):
-    print("Vector result:", result["vector_result"])
-elif result["final_answer"] == "I don't know":
-    print("No result found.")
-else:
-    print(result["final_answer"])
-qdrant.close()
+    result = flow.invoke({"question": "List candidates in database"})
+    if isinstance(result["final_answer"], list) and result.get("sql_result"):
+        print("SQL result:", result["sql_result"])
+    elif isinstance(result["final_answer"], list) and result.get("vector_result"):
+        print("Vector result:", result["vector_result"])
+    elif result["final_answer"] == "I don't know":
+        print("No result found.")
+    else:
+        print(result["final_answer"])

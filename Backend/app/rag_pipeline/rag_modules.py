@@ -220,7 +220,7 @@ def execute_vector_query(plan: dict, client: QdrantClient, embedding_model, sear
         return [p.payload for p in points]
 
     elif action == "search":
-        qdrant_filter = build_filter(plan.get("search_filter", {}))
+        qdrant_filter = build_filter(plan.get("query_filter", {}))
         query_text = plan["query_text"]
         query_vector  = embedding_model.embed_query(query_text) 
 
