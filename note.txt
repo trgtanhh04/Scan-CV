@@ -1,0 +1,43 @@
+1) Cài trước (1 lần/người):
+
+Cài Google Cloud SDK.
+
+Đăng nhập ADC:
+
+gcloud auth application-default login --project interns-2025-467409
+
+
+2) Chủ repo chạy 1 lần (hoặc DevOps) để cấu hình bucket:
+
+Làm 1 lần cho cả team, những người khác không cần làm lại.
+
+# Bật Uniform bucket-level access
+gcloud storage buckets update gs://cv-uploads-prod --uniform-bucket-level-access
+
+# Cho phép public-read (ai có link đều xem được)
+gcloud storage buckets add-iam-policy-binding gs://cv-uploads-prod `
+  --member="allUsers" `
+  --role="roles/storage.objectViewer"
+
+
+3) Mỗi dev chạy code:
+
+Cài dependencies:
+
+pip install google-cloud-storage python-dotenv
+
+
+Set env (hoặc dùng .env):
+
+$env:GCS_BUCKET="cv-uploads-prod"
+$env:GCS_MAKE_PUBLIC="true"
+
+
+Chạy script (hàm main trong file của bạn):
+
+python app\services\get_cv_url_from_gcs.py
+
+
+Nhận public URL mở được ngay (dạng https://storage.googleapis.com/...).
+
+Nếu bucket đã được cấu hình public + uniform như trên, người khác chỉ cần chạy hàm main sau khi gcloud auth application-default login là OK.

@@ -81,6 +81,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: scan_cv_pgadmin
@@ -94,6 +95,32 @@ services:
     networks:
       - app-network
 
+  # === QDRANT ===
+  qdrant:
+    image: qdrant/qdrant:v1.11.0
+    container_name: scan_cv_qdrant
+    ports:
+      - "6333:6333"   # HTTP
+      - "6334:6334"   # gRPC
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+      QDRANT__SERVICE__ENABLE_HTTP2: "true"
+      QDRANT__LOG_LEVEL: INFO
+      # Nếu muốn bật API key, mở dòng dưới + set biến môi trường QDRANT_API_KEY
+      # QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+      # Bật snapshot auto (tuỳ chọn)
+      QDRANT__STORAGE__PERIODIC_SNAPSHOT: "true"
+      QDRANT__STORAGE__SNAPSHOT_PERIOD_SEC: 3600
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+
   # backend:
   #   build:
   #     context: ./Backend
@@ -101,23 +128,22 @@ services:
   #   container_name: scan_cv_backend
   #   restart: unless-stopped
   #   environment:
-  #     # BE kết nối DB trong network docker
   #     - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/scan_cv
-  #     # Khóa LLM
   #     - DEEPSEEK_API_KEY=
-  #     # Link public để người dùng click mở CV (trình duyệt ở máy host)
   #     - PUBLIC_BASE_URL=http://localhost:8000
-  #     # (nếu app cho phép) MEDIA_ROOT nên là đường dẫn trong container, vd /app/media
   #     - MEDIA_ROOT=/app/media
+  #     # === QDRANT (gợi ý biến môi trường khi bạn bật backend) ===
+  #     - QDRANT_URL=http://qdrant:6333
+  #     - QDRANT_COLLECTION=candidates
+  #     # - QDRANT_API_KEY=${QDRANT_API_KEY}  # nếu đã bật API key ở service qdrant
   #   ports:
   #     - "8000:8000"
   #   volumes:
-  #     # mount toàn bộ code để dev nhanh
   #     - ./Backend:/app
-  #     # folder media chung (nếu muốn tách)
   #     - ./media:/app/media
   #   depends_on:
   #     - db
+  #     - qdrant
   #   networks:
   #     - app-network
   #   command: >
@@ -130,7 +156,6 @@ services:
   #   container_name: scan_cv_frontend
   #   restart: unless-stopped
   #   environment:
-  #     # FE gọi BE qua hostname 'backend' trong cùng network
   #     - API_BASE_URL=http://backend:8000
   #   ports:
   #     - "8501:8501"
@@ -149,3 +174,5 @@ networks:
 
 volumes:
   postgres_data:
+  # === thêm volume cho Qdrant ===
+  qdrant_storage:
