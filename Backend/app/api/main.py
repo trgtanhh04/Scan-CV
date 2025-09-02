@@ -23,9 +23,8 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
-qdrant = QdrantClient(path=QDRANT_URL)
+qdrant = QdrantClient(url=QDRANT_URL)
 flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=50)
 
 app = FastAPI(title="CV Manager API")
