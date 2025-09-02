@@ -6,6 +6,7 @@ Cài Google Cloud SDK.
 
 gcloud auth application-default login --project interns-2025-467409
 
+bước bên dưới trở đi k cần làm 
 
 2) Chủ repo chạy 1 lần (hoặc DevOps) để cấu hình bucket:
 
