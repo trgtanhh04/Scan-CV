@@ -7,12 +7,12 @@ from typing import List, Tuple
 # =========================
 # 1) SELECTOR (rule-based)
 # =========================
-SKILL_WORDS = r"(kỹ năng|skill|skills|tech|framework|ngôn ngữ lập trình|biết|thành thạo)"
 EXP_WORDS   = r"(kinh nghiệm|từng làm|đã làm|làm việc|company|công ty|experience|worked)"
 EDU_WORDS = r"(bằng cấp|đại học|university|degree|gpa|điểm trung bình|học|tốt nghiệp|education|studied|field of study)"
 LOC_WORDS   = r"(địa điểm|location|ở|tại|HCM|HCMC|Ho Chi Minh|Hà Nội|Hanoi|Huế|Đà Nẵng|Singapore|USA|UK)"
 LANG_WORDS  = r"(ngôn ngữ|language|languages|tiếng anh|tiếng nhật|english|japanese|vietnamese)"
 CERT_WORDS  = r"(chứng chỉ|certificate|chứng nhận)"
+SKILL_HINT = r"(skill|skills|k[ỹy]\s*n[ăa]ng|know|python|java|aws|spark|golang|pytorch|sql)"
 
 def selector_lite(user_query: str) -> Tuple[List[str], str]:
     """
@@ -23,7 +23,7 @@ def selector_lite(user_query: str) -> Tuple[List[str], str]:
 
     hints = []
 
-    if re.search(SKILL_WORDS, uq):
+    if re.search(SKILL_HINT, uq):
         tables |= {"skills", "candidate_skills"}
         hints.append("This query involves candidate skills; join skills via candidate_skills.")
         hints.append("If returning a candidate list, use DISTINCT or EXISTS to avoid duplicates.")

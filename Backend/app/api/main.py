@@ -136,6 +136,7 @@ class QueryRequest(BaseModel):
 async def query_api(request: QueryRequest):
     state = {"question": request.question}
     result = flow.invoke(state)
+
     # print('result:', result)
     if request.links_only:
         route = result.get("route")
@@ -210,13 +211,22 @@ def debug_db():
         test_sql = """
         SELECT DISTINCT c.id, c.full_name
         FROM candidates c
-        JOIN experiences e ON e.candidate_id = c.id
-        WHERE e.job_title ILIKE '%Data engineer%'
-          AND (
-            (e.end_date IS NOT NULL AND EXTRACT(YEAR FROM AGE(e.end_date, e.start_date)) >= 3)
-            OR (e.end_date IS NULL AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.start_date)) >= 3)
-          )
-        LIMIT 10
+        WHERE EXISTS (
+            SELECT 1 FROM candidate_skills cs1
+            JOIN skills s1 ON s1.id = cs1.skill_id
+            WHERE cs1.candidate_id = c.id AND s1.name ILIKE '%Python%'
+        )
+        AND EXISTS (
+            SELECT 1 FROM candidate_skills cs2
+            JOIN skills s2 ON s2.id = cs2.skill_id
+            WHERE cs2.candidate_id = c.id AND s2.name ILIKE '%Java%'
+        )
+        AND (
+            SELECT COUNT(DISTINCT company) 
+            FROM experiences 
+            WHERE candidate_id = c.id
+        ) >= 2
+        LIMIT 10;
         """
         rows = conn.execute(sa_text(test_sql)).fetchall()
 

@@ -40,17 +40,105 @@ def rewrite_query(question: str, llm):
     response = llm.invoke(prompt.format(question=question))
     return response.content.strip()
 
+from unidecode import unidecode
 
-def route_query(question: str, llm):
-    router_prompt = ChatPromptTemplate.from_template("""
-        You are a classification system. For each user question. 
-        Answer 'SQL' if it is related to structured data (full_name, email, phone, job_title, certifications, languages, degree, ) 
-        that is stored in a Postgresql database.
-        Answer 'VECTOR' if the user question is related to skill and experience.
-        Question: {question}
-        """)
-    response = llm.invoke(router_prompt.format(question=question))
-    return response.content.strip()
+RAG_SOFT_SKILL_PATTERNS = [
+    r"work\s+well\s+with\s+others",
+    r"team\s*player",
+    r"teamwork",
+    r"lam\s+viec\s+nhom",
+]
+
+def _norm(q: str) -> str:
+    return unidecode(q or "").lower().strip()
+
+def _is_sql_hard(qn: str) -> bool:
+    """Các câu nâng cao -> SQL: số năm, so sánh, đếm, top, khoảng thời gian, etc."""
+    pats = [
+        r"\b\d+\s*(years?|nam)\b",                # 3 years / 3 năm
+        r"\b(>=|>|<=|<|more than|over|at least|toi thieu|tro len)\b",
+        r"\b(count|so luong|bao nhieu|how many)\b",
+        r"\b(top|max|min|average|avg|sum)\b",
+        r"\bbetween\b|\bfrom\s+\d{4}\s+to\s+\d{4}\b",
+        r"\b(in|within)\s+\d+\s*(years?|nam)\b",
+        r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*(years?)\b",
+    ]
+    return any(re.search(p, qn) for p in pats)
+
+def _is_rag_simple(qn: str) -> bool:
+    """Những câu cơ bản cho RAG (VECTOR)."""
+    # 1) Find all skills of candidate <name>
+    if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?skills?\b.*\b(of|cua)\b", qn):
+        return True
+    # 2) Find all experience of candidate <name>
+    if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?experiences?\b.*\b(of|cua)\b", qn):
+        return True
+    # 3) Find candidates that know <skill> (Python, Java, …)
+    if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\b(know|ky\s*nang|skill|thanh\s*thao)\b", qn):
+        return True
+    # 4) Find candidates that know Java (trường hợp riêng cũng đã cover bởi (3), giữ cho rõ ràng)
+    if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\bknow\b.*\bjava\b", qn):
+        return True
+    # 5) Soft skill "work well with others" / teamwork
+    if any(re.search(p, qn) for p in RAG_SOFT_SKILL_PATTERNS):
+        return True
+    # 6) Have experience in Software (keyword trong experience)
+    if re.search(r"\bhave\s+experience\s+in\s+software\b", qn) or re.search(r"kinh\s*nghiem\s+.*software", qn):
+        return True
+    # 7) Kết hợp: biết Python AND có experience in Software
+    if re.search(r"know\s+python.*have\s+experience\s+in\s+software", qn) or \
+       re.search(r"ky\s*nang\s+python.*kinh\s*nghiem\s+.*software", qn):
+        return True
+
+    return False
+
+def route_query(question: str, llm=None) -> str:
+    """
+    Quy tắc định tuyến:
+    - Nếu là câu RAG cơ bản -> 'VECTOR'
+    - Nếu là câu SQL khó (năm kinh nghiệm, so sánh, đếm, top, …) -> 'SQL'
+    - Mặc định -> 'SQL' (Text2SQL mạnh hơn ở câu phức tạp/không rõ)
+    """
+    qn = _norm(question)
+
+    # Hard/advanced → SQL
+    if _is_sql_hard(qn):
+        return "SQL"
+
+    # Simple RAG intents → VECTOR
+    if _is_rag_simple(qn):
+        return "VECTOR"
+
+    # (Tuỳ chọn) Fallback dùng LLM nếu bạn THẬT SỰ muốn:
+    # if llm is not None:
+    #     prompt = (
+    #         "Classify the question:\n"
+    #         "- Return 'SQL' for numeric constraints, years, counts, aggregations, joins.\n"
+    #         "- Return 'VECTOR' for skill/experience listing or simple semantic matches.\n"
+    #         f"Question: {question}"
+    #     )
+    #     try:
+    #         resp = llm.invoke(prompt)
+    #         ans = (resp.content or "").strip().upper()
+    #         if ans in ("SQL", "VECTOR"):
+    #             return ans
+    #     except Exception:
+    #         pass
+
+    # Default: SQL
+    return "SQL"
+
+
+# def route_query(question: str, llm):
+#     router_prompt = ChatPromptTemplate.from_template("""
+#         You are a classification system. For each user question. 
+#         Answer 'SQL' if it is related to structured data (full_name, email, phone, job_title, certifications, languages, degree, ) 
+#         that is stored in a Postgresql database.
+#         Answer 'VECTOR' if the user question is related to skill and experience.
+#         Question: {question}
+#         """)
+#     response = llm.invoke(router_prompt.format(question=question))
+#     return response.content.strip()
 
 
 def generate_sql(question: str, llm):

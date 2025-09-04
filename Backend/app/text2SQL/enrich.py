@@ -108,20 +108,20 @@ def enrich_with_resume_urls(
         return records
 
     sql = """
-    SELECT t.candidate_id, t.public_url, t.path
-    FROM (
-        SELECT
-            a.candidate_id,
-            a.public_url,
-            a.path,
-            ROW_NUMBER() OVER (
-                PARTITION BY a.candidate_id
-                ORDER BY a.created_at DESC NULLS LAST
-            ) AS rn
-        FROM attachments a
-        WHERE a.candidate_id = ANY(:ids)
-    ) AS t
-    WHERE t.rn = 1;
+        SELECT t.candidate_id, t.public_url, t.path
+        FROM (
+            SELECT
+                a.candidate_id,
+                a.public_url,
+                a.path,
+                ROW_NUMBER() OVER (
+                    PARTITION BY a.candidate_id
+                    ORDER BY a.created_at DESC NULLS LAST
+                ) AS rn
+            FROM attachments a
+            WHERE a.candidate_id = ANY(:ids)
+        ) AS t
+        WHERE t.rn = 1;
     """
     with engine.connect() as conn:
         rs = conn.execute(sa_text(sql), {"ids": cand_ids}).fetchall()

@@ -25,7 +25,7 @@ from langgraph.graph import StateGraph, END
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # from text2SQL.enrich import enrich_with_resume_urls
 # from text2SQL.t2sql_core import LLM, answer_sql
-from app.rag_pipeline.rag_modules_test import search_vector
+from app.rag_pipeline.rag_modules_test import search_vector, route_query
 from app.text2SQL.t2sql_core import LLM, answer_sql
 
 # === Config ===
@@ -61,44 +61,44 @@ class CandidateState(dict):
     final_answer: str
 
 
-def is_sql(question: str) -> bool:
-    q = unidecode(question.lower())             # "3 nam kinh nghiem tro len"
-    patterns = [
-        r"\b\d+\s*nam\b",                       # 3 nam
-        r">=?\s*\d+\s*nam",                     # >= 3 nam, > 5 nam
-        r"\bat\s*least\b.*\d+\s*year",          # at least 3 years
-        r"\btroi?\s*len\b",                     # trở lên / tro len
-        r"\btoi\s*thieu\b",                     # tối thiểu / toi thieu
-        r"\bkinh\s*nghiem\b.*\d+\s*nam",        # kinh nghiem 3 nam
+# def is_sql(question: str) -> bool:
+#     q = unidecode(question.lower())             # "3 nam kinh nghiem tro len"
+#     patterns = [
+#         r"\b\d+\s*nam\b",                       # 3 nam
+#         r">=?\s*\d+\s*nam",                     # >= 3 nam, > 5 nam
+#         r"\bat\s*least\b.*\d+\s*year",          # at least 3 years
+#         r"\btroi?\s*len\b",                     # trở lên / tro len
+#         r"\btoi\s*thieu\b",                     # tối thiểu / toi thieu
+#         r"\bkinh\s*nghiem\b.*\d+\s*nam",        # kinh nghiem 3 nam
 
-    ]
-    if any(re.search(p, q) for p in patterns):
-        return True
-    # if re.search(r"(python|java|aws|spark|golang|skill|ky\s*nang)", q) and \
-    #    re.search(r"(experience|kinh\s*nghiem|job|vi\s*tri|position|software|engineer)", q):
-    #     return True
+#     ]
+#     if any(re.search(p, q) for p in patterns):
+#         return True
+#     # if re.search(r"(python|java|aws|spark|golang|skill|ky\s*nang)", q) and \
+#     #    re.search(r"(experience|kinh\s*nghiem|job|vi\s*tri|position|software|engineer)", q):
+#     #     return True
 
-    return False
+#     return False
 
-def is_rag(question: str) -> bool:
-    q = unidecode(question.lower())
-    # cho RAG khi chỉ hỏi skill/experience listing, không có ràng buộc số/so sánh
-    has_skill = bool(re.search(r"\b(skill|ky\s*nang|python|java|aws|spark|golang)\b", q))
-    has_list_exp = bool(re.search(r"(liet\s*ke|ke)\s*.*(experience|kinh\s*nghiem)", q))
-    return (has_skill or has_list_exp) and not is_sql(question)
+# def is_rag(question: str) -> bool:
+#     q = unidecode(question.lower())
+#     # cho RAG khi chỉ hỏi skill/experience listing, không có ràng buộc số/so sánh
+#     has_skill = bool(re.search(r"\b(skill|ky\s*nang|python|java|aws|spark|golang)\b", q))
+#     has_list_exp = bool(re.search(r"(liet\s*ke|ke)\s*.*(experience|kinh\s*nghiem)", q))
+#     return (has_skill or has_list_exp) and not is_sql(question)
 
 
-def router_node(state: CandidateState):
-    if is_rag(state["question"]):   # match pattern skill/exp
-        state["route"] = "VECTOR"
-        state["rag_mode"] = {"type": "skill_or_exp"}
-    elif is_sql(state["question"]):
-        state["route"] = "SQL"
-        state["rag_mode"] = {"type": None}
-    else:
-        state["route"] = "SQL"
-        state["rag_mode"] = {"type": None}
-    return state
+# def router_node(state: CandidateState):
+#     if is_rag(state["question"]):   # match pattern skill/exp
+#         state["route"] = "VECTOR"
+#         state["rag_mode"] = {"type": "skill_or_exp"}
+#     elif is_sql(state["question"]):
+#         state["route"] = "SQL"
+#         state["rag_mode"] = {"type": None}
+#     else:
+#         state["route"] = "SQL"
+#         state["rag_mode"] = {"type": None}
+#     return state
 
 def router_condition(state):
     if state["route"] == "SQL":
@@ -109,57 +109,17 @@ def router_condition(state):
 
 
 # ---- Node functions ----
-# def router_node(state: CandidateState, llm):
-#     route = route_query(state["question"], llm)
-#     state["route"] = route
-#     return state
+def router_node(state: CandidateState, llm):
+    route = route_query(state["question"], llm)
+    state["route"] = route
+    return state
 
-# def router_condition(state):
-#     if state["route"] == "SQL":
-#         return "sql"
-#     elif state["route"] == "VECTOR":
-#         return "vector"
-#     return END
 
-# def sql_node(state: CandidateState, limit: int):
-#     """
-#     Giữ nguyên format state cũ: điền sql_query / columns / sql_result / trials.
-#     Thêm 'resume_url' bằng cách join attachments (latest file).
-#     """
-#     try:
-#         result = answer_sql(engine, llm_sql, state["question"], max_refine=1, limit=limit)
-
-#         state["sql_query"] = result["sql"]
-#         state["columns"] = result["columns"]
-
-#         enriched_rows = enrich_with_resume_urls(
-#             engine, result["columns"], result["rows"]
-#         )
-#         state["sql_result"] = enriched_rows
-#         state["trials"] = result.get("trials", [])
-
-#         # nếu UI của bạn đang đọc final_answer = bảng, giữ nguyên định dạng
-#         state["final_answer"] = {
-#             "type": "table",
-#             "columns": (
-#                 result["columns"] if "resume_url" in result["columns"]
-#                 else result["columns"] + ["resume_url"]
-#             ),
-#             "rows": enriched_rows,
-#         }
-#         return state
-
-#     except Exception as e:
-#         state["sql_query"] = None
-#         state["columns"] = []
-#         state["sql_result"] = []
-#         state["trials"] = []
-#         state["final_answer"] = {"type": "error", "message": f"Text2SQL failed: {e}"}
-#         return state
 
 def sql_node(state: CandidateState, limit: int):
     try:
         result = answer_sql(engine, llm_sql, state["question"], max_refine=1, limit=limit)
+        print('result:', result)
 
         state["sql_query"] = result.get("sql")
         state["columns"]  = result.get("columns") or []
@@ -212,7 +172,7 @@ def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_thr
     graph = StateGraph(CandidateState)
 
     # Add nodes
-    graph.add_node("router", lambda state: router_node(state))
+    graph.add_node("router", lambda state: router_node(state, llm))
     graph.add_node("sql", lambda state: sql_node(state, limit))
     graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
     graph.add_node("summarizer", lambda state: summarizer_node(state))
@@ -243,7 +203,7 @@ if __name__ == "__main__":
     qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
     flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
 
-    result = flow.invoke({"question": "List candidates in database"})
+    result = flow.invoke({"question": "Find candidates that know both Python and Java, and have experience in at least 2 different companies."})
     if isinstance(result["final_answer"], list) and result.get("sql_result"):
         print("SQL result:", result["sql_result"])
     elif isinstance(result["final_answer"], list) and result.get("vector_result"):

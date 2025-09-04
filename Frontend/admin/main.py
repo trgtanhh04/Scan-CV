@@ -38,7 +38,6 @@ st.markdown("""
 # ---------------- Sidebar ----------------
 with st.sidebar:
     st.markdown("### 📄 CV Manager")
-    st.markdown('<div class="sidebar-hint">Upload ➜ Extract ➜ Search ➜ Open Resume</div>', unsafe_allow_html=True)
     st.divider()
 
     nav = st.radio("Điều hướng", ["📤 Upload CV", "🔎 Search", "⚙️ Settings"], label_visibility="collapsed")
