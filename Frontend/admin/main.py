@@ -84,7 +84,6 @@ def header():
     c1, c2 = st.columns([0.78, 0.22])
     with c1:
         st.title("📄 CV Manager")
-        st.caption("Upload CV ➜ Extract ➜ Store ➜ Search (Text2SQL / VectorDB) ➜ Open Resume")
     with c2:
         st.markdown(f"""
         <div class="card-light"><b>API</b><br>{st.session_state.api_base}</div>
@@ -200,153 +199,352 @@ def view_upload():
             
 
 
+# def view_search():
+#     header()
+#     st.markdown("### Search Candidates (Text2SQL / VectorDB)")
+
+#     q = st.text_input("Câu hỏi", placeholder="e.g. List candidates with the job title 'Software Engineer'.")
+#     run = st.button("Run Query", type="primary")
+
+
+#     if run and q.strip():
+#         with st.spinner("Đang thực thi..."):
+#             try:
+#                 data = call_query(q.strip())
+#                 route = data.get("route")   # backend trả về "sql" hoặc "vector"
+                
+#                 # st.caption(f"🔧 route={data.get('route')} | rows={len(data.get('rows') or [])} | cols={len(data.get('columns') or [])}")
+#                 # with st.expander("Raw JSON from /query"):
+#                 #     st.json(data)
+
+#                 # ----------------------------
+#                 # CASE 1: SQL Query
+#                 # ----------------------------
+#                 if route == "SQL":
+#                     sql  = data.get("sql") or "-- no sql --"
+#                     cols = data.get("columns", [])
+#                     rows = data.get("rows", [])
+#                     trials = data.get("trials", [])
+
+#                     st.subheader("🗄️ SQL Query")
+#                     st.code(sql, language="sql")
+
+#                     if not rows:
+#                         st.warning("Không tìm thấy kết quả.")
+#                     else:
+#                         df = pd.DataFrame(rows, columns=cols if cols else None)
+#                         if "resume_url" in df.columns:
+#                             df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
+#                         st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+#                     with st.expander("Trials / Diagnostics", expanded=False):
+#                         st.json(trials or [])
+
+#                 # ----------------------------
+#                 # CASE 2: Vector Search
+#                 # ----------------------------
+#                 # elif route == "VECTOR":
+#                 #     vector_query  = data.get("vector_query")
+#                 #     vector_result = data.get("vector_result", [])
+
+#                 #     st.subheader("🔎 Vector Query")
+#                 #     st.code(vector_query, language="json")
+
+#                 #     if not vector_result:
+#                 #         st.warning("Không tìm thấy kết quả.")
+#                 #     else:
+#                 #         first = vector_result[0]
+
+#                 #         # ---- Skill
+#                 #         if first.get("payload", {}).get("type") == "skill":
+#                 #             rows = []
+#                 #             for item in vector_result:
+#                 #                 payload = item["payload"]
+#                 #                 rows.append({
+#                 #                     "Candidate": payload.get("candidate_name"),
+#                 #                     # "Skill": payload.get("skill"),
+#                 #                     "Job Title": payload.get("job_title"),
+#                 #                     "Source File": payload.get("source_file"),
+#                 #                     "Score": round(item.get("score", 0), 4),
+#                 #                 })
+#                 #             df = pd.DataFrame(rows)
+#                 #             # st.dataframe(df, use_container_width=True)
+#                 #             if "Source File" in df.columns:
+#                 #                 df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
+#                 #             st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+#                 #         # ---- Experience
+#                 #         elif first.get("type") == "experience":
+#                 #             st.subheader("📌 Candidate Experiences")
+#                 #             for exp in vector_result:
+#                 #                 with st.expander(f"{exp['experience_detail']['job_title']} @ {exp['experience_detail']['company']}"):
+#                 #                     st.write(f"**Candidate:** {exp['candidate_name']}")
+#                 #                     st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
+#                 #                     st.write(f"**Description:** {exp['experience_detail']['description']}")
+#                 #                     st.caption(f"📄 Source: {exp['source_file']}")
+
+#                 #                     source_file = exp.get("source_file")
+#                 #             if source_file:
+#                 #                 file_url = f"{BASE_URL}/{source_file}"
+#                 #                 st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
+                                    
+#                 #                     # ---- Resume file (nếu có)
+#                 #                     # if exp.get("resume_url"):
+#                 #                     #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
+#                 elif route == "VECTOR":
+#                     vector_query  = data.get("vector_query")
+#                     vector_result = data.get("vector_result", [])
+
+#                     st.subheader("🔎 Vector Query")
+#                     st.code(vector_query or "{}", language="json")
+
+#                     if not vector_result:
+#                         st.warning("Không tìm thấy kết quả.")
+#                     else:
+#                         # Normalize: hỗ trợ cả 2 dạng (có/không có 'payload')
+#                         norm_rows = []
+#                         for item in vector_result:
+#                             payload = item.get("payload", item)  # nếu ko có 'payload' thì chính item là payload
+#                             norm_rows.append({
+#                                 "Candidate":    payload.get("candidate_name"),
+#                                 "Job Title":    payload.get("job_title"),
+#                                 "Skill":        payload.get("skill"),                # có thể None nếu type=experience
+#                                 "Type":         payload.get("type"),
+#                                 "Source File":  payload.get("source_file"),
+#                                 "Resume":       payload.get("resume_url"),
+#                                 "Score":        round(item.get("score", 0), 4) if isinstance(item, dict) else None,
+#                             })
+
+#                         # Ưu tiên hiển thị dạng bảng skill; experience sẽ có detail riêng
+#                         df = pd.DataFrame(norm_rows)
+
+#                         # Link cột Resume
+#                         if "Resume" in df.columns:
+#                             df["Resume"] = df["Resume"].apply(lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else "")
+
+#                         # Fallback: nếu chưa có Resume nhưng có Source File (ít gặp, khi bạn chưa đẩy GCS)
+#                         # Giữ lại, nhưng KHÔNG dùng BASE_URL/source_file nữa nếu đã GCS hết
+#                         # df["Source File"] = df["Source File"].apply(lambda f: f"[{f}](...)")
+
+#                         st.markdown("#### Top matches")
+#                         st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+#                         # Nếu phần tử đầu là 'experience' thì hiển thị chi tiết
+#                         first_payload = vector_result[0].get("payload", vector_result[0])
+#                         if first_payload.get("type") == "experience":
+#                             st.subheader("📌 Candidate Experiences")
+#                             for item in vector_result:
+#                                 p = item.get("payload", item)
+#                                 exp = p.get("experience_detail", {})
+#                                 title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
+#                                 with st.expander(title):
+#                                     st.write(f"**Candidate:** {p.get('candidate_name')}")
+#                                     st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
+#                                     st.write(f"**Description:** {exp.get('description')}")
+#                                     # Mở file gốc (nếu cần) — ưu tiên resume_url
+#                                     if p.get("resume_url"):
+#                                         st.markdown(f"📂 **Resume:** [Open]({p['resume_url']})", unsafe_allow_html=True)
+#                                     elif p.get("source_file"):
+#                                         st.caption(f"📄 Source file: {p['source_file']}")
+#                 else:
+#                     st.error("Không xác định được loại kết quả (sql/vector).")
+
+#             except Exception as e:
+#                 st.error(f"Lỗi khi gọi API: {e}")
+
+def call_query_links(question: str):
+    url = f"{st.session_state.api_base}/query"
+    body = {
+        "question": question,
+        "provider": st.session_state.provider,
+        "model": st.session_state.model,
+        "links_only": True,   # <--- quan trọng
+    }
+    try:
+        resp = requests.post(url, json=body, timeout=120)
+        resp.raise_for_status()
+        return resp.json()    # { route, cv_links: [...] }
+    except Exception as e:
+        st.error(f"Links-only query error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            st.error(f"Response: {e.response.text}")
+        raise
+
+import urllib.parse
+import re
+
+def _suggest_filename(name: str | None, url: str) -> str:
+    # suy tên file hợp lý: <name>.pdf hoặc lấy từ URL
+    if name:
+        base = re.sub(r"[^A-Za-z0-9._-]+", "_", name.strip())
+        return f"{base or 'resume'}.pdf"
+    tail = url.split("/")[-1].split("?")[0]
+    return tail or "resume.pdf"
+
+def _force_download_url(url: str, filename: str) -> str:
+    # ép header tải xuống qua query param cho GCS/CDN phổ biến
+    sep = "&" if "?" in url else "?"
+    disp = f"attachment%3B%20filename%3D{urllib.parse.quote(filename)}"
+    return f"{url}{sep}response-content-disposition={disp}"
+
 def view_search():
     header()
-    st.markdown("### Search Candidates (Text2SQL / VectorDB)")
+    q = st.text_input(
+        "Câu hỏi",
+        placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm của Marco Russo / Ứng viên > 3 năm kinh nghiệm…"
+    )
 
-    q = st.text_input("Câu hỏi", placeholder="e.g. List candidates with the job title 'Software Engineer'.")
-    run = st.button("Run Query", type="primary")
+    col_run, col_links = st.columns([0.7, 0.3])
+    with col_links:
+        links_only = st.checkbox("Chỉ lấy link CV (links_only)", value=False)
+    with col_run:
+        run = st.button("Run Query", type="primary", use_container_width=True)
 
-    if run and q.strip():
-        with st.spinner("Đang thực thi..."):
-            try:
-                data = call_query(q.strip())
-                route = data.get("route")   # backend trả về "sql" hoặc "vector"
+    if not (run and q.strip()):
+        return
 
-                # ----------------------------
-                # CASE 1: SQL Query
-                # ----------------------------
-                if route == "SQL":
-                    sql  = data.get("sql") or "-- no sql --"
-                    cols = data.get("columns", [])
-                    rows = data.get("rows", [])
-                    trials = data.get("trials", [])
+    with st.spinner("Đang thực thi..."):
+        try:
+            # --- LINKS ONLY ---
+            if links_only:
+                data = call_query_links(q.strip())
+                route = data.get("route")
+                links = data.get("cv_links") or []
 
-                    st.subheader("🗄️ SQL Query")
-                    st.code(sql, language="sql")
+                st.caption(f"Route: **{route or 'UNKNOWN'}** · Tổng {len(links)} CV")
 
-                    if not rows:
-                        st.warning("Không tìm thấy kết quả.")
-                    else:
-                        df = pd.DataFrame(rows, columns=cols if cols else None)
-                        if "resume_url" in df.columns:
-                            df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-                        st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                if not links:
+                    st.warning("Không có link CV nào khớp.")
+                    return
+                i = 1
+                for item in links:
+                    name = item.get("full_name") or "Unknown"
+                    url  = item.get("resume_url")
+                    email = item.get("email") or ""
 
-                    with st.expander("Trials / Diagnostics", expanded=False):
-                        st.json(trials or [])
+                    st.markdown(f"### Candidate {i}")
+                    i += 1
+                    if email:
+                        st.caption(email)
 
-                # ----------------------------
-                # CASE 2: Vector Search
-                # ----------------------------
-                # elif route == "VECTOR":
-                #     vector_query  = data.get("vector_query")
-                #     vector_result = data.get("vector_result", [])
+                    if not url:
+                        st.warning("Không có URL CV cho ứng viên này.")
+                        continue
 
-                #     st.subheader("🔎 Vector Query")
-                #     st.code(vector_query, language="json")
+                    # ép tải về
+                    filename = _suggest_filename(item.get("full_name"), url)
+                    dl_url   = _force_download_url(url, filename)
 
-                #     if not vector_result:
-                #         st.warning("Không tìm thấy kết quả.")
-                #     else:
-                #         first = vector_result[0]
+                    st.markdown(
+                        f'🔗 <a href="{dl_url}" download>{dl_url}</a>',
+                        unsafe_allow_html=True
+                    )
 
-                #         # ---- Skill
-                #         if first.get("payload", {}).get("type") == "skill":
-                #             rows = []
-                #             for item in vector_result:
-                #                 payload = item["payload"]
-                #                 rows.append({
-                #                     "Candidate": payload.get("candidate_name"),
-                #                     # "Skill": payload.get("skill"),
-                #                     "Job Title": payload.get("job_title"),
-                #                     "Source File": payload.get("source_file"),
-                #                     "Score": round(item.get("score", 0), 4),
-                #                 })
-                #             df = pd.DataFrame(rows)
-                #             # st.dataframe(df, use_container_width=True)
-                #             if "Source File" in df.columns:
-                #                 df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
-                #             st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                    st.markdown(
+                        f"""
+                        <div style="border:1px solid #1f2937; border-radius:12px; overflow:hidden; margin:10px 0;">
+                          <object data="{url}" type="application/pdf" width="100%" height="560px">
+                            <p>Không thể nhúng PDF (CORS). Hãy tải về qua link trên.</p>
+                          </object>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-                #         # ---- Experience
-                #         elif first.get("type") == "experience":
-                #             st.subheader("📌 Candidate Experiences")
-                #             for exp in vector_result:
-                #                 with st.expander(f"{exp['experience_detail']['job_title']} @ {exp['experience_detail']['company']}"):
-                #                     st.write(f"**Candidate:** {exp['candidate_name']}")
-                #                     st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
-                #                     st.write(f"**Description:** {exp['experience_detail']['description']}")
-                #                     st.caption(f"📄 Source: {exp['source_file']}")
+                with st.expander("Raw JSON", expanded=False):
+                    st.json(data)
+                return
 
-                #                     source_file = exp.get("source_file")
-                #             if source_file:
-                #                 file_url = f"{BASE_URL}/{source_file}"
-                #                 st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
-                                    
-                #                     # ---- Resume file (nếu có)
-                #                     # if exp.get("resume_url"):
-                #                     #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
-                elif route == "VECTOR":
-                    vector_query  = data.get("vector_query")
-                    vector_result = data.get("vector_result", [])
+            # --- FULL SEARCH ---
+            data = call_query(q.strip())  # CHỈ gọi khi không phải links_only
+            route = data.get("route")
 
-                    st.subheader("🔎 Vector Query")
-                    st.code(vector_query or "{}", language="json")
+            st.caption(f"🔧 route={route} | rows={len(data.get('rows') or [])}")
 
-                    if not vector_result:
-                        st.warning("Không tìm thấy kết quả.")
-                    else:
-                        # Normalize: hỗ trợ cả 2 dạng (có/không có 'payload')
-                        norm_rows = []
-                        for item in vector_result:
-                            payload = item.get("payload", item)  # nếu ko có 'payload' thì chính item là payload
-                            norm_rows.append({
-                                "Candidate":    payload.get("candidate_name"),
-                                "Job Title":    payload.get("job_title"),
-                                "Skill":        payload.get("skill"),                # có thể None nếu type=experience
-                                "Type":         payload.get("type"),
-                                "Source File":  payload.get("source_file"),
-                                "Resume":       payload.get("resume_url"),
-                                "Score":        round(item.get("score", 0), 4) if isinstance(item, dict) else None,
-                            })
+            # ----------------------------
+            # CASE 1: SQL
+            # ----------------------------
+            if route == "SQL":
+                sql  = data.get("sql") or "-- no sql --"
+                cols = data.get("columns") or []
+                rows = data.get("rows") or []
+                trials = data.get("trials") or []
 
-                        # Ưu tiên hiển thị dạng bảng skill; experience sẽ có detail riêng
-                        df = pd.DataFrame(norm_rows)
+                st.subheader("🗄️ SQL Query")
+                st.code(sql, language="sql")
 
-                        # Link cột Resume
-                        if "Resume" in df.columns:
-                            df["Resume"] = df["Resume"].apply(lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else "")
-
-                        # Fallback: nếu chưa có Resume nhưng có Source File (ít gặp, khi bạn chưa đẩy GCS)
-                        # Giữ lại, nhưng KHÔNG dùng BASE_URL/source_file nữa nếu đã GCS hết
-                        # df["Source File"] = df["Source File"].apply(lambda f: f"[{f}](...)")
-
-                        st.markdown("#### Top matches")
-                        st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-                        # Nếu phần tử đầu là 'experience' thì hiển thị chi tiết
-                        first_payload = vector_result[0].get("payload", vector_result[0])
-                        if first_payload.get("type") == "experience":
-                            st.subheader("📌 Candidate Experiences")
-                            for item in vector_result:
-                                p = item.get("payload", item)
-                                exp = p.get("experience_detail", {})
-                                title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
-                                with st.expander(title):
-                                    st.write(f"**Candidate:** {p.get('candidate_name')}")
-                                    st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
-                                    st.write(f"**Description:** {exp.get('description')}")
-                                    # Mở file gốc (nếu cần) — ưu tiên resume_url
-                                    if p.get("resume_url"):
-                                        st.markdown(f"📂 **Resume:** [Open]({p['resume_url']})", unsafe_allow_html=True)
-                                    elif p.get("source_file"):
-                                        st.caption(f"📄 Source file: {p['source_file']}")
+                if not rows:
+                    st.warning("Không tìm thấy kết quả.")
                 else:
-                    st.error("Không xác định được loại kết quả (sql/vector).")
+                    df = pd.DataFrame(rows, columns=cols if cols else None)
+                    if "resume_url" in df.columns:
+                        df["resume_url"] = df["resume_url"].apply(
+                            lambda u: f"[Open]({u})" if u else ""
+                        )
+                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
 
-            except Exception as e:
-                st.error(f"Lỗi khi gọi API: {e}")
+                with st.expander("Trials / Diagnostics", expanded=False):
+                    st.json(trials)
+
+            # ----------------------------
+            # CASE 2: VECTOR
+            # ----------------------------
+            elif route == "VECTOR":
+                vector_query  = data.get("vector_query")
+                vector_result = data.get("vector_result", []) or []
+
+                st.subheader("🔎 Vector Query")
+                st.code(vector_query or "{}", language="json")
+
+                if not vector_result:
+                    st.warning("Không tìm thấy kết quả.")
+                else:
+                    # Chuẩn hoá: hỗ trợ cả 2 dạng (có/không có 'payload')
+                    norm_rows = []
+                    for item in vector_result:
+                        payload = item.get("payload", item)
+                        norm_rows.append({
+                            "Candidate":   payload.get("candidate_name"),
+                            "Job Title":   payload.get("job_title"),
+                            "Skill":       payload.get("skill"),
+                            "Type":        payload.get("type"),
+                            "Source File": payload.get("source_file"),
+                            "Resume":      payload.get("resume_url"),
+                            "Score":       round(item.get("score", 0), 4) if isinstance(item, dict) else None,
+                        })
+
+                    df = pd.DataFrame(norm_rows)
+
+                    # Link cột Resume
+                    if "Resume" in df.columns:
+                        df["Resume"] = df["Resume"].apply(
+                            lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
+                        )
+
+                    st.markdown("#### Top matches")
+                    st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+                    # Nếu phần tử đầu là 'experience' thì show chi tiết
+                    first_payload = vector_result[0].get("payload", vector_result[0])
+                    if first_payload.get("type") == "experience":
+                        st.subheader("📌 Candidate Experiences")
+                        for item in vector_result:
+                            p = item.get("payload", item)
+                            exp = p.get("experience_detail", {}) or {}
+                            title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
+                            with st.expander(title):
+                                st.write(f"**Candidate:** {p.get('candidate_name')}")
+                                st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
+                                st.write(f"**Description:** {exp.get('description')}")
+                                if p.get("resume_url"):
+                                    st.markdown(f"📂 **Resume:** [Open]({p['resume_url']})", unsafe_allow_html=True)
+
+            else:
+                st.error("Không xác định được loại kết quả (SQL/VECTOR).")
+
+        except Exception as e:
+            st.error(f"Lỗi khi gọi API: {e}")
+
 
 
 def view_settings():
@@ -357,6 +555,8 @@ def view_settings():
         "- UI gọi **Upload** ➜ `POST /cv/upload` ; **Search** ➜ `POST /query`.\n"
         "- UI gửi thêm `provider` & `model` trong body `/query` để backend chọn LLM."
     )
+
+    
 
 # ---------------- Router ----------------
 with st.sidebar:

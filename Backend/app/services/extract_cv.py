@@ -8,6 +8,7 @@ import uuid
 from dotenv import load_dotenv
 from langchain_qdrant import Qdrant
 import hashlib
+from typing import List, Tuple
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 from qdrant_client.models import Distance, VectorParams, PointStruct
@@ -123,6 +124,29 @@ def normalize_email(email: str | None) -> str | None:
     e = email.strip().lower()
     return e if re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", e) else None
 
+# ---------------- Dedup helpers ----------------
+def _clean_skill(s: str) -> str:
+    return s.strip()
+
+def _dedup_skills(skills_in) -> List[str]:
+    if not skills_in:
+        return []
+    # chấp nhận cả string hoặc list
+    if isinstance(skills_in, str):
+        skills_in = [skills_in]
+    cleaned = []
+    seen = set()
+    for s in skills_in:
+        if not isinstance(s, str):
+            continue
+        cs = _clean_skill(s)
+        if not cs:  # rỗng
+            continue
+        key = cs.lower()
+        if key not in seen:
+            seen.add(key)
+            cleaned.append(cs)
+    return cleaned
 
 def exists_email(qdrant, collection: str, email: str) -> bool:
     flt = Filter(must=[FieldCondition(key="email", match=MatchValue(value=email))])
@@ -139,6 +163,29 @@ def exists_email(qdrant, collection: str, email: str) -> bool:
             continue
     return False
 
+def _exp_signature(exp: dict) -> Tuple[str, str, str, str, str]:
+    # tạo khóa nhận diện để lọc trùng experience
+    jt = (exp.get("job_title") or "").strip().lower()
+    cp = (exp.get("company") or "").strip().lower()
+    sd = (exp.get("start_date") or "").strip().lower()
+    ed = (exp.get("end_date") or "").strip().lower()
+    ds = (exp.get("description") or "").strip().lower()
+    return (cp, jt, sd, ed, ds)
+
+def _dedup_experiences(exps_in) -> List[dict]:
+    if not exps_in:
+        return []
+    uniq = []
+    seen = set()
+    for exp in exps_in:
+        if not isinstance(exp, dict):
+            continue
+        sig = _exp_signature(exp)
+        if sig not in seen:
+            seen.add(sig)
+            uniq.append(exp)
+    return uniq
+
 
 def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_model) -> None:
     try:
@@ -152,98 +199,6 @@ def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_mode
     except Exception as e:
         print(f"[WARN] ensure_collection failed: {e}")
 
-
-# def process_cv(
-#     file_path: str,
-#     vector_db,
-#     embedding_model,
-#     collection_name: str,
-# ) -> dict:
-#     """
-#     Xử lý 1 file CV PDF, trích xuất thông tin ứng viên và lưu vào Qdrant.
-#     Trả về dict thông tin ứng viên.
-#     """
-#     filename = os.path.basename(file_path)
-#     print(f"Processing {filename}...")
-
-#     # Trích xuất text từ PDF
-#     text = extract_text_from_pdf(file_path)
-#     if not text:
-#         print(f"No text extracted from {filename}, skipping.")
-#         return {}
-
-#     # Trích xuất thông tin từ LLM
-#     info = extract_info(text) or {}
-#     info["source_file"] = filename
-
-#     # Check email duplicate
-#     email_norm = normalize_email(info.get("email"))
-
-#     # ensure_collection(vector_db, collection_name, embedding_model)
-
-#     if email_norm and exists_email(vector_db, collection_name, email_norm):
-#         print(f"Duplicate email {email_norm}, skip {filename}")
-#         return {"skipped": "duplicate_email", "email": email_norm}
-
-#     # Chuẩn hóa skills
-#     skills = info.get("skills", [])
-#     if isinstance(skills, str):
-#         skills = [skills]
-#     elif skills is None:
-#         skills = []
-
-#     # Chuẩn hóa experiences
-#     experiences = info.get("experience") or []
-
-#     # Gom tất cả point vào list
-#     points = []
-
-#     # Xử lý skills
-#     for skill in skills:
-#         vector = embedding_model.embed_query(skill)
-#         points.append(
-#             PointStruct(
-#                 id=make_id(f"skill-{filename}-{skill}-{uuid.uuid4().hex[:8]}"),
-#                 vector=vector,
-#                 payload={
-#                     "type": "skill",
-#                     "skill": skill,
-#                     "job_title": info.get("job_title"),
-#                     "source_file": filename,
-#                     "candidate_name": info.get("full_name"),
-#                     "email": email_norm,   
-#                 },
-#             )
-#         )
-
-#     # Xử lý experiences
-#     for i, exp in enumerate(experiences):
-#         exp_text = f"{exp.get('job_title', '')} at {exp.get('company', '')} ({exp.get('start_date', '')} - {exp.get('end_date', '')}) {exp.get('description', '')}"
-#         vector = embedding_model.embed_query(exp_text)
-#         points.append(
-#             PointStruct(
-#                 id=make_id(f"exp-{filename}-{exp.get('company', 'unknown')}-{i}-{uuid.uuid4().hex[:8]}"),
-#                 vector=vector,
-#                 payload={
-#                     "type": "experience",
-#                     "experience": exp_text,
-#                     "experience_detail": exp,  # lưu cả dict gốc
-#                     "job_title": info.get("job_title"),
-#                     "source_file": filename,
-#                     "candidate_name": info.get("full_name"),
-#                     "email": email_norm,   
-#                 },
-#             )
-#         )
-
-#     # Upsert vào Qdrant
-#     if points:
-#         vector_db.upsert(
-#             collection_name=collection_name,
-#             points=points
-#         )
-
-#     return info
 
 def process_cv_rag(
     file_path: str,
@@ -277,9 +232,8 @@ def process_cv_rag(
         print(f"Duplicate email {email_norm}, skip {filename}")
         return {"skipped": "duplicate_email", "email": email_norm}
 
-    skills = info.get("skills") or []
-    if isinstance(skills, str): skills = [skills]
-    experiences = info.get("experience") or []
+    skills = _dedup_skills(info.get("skills"))
+    experiences = _dedup_experiences(info.get("experience"))
 
     points = []
     for skill in skills:

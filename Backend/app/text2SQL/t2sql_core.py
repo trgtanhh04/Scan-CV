@@ -260,29 +260,30 @@ def postprocess_sql(sql: str) -> str:
 # ============== Orchestrator/Pipeline ==============
 def answer_sql(
     engine: Engine,
-    llm: LLM,
+    llm,
     user_query: str,
     max_refine: int = 1,
+    limit: int = 10,
     *,
-    base_url: Optional[str] = None, 
+    base_url: Optional[str] = None,
 ) -> Dict[str, Any]:
-    # a) selector → subset schema
+    # a) selector -> subset schema + schema text
     tables, hints = selector_lite(user_query)
     schema = load_schema(engine, only=tables)
     schema_txt = render_schema(schema)
 
-    # b) generate
-    prompt = build_schema_prompt(schema_txt, hints, user_query)
+    # b) generate initial SQL
+    prompt = build_schema_prompt(schema_txt, hints, user_query, limit)
     sql = llm.gen(prompt)
 
     trials: List[Tuple[str, str]] = []
 
     for attempt in range(max_refine + 1):
         try:
+            # --- Guards ---
             sql_guard(sql)
 
-            # Schema guard (fail-soft)
-            warn = schema_guard(sql, schema)
+            warn = schema_guard(sql, schema)  # cảnh báo sai bảng/cột (fail-soft)
             if warn:
                 pretty_sql = postprocess_sql(sql)
                 return {
@@ -293,33 +294,51 @@ def answer_sql(
                     "warning": warn,
                 }
 
-            # DISTINCT/EXISTS post-process
+            # --- Post-process DISTINCT / ORDER BY cho m-n ---
             sql = postprocess_sql(sql)
+            print("[answer_sql] EXEC_SQL:\n", sql)
 
-            cols, rows = run_sql(engine, sql)
+            # --- Execute ---
+            cols, raw_rows = run_sql(engine, sql)
+            cols = list(cols or [])  # luôn là list
+            print(f"[answer_sql] RES rows={len(raw_rows)} cols={len(cols or [])}")
 
-            # --- ENRICH: thêm resume_url nếu có cột id ---
-            enriched_records = enrich_with_resume_urls(engine, cols, rows, base_url=base_url)
-            if enriched_records:
-                # bảo đảm có cột 'resume_url'
+            # --- Enrich resume_url ---
+            id_col = "candidate_id" if "candidate_id" in cols else ("id" if "id" in cols else None)
+
+            enriched = enrich_with_resume_urls(
+                engine,
+                cols,
+                raw_rows,
+                base_url=base_url,
+                id_column=id_col,          
+            )
+
+            if enriched:
                 if "resume_url" not in cols:
                     cols = cols + ["resume_url"]
-                rows = [tuple(rec.get(c) for c in cols) for rec in enriched_records]
+                packed_rows: List[List[Any]] = [[rec.get(c) for c in cols] for rec in enriched]
+            else:
+                packed_rows = [list(r) for r in raw_rows]
 
-            # Empty -> refine
-            if len(rows) == 0 and attempt < max_refine:
+            # --- Empty -> refine ---
+            if len(packed_rows) == 0 and attempt < max_refine:
                 trials.append((sql, "empty result"))
                 sql = llm.gen(refine_prompt(schema_txt, user_query, sql, "empty result"))
                 continue
 
-            return {"sql": sql, "columns": cols, "rows": [tuple(r) for r in rows], "trials": trials}
+            return {
+                "sql": sql,
+                "columns": cols,
+                "rows": packed_rows,
+                "trials": trials,
+            }
 
         except Exception as e:
             if attempt < max_refine:
                 trials.append((sql, str(e)))
                 sql = llm.gen(refine_prompt(schema_txt, user_query, sql, str(e)))
             else:
-                # fail-soft lượt cuối
                 return {
                     "sql": sql,
                     "columns": [],

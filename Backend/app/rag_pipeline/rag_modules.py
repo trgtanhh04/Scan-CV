@@ -221,8 +221,14 @@ def execute_vector_query(plan: dict, client: QdrantClient, embedding_model, sear
 
     elif action == "search":
         qdrant_filter = build_filter(plan.get("query_filter", {}))
+        # qdrant_filter = build_filter(plan.get("query_filter") or plan.get("search_filter") or {})
+
         query_text = plan["query_text"]
-        query_vector  = embedding_model.embed_query(query_text) 
+        try:
+            query_vector = embedding_model.embed_query(query_text)
+        except Exception as e:
+            print(f"[Embed ERROR] {e}")
+            return []
 
         results = client.search(
             collection_name=collection_name,
@@ -239,6 +245,6 @@ def execute_vector_query(plan: dict, client: QdrantClient, embedding_model, sear
 def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=3, search_threshold=0.75):
     output = generate_vector_query(query, llm, collection, limit)
     plan = json.loads(output)
-    print(plan)
+    # print(plan)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold)
     return results, plan

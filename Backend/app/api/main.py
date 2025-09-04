@@ -19,13 +19,15 @@ from config.storage import MEDIA_ROOT
 from langchain_deepseek import ChatDeepSeek
 from qdrant_client import QdrantClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from sqlalchemy import text as sa_text
+from fastapi import FastAPI, Depends
 
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
+embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL)
-flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=50)
+flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10)
 
 app = FastAPI(title="CV Manager API")
 
@@ -58,14 +60,6 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         # (2) Extract 1 lần
         text = extract_text_from_pdf(temp_path)
         info = extract_info(text) or {}
-
-        # process_cvs của RAG
-        # _ = process_cv(
-        #     file_path=temp_path,
-        #     vector_db=qdrant,   
-        #     embedding_model=embedding,
-        #     collection_name="candidates"
-        # )
 
         # (3) RAG 
         rag_results = process_cv_rag(
@@ -109,11 +103,77 @@ class QueryRequest(BaseModel):
     question: str
     provider: str = "deepseek"
     model: str = "deepseek-chat"
+    links_only: bool = False    # <--- thêm cờ này
+
+
+
+class QueryRequest(BaseModel):
+    question: str
+    provider: str = "deepseek"
+    model: str = "deepseek-chat"
+    links_only: bool = False
+
+# @app.post("/query")
+# async def query_api(request: QueryRequest):
+#     state = {"question": request.question}
+#     result = flow.invoke(state)
+#     return {
+#         "question": request.question,
+#         "provider": request.provider,
+#         "model": request.model,
+#         "route": result.get("route"),
+#         "sql": result.get("sql_query"),
+#         "columns": result.get("columns"),
+#         "rows": result.get("sql_result"),
+#         "trials": result.get("trials"),
+#         "final_answer": result.get("final_answer"),
+#         "vector_query": result.get("vector_query"),
+#         "vector_result": result.get("vector_result"),
+#         "final_answer": result.get("final_answer"),
+#     }
 
 @app.post("/query")
 async def query_api(request: QueryRequest):
     state = {"question": request.question}
     result = flow.invoke(state)
+    # print('result:', result)
+    if request.links_only:
+        route = result.get("route")
+        cv_links = []
+
+        if route == "SQL":
+            cols = result.get("columns") or []
+            rows = result.get("sql_result") or []
+
+            for r in rows:
+                if "resume_url" in cols:
+                    resume_url = r[cols.index("resume_url")]
+                elif len(r) > len(cols):
+                    resume_url = r[-1]   
+                else:
+                    resume_url = None
+
+                rec = dict(zip(cols, r[:len(cols)]))
+
+                cv_links.append({
+                    "candidate_id": rec.get("id") or rec.get("candidate_id"),
+                    "full_name": rec.get("full_name"),
+                    "email": rec.get("email"),
+                    "resume_url": resume_url,
+                })
+
+        elif route == "VECTOR":
+            for item in result.get("vector_result") or []:
+                p = item.get("payload", item)
+                cv_links.append({
+                    "candidate_id": None,
+                    "full_name": p.get("candidate_name"),
+                    "email": p.get("email"),
+                    "resume_url": p.get("resume_url"),
+                })
+
+        return {"route": route, "cv_links": cv_links}
+
     return {
         "question": request.question,
         "provider": request.provider,
@@ -126,7 +186,45 @@ async def query_api(request: QueryRequest):
         "final_answer": result.get("final_answer"),
         "vector_query": result.get("vector_query"),
         "vector_result": result.get("vector_result"),
-        "final_answer": result.get("final_answer"),
+    }
+
+
+@app.get("/__debug/db")
+def debug_db():
+    engine = SessionLocal().get_bind()
+    with engine.connect() as conn:
+        info = conn.execute(sa_text("""
+            SELECT
+              current_database()  AS db,
+              current_user        AS user,
+              inet_server_addr()  AS host,
+              inet_server_port()  AS port,
+              current_schema      AS schema,
+              (SELECT setting FROM pg_settings WHERE name='search_path') AS search_path
+        """)).mappings().first()
+
+        cands = conn.execute(sa_text("SELECT COUNT(*) AS n FROM candidates")).scalar() or 0
+        exps  = conn.execute(sa_text("SELECT COUNT(*) AS n FROM experiences")).scalar() or 0
+
+        # Test câu SQL đang lỗi
+        test_sql = """
+        SELECT DISTINCT c.id, c.full_name
+        FROM candidates c
+        JOIN experiences e ON e.candidate_id = c.id
+        WHERE e.job_title ILIKE '%Data engineer%'
+          AND (
+            (e.end_date IS NOT NULL AND EXTRACT(YEAR FROM AGE(e.end_date, e.start_date)) >= 3)
+            OR (e.end_date IS NULL AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, e.start_date)) >= 3)
+          )
+        LIMIT 10
+        """
+        rows = conn.execute(sa_text(test_sql)).fetchall()
+
+    return {
+        "engine_url_used": str(engine.url),   # xem API đang trỏ DB nào
+        "info": dict(info) if info else None,
+        "counts": {"candidates": cands, "experiences": exps},
+        "test_query_rows": [dict(r._mapping) for r in rows],
     }
 
 # giao diện Qdrant: http://localhost:6333/dashboard

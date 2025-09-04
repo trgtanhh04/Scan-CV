@@ -13,6 +13,7 @@ EDU_WORDS = r"(bằng cấp|đại học|university|degree|gpa|điểm trung bì
 LOC_WORDS   = r"(địa điểm|location|ở|tại|HCM|HCMC|Ho Chi Minh|Hà Nội|Hanoi|Huế|Đà Nẵng|Singapore|USA|UK)"
 LANG_WORDS  = r"(ngôn ngữ|language|languages|tiếng anh|tiếng nhật|english|japanese|vietnamese)"
 CERT_WORDS  = r"(chứng chỉ|certificate|chứng nhận)"
+
 def selector_lite(user_query: str) -> Tuple[List[str], str]:
     """
     Trả về (danh_sách_bảng_cần, hints chuỗi) dựa theo từ khóa.
@@ -91,7 +92,7 @@ EXAMPLES = [
     )
 ]
 
-def build_schema_prompt(schema_txt: str, hints: str, user_query: str) -> str:
+def build_schema_prompt(schema_txt: str, hints: str, user_query: str, limit: int) -> str:
     ex_txt = "\n\n".join([f"Q: {q}\nSQL:\n{sql}" for q, sql in EXAMPLES])
     prompt = f"""
         You are a Text-to-SQL assistant for a PostgreSQL database.
@@ -105,6 +106,9 @@ def build_schema_prompt(schema_txt: str, hints: str, user_query: str) -> str:
         - Many-to-many joins (skills/languages) create duplicates: if returning a candidate list, use SELECT DISTINCT or use EXISTS for multiple skill conditions.
         - ALWAYS include the candidate id column (e.g. id) in the SELECT result, even if the user only asks for names. This is required for downstream enrichment (e.g. resume_url).
         - If the user asks for only names, return both id and name.
+
+        Limit:
+        {limit}
 
         Schema:
         {schema_txt}
