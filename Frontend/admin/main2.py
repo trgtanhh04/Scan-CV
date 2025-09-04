@@ -4,11 +4,10 @@ import os
 import requests
 import pandas as pd
 import streamlit as st
+from collections import defaultdict
+# from st_aggrid import AgGrid
 
-import os
 BASE_URL = "http://localhost:8000/cvs"
-
-
 DEFAULT_API = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="CV Manager", page_icon="📄", layout="wide")
@@ -70,14 +69,14 @@ def provider_badge():
     if st.session_state.provider == "deepseek":
         return (
             '<span class="badge">'
-            '<img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/deepseek.svg" />'
+            '<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/deepseek.webp" />'
             'DeepSeek'
             f' · {st.session_state.model}</span>'
         )
     else:
         return (
             '<span class="badge">'
-            '<img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/openai.svg" />'
+            '<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/webp/openai-light.webp" />'
             'OpenAI'
             f' · {st.session_state.model}</span>'
         )
@@ -86,7 +85,7 @@ def header():
     c1, c2 = st.columns([0.78, 0.22])
     with c1:
         st.title("📄 CV Manager")
-        st.caption("Upload CV ➜ Extract ➜ Store ➜ Search (Text2SQL) ➜ Open Resume")
+        st.caption("Upload CV ➜ Extract ➜ Store ➜ Search (Text2SQL / VectorDB) ➜ Open Resume")
     with c2:
         st.markdown(f"""
         <div class="card-light"><b>API</b><br>{st.session_state.api_base}</div>
@@ -97,7 +96,7 @@ def header():
 def call_upload(file):
     url = f"{st.session_state.api_base}/cv/upload"
     try:
-        resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=120)
+        resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=(10, 600))
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
@@ -127,32 +126,80 @@ def view_upload():
 
     up = st.file_uploader("Chọn CVs (PDF)", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed")
     st.write("")
-    btn = st.button("Upload & Ingest", type="primary", use_container_width=True, disabled=not up)
+    run = st.button("Upload & Ingest", type="primary", use_container_width=True, disabled=not up)
 
-    if btn:
-        results = []
-        with st.spinner("Đang tải và xử lý..."):
-            for f in up or []:
-                try:
-                    st.write("Start upload")
-                    data = call_upload(f)
-                    st.write(data)
-                    results.append({
-                        "candidate_id": data.get("candidate_id"),
-                        "full_name": data.get("full_name"),
-                        "resume_url": data.get("file_url") or data.get("resume_url"),
-                        "attachment_id": data.get("attachment_id"),
-                        "source_file": f.name
-                    })
-                except Exception as e:
-                    st.write("Exception:", str(e))
-                    results.append({"source_file": f.name, "error": str(e)})
-        st.success(f"Đã xử lý {len(results)} file.")
-        st.markdown("#### Kết quả")
-        df = pd.DataFrame(results)
-        if "resume_url" in df.columns:
-            df["resume_url"] = df["resume_url"].apply(lambda u: f"[Open]({u})" if u else "")
-        st.dataframe(df, use_container_width=True, hide_index=True)
+    if not run:
+        return
+
+    files = up or []
+    total = len(files)
+    if total == 0:
+        st.info("Hãy chọn ít nhất 1 file PDF.")
+        return
+
+    results = []
+    # Khối hiển thị tiến độ và trạng thái
+    status = st.empty()
+    prog = st.progress(0)
+    list_container = st.container()  # chỗ log ngắn từng file (tuỳ thích)
+
+    ok = 0
+    for i, f in enumerate(files, start=1):
+        status.write(f"🔄 Đang xử lý **{i}/{total}**: `{f.name}` …")
+        prog.progress(i/total)
+
+        try:
+            data = call_upload(f)
+            ok += 1
+            # gom dữ liệu hiển thị
+            results.append({
+                "Source file": f.name,
+                "Candidate ID": data.get("candidate_id"),
+                "Full name": data.get("full_name"),
+                "Resume": data.get("file_url") or data.get("resume_url"),
+                "Attachment ID": data.get("attachment_id"),
+                "Error": None
+            })
+            st.toast(f"✅ {f.name} xong", icon="✅")
+            with list_container:
+                st.write(f"✅ `{f.name}` uploaded.")
+        except Exception as e:
+            results.append({
+                "Source file": f.name,
+                "Candidate ID": None,
+                "Full name": None,
+                "Resume": None,
+                "Attachment ID": None,
+                "Error": str(e)
+            })
+            st.toast(f"❌ {f.name} lỗi", icon="❌")
+            with list_container:
+                st.write(f"❌ `{f.name}` lỗi: {e}")
+
+    # Hoàn tất
+    prog.empty()
+    if ok == total:
+        status.success(f"🎉 Hoàn tất {ok}/{total} file.")
+    else:
+        status.warning(f"Hoàn tất {ok}/{total} file (một số file lỗi).")
+
+    # Bảng kết quả
+    st.markdown("#### Kết quả")
+    df = pd.DataFrame(results)
+    if "Resume" in df.columns:
+        df["Resume"] = df["Resume"].apply(
+            lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
+        )
+
+    st.markdown(
+        df.to_html(escape=False, index=False),
+        unsafe_allow_html=True
+    )
+
+    with st.expander("🔎 Debug uploads (raw JSON)", expanded=False):
+        st.json(results)
+            
+
 
 def view_search():
     header()
@@ -193,55 +240,172 @@ def view_search():
                 # ----------------------------
                 # CASE 2: Vector Search
                 # ----------------------------
+                # elif route == "VECTOR":
+                #     vector_query  = data.get("vector_query")
+                #     vector_result = data.get("vector_result", [])
+
+                #     st.subheader("🔎 Vector Query")
+                #     st.code(vector_query, language="json")
+
+                #     if not vector_result:
+                #         st.warning("Không tìm thấy kết quả.")
+                #     else:
+                #         first = vector_result[0]
+
+                #         # ---- Skill
+                #         if first.get("payload", {}).get("type") == "skill":
+                #             rows = []
+                #             for item in vector_result:
+                #                 payload = item["payload"]
+                #                 rows.append({
+                #                     "Candidate": payload.get("candidate_name"),
+                #                     # "Skill": payload.get("skill"),
+                #                     "Job Title": payload.get("job_title"),
+                #                     "Source File": payload.get("source_file"),
+                #                     "Score": round(item.get("score", 0), 4),
+                #                 })
+                #             df = pd.DataFrame(rows)
+                #             # st.dataframe(df, use_container_width=True)
+                #             if "Source File" in df.columns:
+                #                 df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
+                #             st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+
+                #         # ---- Experience
+                #         elif first.get("type") == "experience":
+                #             st.subheader("📌 Candidate Experiences")
+                #             for exp in vector_result:
+                #                 with st.expander(f"{exp['experience_detail']['job_title']} @ {exp['experience_detail']['company']}"):
+                #                     st.write(f"**Candidate:** {exp['candidate_name']}")
+                #                     st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
+                #                     st.write(f"**Description:** {exp['experience_detail']['description']}")
+                #                     st.caption(f"📄 Source: {exp['source_file']}")
+
+                #                     source_file = exp.get("source_file")
+                #             if source_file:
+                #                 file_url = f"{BASE_URL}/{source_file}"
+                #                 st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
+                                    
+                #                     # ---- Resume file (nếu có)
+                #                     # if exp.get("resume_url"):
+                #                     #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
                 elif route == "VECTOR":
                     vector_query  = data.get("vector_query")
                     vector_result = data.get("vector_result", [])
 
                     st.subheader("🔎 Vector Query")
-                    st.code(vector_query, language="json")
+                    st.code(vector_query or "{}", language="json")
 
                     if not vector_result:
                         st.warning("Không tìm thấy kết quả.")
                     else:
-                        first = vector_result[0]
+                        first_payload = vector_result[0].get("payload", vector_result[0])
 
-                        # ---- Skill
-                        if first.get("payload", {}).get("type") == "skill":
-                            rows = []
+                        # Xác định có filter theo candidate_name không
+                        is_specific_candidate = (
+                            isinstance(vector_query, dict)
+                            and "scroll_filter" in vector_query
+                            and any(cond.get("key") == "candidate_name"
+                                    for cond in vector_query.get("scroll_filter", {}).get("must", []))
+                        )
+
+                        if is_specific_candidate:
+                            # 👉 Trường hợp query 1 ứng viên cụ thể
+                            cname = first_payload.get("candidate_name") or "Unknown"
+                            st.markdown(f"### 👤 {cname}")
+                            if first_payload.get("email"):
+                                st.write(f"✉️ {first_payload['email']}")
+                            if first_payload.get("resume_url"):
+                                st.markdown(f"📂 [Resume]({first_payload['resume_url']})", unsafe_allow_html=True)
+
+                            if first_payload.get("type") == "experience":
+                                st.subheader("📌 Candidate Experiences")
+                                for item in vector_result:
+                                    p = item.get("payload", item)
+                                    exp = p.get("experience_detail", {})
+                                    title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
+                                    with st.expander(title):
+                                        st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
+                                        st.write(f"**Description:** {exp.get('description')}")
+                            elif first_payload.get("type") == "skill":
+                                st.subheader("🛠 Candidate Skills")
+                                for item in vector_result:
+                                    p = item.get("payload", item)
+                                    st.markdown(f"- {p.get('skill')}")
+
+                        else:
+                            # 👉 Trường hợp query nhiều ứng viên (hoặc chỉ 1 ứng viên match) → luôn hiển thị bảng
+                            candidates = {}
                             for item in vector_result:
-                                payload = item["payload"]
+                                payload = item.get("payload", item)
+                                cname = payload.get("candidate_name") or "Unknown"
+                                if cname not in candidates:
+                                    candidates[cname] = {
+                                        "email": payload.get("email"),
+                                        "resume": payload.get("resume_url"),
+                                    }
+
+                            rows = []
+                            for cname, info in candidates.items():
                                 rows.append({
-                                    "Candidate": payload.get("candidate_name"),
-                                    # "Skill": payload.get("skill"),
-                                    "Job Title": payload.get("job_title"),
-                                    "Source File": payload.get("source_file"),
-                                    "Score": round(item.get("score", 0), 4),
+                                    "Candidate": cname,
+                                    "Email": info.get("email") or "",
+                                    "Resume": f'<a href="{info["resume"]}" target="_blank">Open</a>' if info.get("resume") else ""
                                 })
+
                             df = pd.DataFrame(rows)
-                            # st.dataframe(df, use_container_width=True)
-                            if "Source File" in df.columns:
-                                df["Source File"] = df["Source File"].apply( lambda f: f"[Open]({BASE_URL}/{f})" if f else "")
-                            st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                            st.markdown("#### 👥 Candidates Found")
+                            st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+                        # candidate_names = set(
+                        #     item.get("payload", item).get("candidate_name") or "Unknown"
+                        #     for item in vector_result
+                        # )
+                    
+                        # if len(candidate_names) > 1:
+                        #     # Hiển thị bảng chung
+                        #     candidates = {}
+                        #     for item in vector_result:
+                        #         payload = item.get("payload", item)
+                        #         cname = payload.get("candidate_name") or "Unknown"
+                        #         if cname not in candidates:
+                        #             candidates[cname] = {
+                        #                 "email": payload.get("email"),
+                        #                 "resume": payload.get("resume_url"),
+                        #             }
+                        #     rows = []
+                        #     for cname, info in candidates.items():
+                        #         rows.append({
+                        #             "Candidate": cname,
+                        #             "Email": info.get("email") or "",
+                        #             "Resume": f'<a href="{info["resume"]}" target="_blank">Open</a>' if info.get("resume") else ""
+                        #         })
+                        #     df = pd.DataFrame(rows)
+                        #     st.markdown("#### 👥 Candidates Found")
+                        #     st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+                        
+                        # else:
+                        #     # 2️⃣ / 3️⃣ Query 1 người → check type (skill hoặc experience)
+                        #     first_payload = vector_result[0].get("payload", vector_result[0])
+                        #     cname = first_payload.get("candidate_name") or "Unknown"
+                        #     st.markdown(f"### 👤 {cname}")
+                        #     if first_payload.get("email"):
+                        #         st.write(f"✉️ {first_payload['email']}")
+                        #     if first_payload.get("resume_url"):
+                        #         st.markdown(f"📂 [Resume]({first_payload['resume_url']})", unsafe_allow_html=True)
 
-                        # ---- Experience
-                        elif first.get("type") == "experience":
-                            st.subheader("📌 Candidate Experiences")
-                            for exp in vector_result:
-                                with st.expander(f"{exp['experience_detail']['job_title']} @ {exp['experience_detail']['company']}"):
-                                    st.write(f"**Candidate:** {exp['candidate_name']}")
-                                    st.write(f"**Period:** {exp['experience_detail']['start_date']} - {exp['experience_detail']['end_date']}")
-                                    st.write(f"**Description:** {exp['experience_detail']['description']}")
-                                    st.caption(f"📄 Source: {exp['source_file']}")
-
-                                    source_file = exp.get("source_file")
-                            if source_file:
-                                file_url = f"{BASE_URL}/{source_file}"
-                                st.markdown(f"📄 Source File: [Open]({file_url})", unsafe_allow_html=True)
-                                    
-                                    # ---- Resume file (nếu có)
-                                    # if exp.get("resume_url"):
-                                    #     st.markdown(f"📂 Resume: [Open]({exp['resume_url']})")
-
+                        #     if first_payload.get("type") == "experience":
+                        #         st.subheader("📌 Candidate Experiences")
+                        #         for item in vector_result:
+                        #             p = item.get("payload", item)
+                        #             exp = p.get("experience_detail", {})
+                        #             title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
+                        #             with st.expander(title):
+                        #                 st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
+                        #                 st.write(f"**Description:** {exp.get('description')}")
+                        #     elif first_payload.get("type") == "skill":
+                        #         st.subheader("🛠 Candidate Skills")
+                        #         for item in vector_result:
+                        #             p = item.get("payload", item)
+                        #             st.markdown(f"- {p.get('skill')}")
                 else:
                     st.error("Không xác định được loại kết quả (sql/vector).")
 

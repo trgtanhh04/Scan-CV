@@ -25,7 +25,7 @@ from langgraph.graph import StateGraph, END
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # from text2SQL.enrich import enrich_with_resume_urls
 # from text2SQL.t2sql_core import LLM, answer_sql
-from app.rag_pipeline.rag_modules import route_query, search_vector
+from app.rag_pipeline.rag_modules_test import route_query, search_vector
 from app.text2SQL.t2sql_core import LLM, answer_sql
 from app.text2SQL.enrich import enrich_with_resume_urls
 # === Config ===
@@ -208,7 +208,7 @@ def summarizer_node(state: CandidateState):
     return state
 
 # ---- Build Flow ----
-def build_flow(llm, embedding_model, qdrant_db, collection, limit, search_threshold=0.3):
+def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_threshold=0.72):
     graph = StateGraph(CandidateState)
 
     # Add nodes
@@ -241,7 +241,7 @@ def build_flow(llm, embedding_model, qdrant_db, collection, limit, search_thresh
 if __name__ == "__main__":
     embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
     qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
-    flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=50)
+    flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
 
     result = flow.invoke({"question": "List candidates in database"})
     if isinstance(result["final_answer"], list) and result.get("sql_result"):

@@ -106,6 +106,9 @@ def generate_vector_query(question: str, llm, collection_name, limit):
           return an array of multiple queries, one for skills and one for experiences.
         - Never mix type=skill and type=experience in the same query_filter.
         - Always return raw JSON only, no explanation.
+        - If you're using scroll, the filter argument is "scroll_filter".
+        - If you're using search, the filter argument is "query_filter".
+                                                                                                      
 
         collection_name: {collection_name}
         limit: {limit}
@@ -113,11 +116,9 @@ def generate_vector_query(question: str, llm, collection_name, limit):
         Question: {question}
         Output format: JSON object OR array of JSON objects
     """)
-
-    response = llm.invoke(vector_prompt.format(
-        question=question, collection_name=collection_name, limit=limit
-    ))
-    cleaned = re.sub(r"^```json\s*|\s*```$", "", response.content.strip())
+    response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name, limit=limit))
+    response = response.content.strip()
+    cleaned = re.sub(r"^```json\s*|\s*```$", "", response.strip())
     return cleaned.strip()
 
 def build_filter(filter_json: dict):
@@ -152,11 +153,11 @@ def build_filter(filter_json: dict):
     )
 
 
-def execute_vector_query(plan, client: QdrantClient, embedding_model, search_threshold=0.75):
+def execute_vector_query(plan, client: QdrantClient, embedding_model, limit=None, search_threshold=0.75):
     if isinstance(plan, list):  # nhiều query cần chạy rồi join
         results_per_query = []
         for subplan in plan:
-            results = execute_vector_query(subplan, client, embedding_model, search_threshold)
+            results = execute_vector_query(subplan, client, embedding_model, 30, search_threshold)
             results_per_query.append(results)
         
         # join theo candidate_name (chỉ giữ những người có mặt ở tất cả queries)
@@ -174,13 +175,13 @@ def execute_vector_query(plan, client: QdrantClient, embedding_model, search_thr
     # -------- trường hợp chỉ 1 query như cũ ----------
     action = plan["action"]
     collection_name = plan["collection_name"]
-    limit = plan.get("limit", 10)
-
+    limit = limit or plan.get("limit", 10)
+    scroll_limit = 30
     if action == "scroll":
         qdrant_filter = build_filter(plan.get("scroll_filter", {}))
         points, _ = client.scroll(
             collection_name=collection_name,
-            limit=limit,
+            limit=scroll_limit,
             scroll_filter=qdrant_filter
         )
         return [p.payload for p in points]
@@ -202,11 +203,155 @@ def execute_vector_query(plan, client: QdrantClient, embedding_model, search_thr
     else:
         raise ValueError(f"Unknown action type: {action}")
 
-def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=3, search_threshold=0.5):
+# def generate_vector_query(question: str, llm, collection_name, limit):
+#     vector_prompt = ChatPromptTemplate.from_template("""
+#         You are a TEXT2VECTORQUERY system. 
+#         Your job is to translate user questions into a valid Qdrant query in JSON format. 
+#         Use one of two actions: "search" or "scroll".
+
+#         Rules:
+#         - If the question is asking to list attributes of a specific candidate (skills or experiences),
+#           use "scroll" with a filter on candidate_name and type.
+#         - If the question is asking to find candidates by skill, experience, or semantic content,
+#           use "search" with query_text and type filter.
+#         - Always return a valid JSON object only, no extra text.
+                                                     
+#         collection_name: {collection_name}
+#         limit: {limit}
+
+#         Schema:
+                                                     
+#         Skill points schema (per-skill embedding).
+#         Skill vector stores one vector per individual skill term (e.g., “Python”), 
+#         with lightweight candidate/context metadata for fast semantic search on skills.. 
+#         Example schema for skill point schema:
+#         {{
+#             "id": "skill-15.pdf-{{skill}}-{{uuid.uuid4().hex[:8]}}", 
+#             "vector": embed_query(skill),          
+#             "payload": {{
+#                 "type": "skill",
+#                 "skill": skill,
+#                 "job_title": "Data Engineer",
+#                 "source_file": "15.pdf",                               
+#                 "candidate_name": "Pooya Karimian"
+#             }}
+#         }}
+#         Experience points schema (per-experience embedding).
+#         Embeds a composed experience string (role, company, time range, description to enable semantic retrieval of rich work history, plus detailed metadata for display. 
+#         Don't confuse the job_title in the payload with the job_title in experience_detail. The former is the candidate's current job title, while the latter is part of the experience                                    
+#         Example schema for experience:
+#         Given exp_text as "{{exp.get('job_title', '')}} at {{exp.get('company', '')}} ({{exp.get('start_date', '')}} - {{exp.get('end_date', '')}}) {{exp.get('description', '')}}"
+#         {{
+#             "id": "exp-{{filename}}-{{exp.get('company', 'unknown')}}--{{uuid.uuid4().hex[:8]}}",  
+#             "vector": embed_query(exp_text),          
+#             "payload": {{
+#                 "type": "experience",   
+#                 "experience": exp_text,    
+#                 "experience_detail": exp dict,  
+#                 "job_title": "Data Enginner",
+#                 "source_file": "15.pdf",                                                         
+#                 "candidate_name": "Pooya Karimian"
+#             }}
+#         }}
+
+#         Format:
+#         {{
+#           "action": "scroll",
+#           "collection_name": collection_name,
+#           "scroll_filter": {{
+#             "must": [
+#               {{"key": "candidate_name", "match": {{"value": "Pooya Karimian"}}}},
+#               {{"key": "type", "match": {{"value": "skill"}}}}
+#             ]
+#           }},
+#           "limit": {limit}
+#         }}
+#         or
+#         {{
+#           "action": "search",
+#           "collection_name": collection_name,
+#           "query_text": "Python",
+#           "query_filter": {{
+#             "must": [
+#               {{"key": "type", "match": {{"value": "skill"}}}}
+#             ]
+#           }},
+#           "limit": {limit}
+#         }}
+                                                     
+#         If the user require a specific number of results ("Find 3 candidates who..."), you can override the predefined limit value (3 in the example).
+
+#         Question: {question}
+#         Return only raw JSON, no explanation.
+#     """)
+
+#     response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name, limit=limit))
+#     response = response.content.strip()
+#     cleaned = re.sub(r"^```json\s*|\s*```$", "", response.strip())
+#     return cleaned.strip()
+
+
+# def build_filter(filter_json: dict) -> Filter:
+#     """
+#     Convert filter JSON (must, should, must_not) into Qdrant Filter object
+#     """
+#     must_conditions, should_conditions, must_not_conditions = [], [], []
+
+#     for cond in filter_json.get("must", []):
+#         must_conditions.append(
+#             FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+#         )
+#     for cond in filter_json.get("should", []):
+#         should_conditions.append(
+#             FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+#         )
+#     for cond in filter_json.get("must_not", []):
+#         must_not_conditions.append(
+#             FieldCondition(key=cond["key"], match=MatchValue(value=cond["match"]["value"]))
+#         )
+
+#     return Filter(must=must_conditions or None,
+#                   should=should_conditions or None,
+#                   must_not=must_not_conditions or None)
+
+# def execute_vector_query(plan: dict, client: QdrantClient, embedding_model, search_threshold=0.75):
+
+#     action = plan["action"]
+#     collection_name = plan["collection_name"]
+#     limit = plan.get("limit", 10)
+
+#     if action == "scroll":
+#         scroll_limit = 30
+#         qdrant_filter = build_filter(plan.get("scroll_filter", {}))
+#         points, next_page = client.scroll(
+#             collection_name=collection_name,
+#             limit=scroll_limit,
+#             scroll_filter=qdrant_filter
+#         )
+#         return [p.payload for p in points]
+
+#     elif action == "search":
+#         qdrant_filter = build_filter(plan.get("query_filter", {}))
+#         query_text = plan["query_text"]
+#         query_vector  = embedding_model.embed_query(query_text) 
+
+#         results = client.search(
+#             collection_name=collection_name,
+#             query_vector=query_vector,
+#             score_threshold=search_threshold,
+#             limit=limit,
+#             query_filter=qdrant_filter
+#         )
+#         return [{"payload": r.payload, "score": r.score} for r in results]
+
+#     else:
+#         raise ValueError(f"Unknown action type: {action}")
+
+def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
     output = generate_vector_query(query, llm, collection, limit)
     plan = json.loads(output)
-    # print(plan)
-    results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold)
+    print(plan)
+    results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
     return results, plan
 
 
