@@ -25,9 +25,9 @@ from langgraph.graph import StateGraph, END
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # from text2SQL.enrich import enrich_with_resume_urls
 # from text2SQL.t2sql_core import LLM, answer_sql
-from app.rag_pipeline.rag_modules_test import route_query, search_vector
+from app.rag_pipeline.rag_modules_test import search_vector
 from app.text2SQL.t2sql_core import LLM, answer_sql
-from app.text2SQL.enrich import enrich_with_resume_urls
+
 # === Config ===
 # sys.path.append(os.path.abspath('../../'))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -74,9 +74,9 @@ def is_sql(question: str) -> bool:
     ]
     if any(re.search(p, q) for p in patterns):
         return True
-    if re.search(r"(python|java|aws|spark|golang|skill|ky\s*nang)", q) and \
-       re.search(r"(experience|kinh\s*nghiem|job|vi\s*tri|position|software|engineer)", q):
-        return True
+    # if re.search(r"(python|java|aws|spark|golang|skill|ky\s*nang)", q) and \
+    #    re.search(r"(experience|kinh\s*nghiem|job|vi\s*tri|position|software|engineer)", q):
+    #     return True
 
     return False
 

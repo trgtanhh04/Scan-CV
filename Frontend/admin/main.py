@@ -410,6 +410,16 @@ def view_search():
                 data = call_query_links(q.strip())
                 route = data.get("route")
                 links = data.get("cv_links") or []
+                
+                # drop trùng link
+                seen = set()
+                unique_links = []
+                for item in links:
+                    url = item.get("resume_url")
+                    if url and url not in seen:
+                        seen.add(url)
+                        unique_links.append(item)
+                links = unique_links
 
                 st.caption(f"Route: **{route or 'UNKNOWN'}** · Tổng {len(links)} CV")
 
@@ -514,6 +524,11 @@ def view_search():
                         })
 
                     df = pd.DataFrame(norm_rows)
+                    df = pd.DataFrame(norm_rows)
+                    if not df.empty:
+                        df["_has_resume"] = df["Resume"].notna() & df["Resume"].astype(str).str.len().gt(0)
+                        df.sort_values(["Candidate","_has_resume"], ascending=[True, False], inplace=True)
+                        df = df.drop_duplicates(subset=["Candidate"], keep="first").drop(columns=["_has_resume"])
 
                     # Link cột Resume
                     if "Resume" in df.columns:
