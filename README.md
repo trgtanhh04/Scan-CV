@@ -114,3 +114,10 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 
 - **Error Handling & Retry:**  
   If the SQL fails or returns no results, the system refines the prompt using previous SQL attempts and error reasons, and retries the LLM generation.
+
+---
+
+## Database
+<p align="center">
+  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/erd_for_db.png" width="100%" alt="Workflow">
+</p>
