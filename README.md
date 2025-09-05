@@ -8,19 +8,38 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 ## 🗂️ Project Structure
 
 ```
-Scan-CV/
-├── app/            # Main application code
-│   ├── ingestion/  # CV ingestion & preprocessing
-│   ├── extraction/ # Information extraction (LLM/NLP)
-│   ├── database/   # DB models & connection
-│   ├── api/        # FastAPI endpoints
-│   └── utils/      # Utility functions
-├── data/           # Sample CVs and datasets
-├── tests/          # Unit and integration tests
-├── requirements.txt
-├── README.md
-├── .env.example
-└── config/
+SCAN-CV/
+│
+├── Backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── models/
+│   │   ├── qdrant_gemini_db/
+│   │   ├── rag_pipeline/
+│   │   ├── services/
+│   │   ├── text2SQL/
+│   │   ├── vector_db/
+│   │   └── __init__.py
+│   ├── config/
+│   ├── CV-MEDIA/           # Folder for storing CV files
+│   ├── notebooks/          # Jupyter notebooks, experiments
+│   ├── raw/                # Raw data or scripts
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── Frontend/
+│   ├── admin/
+│   ├── client/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│
+├── Images/                 # Documentation and workflow images
+│
+├── .env
+├── .gitignore
+├── docker-compose.yml
+├── note.txt
+└── README.md
 ```
 
 ---
@@ -161,7 +180,7 @@ Scan-CV/
 
 ## ✨ Credits
 
-Project initiated by [Chiến Phạm Minh](https://github.com/trgtanhh04) as part of the AI Mini Project series (AI-003).
+Project initiated by [Truong Tien Anh](https://github.com/trgtanhh04).
 
 ---
 
