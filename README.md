@@ -121,3 +121,22 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 <p align="center">
   <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/erd_for_db.png" width="100%" alt="Workflow">
 </p>
+
+---
+
+## 📚 References
+
+### Key GitHub Repositories
+- [LangChain](https://github.com/langchain-ai/langchain) 🧠
+- [FastAPI](https://github.com/tiangolo/fastapi) ⚡
+- [Qdrant Vector Database](https://github.com/qdrant/qdrant) 🗄️
+- [FAISS](https://github.com/facebookresearch/faiss) 🔍
+- [ChromaDB](https://github.com/chroma-core/chroma) 🟩
+- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) 📄
+- [spaCy](https://github.com/explosion/spaCy) 📝
+- [PostgreSQL](https://github.com/postgres/postgres) 🛢️
+
+### Related Research Papers & Articles
+- [Text-to-SQL: Past, Present and Future](https://arxiv.org/abs/2104.00759) 📖
+- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) 📙
+- [Semantic Search with Vector Databases](https://towardsdatascience.com/semantic-search-with-vector-databases-5c6b4c3d8e4b) 🔎
