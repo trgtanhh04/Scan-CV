@@ -177,7 +177,7 @@ SCAN-CV/
 - [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) 📙
 - [Semantic Search with Vector Databases](https://towardsdatascience.com/semantic-search-with-vector-databases-5c6b4c3d8e4b) 🔎
 
----https://github.com/wbbeyourself/MAC-SQL.git
+---
 
 ## ✨ Credits
 
