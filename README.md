@@ -7,5 +7,5 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 
 ## Workflow
 <p align="center">
-  <img src="https://raw.githubusercontent.com/trgtanhh04/End-to-End-MovieDB-Data-Engineering/main/Images/workflow.png" width="100%" alt="airflow">
+  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/workflow.png" width="100%" alt="Workflow">
 </p>
