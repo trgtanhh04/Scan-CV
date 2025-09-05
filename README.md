@@ -1,15 +1,31 @@
-# Scan CV: Intelligent CV Analysis and Candidate Database System
+# 🚀 Scan CV: Intelligent CV Analysis and Candidate Database System
 
-## Overview
-Scan CV is an AI-powered system for automated CV parsing, information extraction, and candidate database construction. It streamlines the recruitment process by enabling semantic search, QA and efficient candidate filtering.
-
----
-
-## Project structure
+## 📝 Overview
+Scan CV is an AI-powered system for automated CV parsing, information extraction, and candidate database construction. It streamlines the recruitment process by enabling semantic search, QA, and efficient candidate filtering.
 
 ---
 
-## Workflow
+## 🗂️ Project Structure
+
+```
+Scan-CV/
+├── app/            # Main application code
+│   ├── ingestion/  # CV ingestion & preprocessing
+│   ├── extraction/ # Information extraction (LLM/NLP)
+│   ├── database/   # DB models & connection
+│   ├── api/        # FastAPI endpoints
+│   └── utils/      # Utility functions
+├── data/           # Sample CVs and datasets
+├── tests/          # Unit and integration tests
+├── requirements.txt
+├── README.md
+├── .env.example
+└── config/
+```
+
+---
+
+## 🔄 Workflow
 <p align="center">
   <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/workflow.png" width="100%" alt="Workflow">
 </p>
@@ -54,9 +70,9 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 
 ---
 
-## Text2Sql
+## 🧩 Text2Sql
 <p align="center">
-  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/text2Sql_pipeline.png" width="100%" alt="Workflow">
+  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/text2Sql_pipeline.png" width="100%" alt="Text2Sql Pipeline">
 </p>
 
 ### 1. Selector
@@ -117,9 +133,9 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 
 ---
 
-## Database
+## 🗃️ Database
 <p align="center">
-  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/erd_for_db.png" width="100%" alt="Workflow">
+  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/erd_for_db.png" width="100%" alt="Database ERD">
 </p>
 
 ---
@@ -140,3 +156,15 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 - [Text-to-SQL: Past, Present and Future](https://arxiv.org/abs/2104.00759) 📖
 - [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) 📙
 - [Semantic Search with Vector Databases](https://towardsdatascience.com/semantic-search-with-vector-databases-5c6b4c3d8e4b) 🔎
+
+---
+
+## ✨ Credits
+
+Project initiated by [Chiến Phạm Minh](https://github.com/trgtanhh04) as part of the AI Mini Project series (AI-003).
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
