@@ -3,7 +3,11 @@
 ## Overview
 Scan CV is an AI-powered system for automated CV parsing, information extraction, and candidate database construction. It streamlines the recruitment process by enabling semantic search, QA and efficient candidate filtering.
 
+---
+
 ## Project structure
+
+---
 
 ## Workflow
 <p align="center">
@@ -48,8 +52,10 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 - **Advanced:**  
   For complex queries, a query transformation/decomposition module may break down the query into manageable parts for multi-step generation.
 
-  ## Text2Sql
-  <p align="center">
+---
+
+## Text2Sql
+<p align="center">
   <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/text2Sql_pipeline.png" width="100%" alt="Workflow">
 </p>
 
