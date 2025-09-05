@@ -173,10 +173,11 @@ SCAN-CV/
 
 ### Related Research Papers & Articles
 - [Text-to-SQL: Past, Present and Future](https://arxiv.org/abs/2104.00759) 📖
+- [MAC-SQL: A Multi-Agent Collaborative Framework for Text-to-SQL](https://github.com/wbbeyourself/MAC-SQL.git) 📖
 - [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) 📙
 - [Semantic Search with Vector Databases](https://towardsdatascience.com/semantic-search-with-vector-databases-5c6b4c3d8e4b) 🔎
 
----
+---https://github.com/wbbeyourself/MAC-SQL.git
 
 ## ✨ Credits
 
