@@ -47,3 +47,64 @@ Scan CV is an AI-powered system for automated CV parsing, information extraction
 
 - **Advanced:**  
   For complex queries, a query transformation/decomposition module may break down the query into manageable parts for multi-step generation.
+
+  ## Text2Sql
+  <p align="center">
+  <img src="https://raw.githubusercontent.com/trgtanhh04/Scan-CV/main/Images/text2Sql_pipeline.png" width="100%" alt="Workflow">
+</p>
+
+### 1. Selector
+
+- **Input Query Parsing:**  
+  The selector processes the incoming query using regex to identify relevant entities (skills, experience, education, language, certification, location, etc.).
+- **Table Set Identification:**  
+  Based on detected entities, it determines the set of database tables involved.
+- **Hints Extraction:**  
+  Generates hints (e.g., DISTINCT, EXISTS) to guide the SQL generation.
+
+### 2. Introspection
+
+- **Schema Loading:**  
+  Loads schema information from the database engine.
+- **Schema Summarization:**  
+  Summarizes schema, mapping tables to their structure.
+- **Schema Rendering:**  
+  Renders the processed schema as text for prompt building.
+
+### 3. Prompting
+
+- **Prompt Construction:**  
+  Builds a prompt for the LLM using:
+  - Rendered schema text
+  - Hints
+  - User query
+  - 2–3 example queries for guidance
+- **LLM Generation:**  
+  The LLM generates a candidate SQL query based on the prompt.
+
+### 4. Safety
+
+- **SQL Guard:**  
+  Ensures only safe SQL statements are executed (SELECT only; forbids DDL/DML).
+
+### 5. Post-Processing
+
+- **SQL Parsing:**  
+  Parses the generated SQL for rule checks.
+  - Ensures proper use of JOINs, no improper GROUP BY or COUNT.
+  - Applies SELECT DISTINCT or custom rules for candidate queries (e.g., ORDER BY candidate ID, start date DESC).
+- **Prettify:**  
+  Formats the SQL output for readability.
+
+### 6. Execution
+
+- **SQL Execution:**  
+  Runs the generated SQL against the database engine.
+- **Result Handling:**  
+  - On success: Returns columns, rows, and formatted SQL.
+  - On error or empty results: Invokes a refinement loop.
+
+### 7. Refinement Loop
+
+- **Error Handling & Retry:**  
+  If the SQL fails or returns no results, the system refines the prompt using previous SQL attempts and error reasons, and retries the LLM generation.
