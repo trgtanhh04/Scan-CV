@@ -105,6 +105,7 @@ def build_schema_prompt(schema_txt: str, hints: str, user_query: str, limit: int
         - Add LIMIT 50 unless user asks otherwise.
         - Many-to-many joins (skills/languages) create duplicates: if returning a candidate list, use SELECT DISTINCT or use EXISTS for multiple skill conditions.
         - ALWAYS include the candidate id column (e.g. id) in the SELECT result, even if the user only asks for names. This is required for downstream enrichment (e.g. resume_url).
+        - Hint: When subtracting two DATE columns in PostgreSQL, result is in days (integer). Do NOT use INTERVAL literal.
         - If the user asks for only names, return both id and name.
 
         Limit:

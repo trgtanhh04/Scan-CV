@@ -120,26 +120,39 @@ def _extract_qualified_cols(sql: str) -> List[Tuple[str, str]]:
         node = sqlglot.parse_one(sql, read="postgres")
         for col in node.find_all(exp.Column):
             # col.table is Identifier or None; col.name is column name
+            table_name = None
             if col.table:
-                out.append((col.table, col.name))
+                if isinstance(col.table, exp.Identifier):
+                    table_name = col.table.this
+                else:
+                    table_name = str(col.table)
+            if table_name:
+                out.append((table_name, col.name))
     except Exception:
         pass
     return out
 
-def schema_guard(sql: str, schema: SchemaSummary) -> Optional[str]:
+# ================================
+# 2) Schema guard
+# ================================
+def schema_guard(sql: str, schema: 'SchemaSummary') -> Optional[str]:
     """
     Validate table/column names using sqlglot AST (no regex).
     Returns warning string if invalid; otherwise None.
     """
     # known tables & columns
     known_tables = set(schema.tables.keys())
-    table_cols: Dict[str, set] = {t.name: set(t.columns) for t in schema.tables.values()}
+    # chỉ lấy tên cột, tránh ColumnInfo unhashable
+    table_cols: Dict[str, set] = {
+        t.name: set(c.name for c in t.columns)
+        for t in schema.tables.values()
+    }
 
     # parse once
     try:
         node = sqlglot.parse_one(sql, read="postgres")
     except Exception:
-        # nếu parse lỗi thì không guard quá gắt (để vòng refine xử lý)
+        # nếu parse lỗi thì không guard quá gắt
         return None
 
     # collect tables + alias map
@@ -147,17 +160,22 @@ def schema_guard(sql: str, schema: SchemaSummary) -> Optional[str]:
     alias_map: Dict[str, str] = {}  # alias -> real table
 
     for t in node.find_all(exp.Table):
-        real_name = t.this.name  # actual table name string
+        real_name = t.this.name if isinstance(t.this, exp.Identifier) else str(t.this)
         used_tables.add(real_name)
 
         # alias, if any
         if t.alias:
-            alias_name = t.alias
-            if isinstance(alias_name, exp.TableAlias):
-                alias_name = alias_name.this
-            if isinstance(alias_name, exp.Identifier):
-                alias_map[alias_name.this] = real_name
-            elif isinstance(alias_name, str):
+            alias_name = None
+            if isinstance(t.alias, exp.TableAlias):
+                if isinstance(t.alias.this, exp.Identifier):
+                    alias_name = t.alias.this.this
+                else:
+                    alias_name = str(t.alias.this)
+            elif isinstance(t.alias, exp.Identifier):
+                alias_name = t.alias.this
+            elif isinstance(t.alias, str):
+                alias_name = t.alias
+            if alias_name:
                 alias_map[alias_name] = real_name
         else:
             # allow referencing table by its own name as "alias" too
@@ -171,7 +189,7 @@ def schema_guard(sql: str, schema: SchemaSummary) -> Optional[str]:
     # qualified columns check
     bad_cols: List[Tuple[str, str, str]] = []  # (alias_or_table, real_table, col)
     for alias, col in set(_extract_qualified_cols(sql)):
-        alias_str = alias.this if isinstance(alias, exp.Identifier) else str(alias)
+        alias_str = str(alias)
         real_table = alias_map.get(alias_str, alias_str)
         if real_table in table_cols and col not in table_cols[real_table]:
             bad_cols.append((alias_str, real_table, col))

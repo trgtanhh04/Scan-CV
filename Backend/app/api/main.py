@@ -7,7 +7,6 @@ import tempfile, shutil, os, uuid
 from fastapi.staticfiles import StaticFiles
 
 from app.models.models import SessionLocal
-# from app.rag_pipeline.workflow import flow   # graph build sẵn
 from app.rag_pipeline.workflow import build_flow 
 from app.text2SQL.process_cvs_sql import process_cvs_sql     
 from app.services.extract_cv import process_cv_rag
@@ -21,7 +20,6 @@ from qdrant_client import QdrantClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from sqlalchemy import text as sa_text
 from fastapi import FastAPI, Depends
-
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
@@ -103,38 +101,14 @@ class QueryRequest(BaseModel):
     question: str
     provider: str = "deepseek"
     model: str = "deepseek-chat"
-    links_only: bool = False    # <--- thêm cờ này
+    links_only: bool = False   
 
-
-
-class QueryRequest(BaseModel):
-    question: str
-    provider: str = "deepseek"
-    model: str = "deepseek-chat"
-    links_only: bool = False
-
-# @app.post("/query")
-# async def query_api(request: QueryRequest):
-#     state = {"question": request.question}
-#     result = flow.invoke(state)
-#     return {
-#         "question": request.question,
-#         "provider": request.provider,
-#         "model": request.model,
-#         "route": result.get("route"),
-#         "sql": result.get("sql_query"),
-#         "columns": result.get("columns"),
-#         "rows": result.get("sql_result"),
-#         "trials": result.get("trials"),
-#         "final_answer": result.get("final_answer"),
-#         "vector_query": result.get("vector_query"),
-#         "vector_result": result.get("vector_result"),
-#         "final_answer": result.get("final_answer"),
-#     }
 
 @app.post("/query")
 async def query_api(request: QueryRequest):
-    state = {"question": request.question}
+    question = request.question.strip()
+    print("Received question:", question)
+    state = {"question": question}
     result = flow.invoke(state)
 
     # print('result:', result)
