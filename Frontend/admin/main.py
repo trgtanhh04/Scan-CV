@@ -5,6 +5,8 @@ import requests
 import pandas as pd
 import streamlit as st
 import html
+from io import BytesIO
+import base64
 from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query
 
 
@@ -329,80 +331,132 @@ def filter_ui_dynamic(df, rows):
     return df_scored
 
 # ------------------ RENDER TABLE ------------------
+# def render_table_view(df: pd.DataFrame):
+#     """Hiển thị CV dạng bảng."""
+#     display_df = df.copy()
+
+#     if "resume_url" in display_df.columns:
+#         display_df["resume_url"] = display_df["resume_url"].apply(
+#             lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
+#         )
+
+#     if "skills" in display_df.columns:
+#         display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
+#     if "educations" in display_df.columns:
+#         display_df["educations"] = display_df["educations"].apply(lambda e: educations_to_html(e) if e else "")
+
+#     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+# Style chip
+CHIP_STYLE = """
+    <style>
+    .chip {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px;
+    background-color: #1f2937;
+    color: white;
+    border-radius: 12px;
+    font-size: 13px;
+    text-decoration: none;
+    }
+    .chip:hover {
+    background-color: #374151;
+    }
+    </style>
+"""
+st.markdown(CHIP_STYLE, unsafe_allow_html=True)
+
+def chip_html(text, url=None):
+    """Tạo chip HTML bo tròn."""
+    if url:
+        return f'<a class="chip" href="{url}" target="_blank">{text}</a>'
+    return f'<span class="chip">{text}</span>'
+
+def create_download_link(url, filename):
+    """Tạo link download base64 inline."""
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            b64 = base64.b64encode(r.content).decode()
+            return f'<a class="chip" href="data:application/pdf;base64,{b64}" download="{filename}">⬇️ Download</a>'
+        else:
+            return '<span class="chip">Lỗi</span>'
+    except Exception:
+        return '<span class="chip">Lỗi</span>'
+
+def list_to_chips(val):
+    """Convert list hoặc chuỗi thành chip HTML."""
+    if not val:
+        return ""
+    if isinstance(val, list):
+        return "".join([chip_html(str(v)) for v in val])
+    if isinstance(val, str):
+        return "".join([chip_html(v.strip()) for v in val.split(",")])
+    return chip_html(str(val))
+
+
+def education_to_chips(educations):
+    """Format education để hiển thị rõ degree - university."""
+    if not educations:
+        return ""
+    
+    chips = []
+    for edu in educations:
+        # Lấy degree và university
+        degree = edu.get("degree", "")
+        university = edu.get("university", "")
+        # Format gọn gàng
+        text = degree
+        if university:
+            text += f" @ {university}"
+        chips.append(chip_html(text))
+    return "".join(chips)
+
+
 def render_table_view(df: pd.DataFrame):
-    """Hiển thị CV dạng bảng."""
+    """Render bảng đẹp + chip bo tròn cho Open CV và Download."""
     display_df = df.copy()
 
+    # Open CV
     if "resume_url" in display_df.columns:
-        display_df["resume_url"] = display_df["resume_url"].apply(
-            lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
+        display_df["CV"] = display_df.apply(
+            lambda row: chip_html("🔗 Open", row["resume_url"]) if row["resume_url"] else "",
+            axis=1
         )
 
+    # Skills
     if "skills" in display_df.columns:
-        display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
+        display_df["skills"] = display_df["skills"].apply(list_to_chips)
+
+    # Education
+    # if "educations" in display_df.columns:
+    #     display_df["educations"] = display_df["educations"].apply(list_to_chips)
+    # Education
     if "educations" in display_df.columns:
-        display_df["educations"] = display_df["educations"].apply(lambda e: educations_to_html(e) if e else "")
+        display_df["educations"] = display_df["educations"].apply(education_to_chips)
+
+    # Download
+    display_df["Download"] = display_df.apply(
+        lambda row: create_download_link(row["resume_url"], f"{row.get('email','cv')}.pdf")
+        if row.get("resume_url") else "",
+        axis=1
+    )
+
+    # Cột hiển thị
+    cols = [c for c in ["id", "email", "CV", "job_title", "skills", "educations", "_match_score", "Download"] if c in display_df.columns]
+    display_df = display_df[cols]
 
     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
-# ------------------ RENDER CARD ------------------
-def render_card_view(df: pd.DataFrame):
-    """Hiển thị CV dạng card."""
-    for _, row in df.iterrows():
-        job = row.get("job_title") or "N/A"
-        email = row.get("email") or ""
-        resume_url = row.get("resume_url") or ""
-        score = int(row.get("_match_score", 0))
-        skills_html = skills_to_html(row.get("skills", []) or [])
-        edu_html = educations_to_html(row.get("educations", []) or [])
 
-        # match progress width (cap at 10 for 100%)
-        max_expected = 10
-        pct = min(int((score / max_expected) * 100), 100) if max_expected > 0 else 0
-
-        resume_link = (
-            f'<a href="{resume_url}" target="_blank" '
-            f'style="color:#06b6d4;text-decoration:none;">🔗 Open resume</a>'
-            if resume_url else ""
-        )
-
-        card_html = f"""
-        <div class="card" style="margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div>
-              <div style="font-size:1.05rem;font-weight:600">{html.escape(str(job))}</div>
-              <div class="small-muted">📧 {html.escape(str(email))}</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:.85rem;" class="small-muted">Match score</div>
-              <div style="width:120px;">{score}</div>
-            </div>
-          </div>
-
-          <div style="margin-top:8px;">
-            <div style="margin-bottom:6px;"><b>Skills:</b> {skills_html}</div>
-            <div style="margin-bottom:6px;"><b>Education:</b> {edu_html}</div>
-            <div style="margin-bottom:8px;">{resume_link}</div>
-            <div class="progress-bar"><div class="progress-fill" style="width:{pct}%;"></div></div>
-          </div>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
-
-
-# ------------------ MAIN VIEW SEARCH ------------------
+# -------------- MAIN VIEW SEARCH ------------------
 def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
-    # Top row: question + view toggle
-    top_col1, top_col2 = st.columns([3, 1])
-    with top_col1:
-        q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
-    with top_col2:
-        view_mode = st.selectbox("View", ["Card", "Table"], index=0, help="Chọn chế độ hiển thị")
-
+    q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
     run = st.button("Run Query", type="primary", use_container_width=True)
 
     # Fetch data from API
@@ -432,6 +486,8 @@ def view_search():
             # Remove empty rows
             rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
             df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
+            if df_original['id'].isnull().all():
+                df_original['id'] = range(1, len(df_original) + 1)
 
             # Save to session
             st.session_state["rows"] = rows
@@ -458,17 +514,12 @@ def view_search():
         st.divider()
         if st.button("Export CSV (filtered)"):
             csv_bytes = df_scored.drop(columns=["_match_score"]).to_csv(index=False).encode("utf-8")
-            st.download_button("Download CSV", data=csv_bytes, file_name="candidates_filtered.csv", mime="text/csv")
+            st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
     with col_right:
-        if view_mode == "Table":
-            render_table_view(df_scored)
-        else:
-            render_card_view(df_scored)
+        render_table_view(df_scored)
 
 # ------------------------------------
-
-
 def view_settings():
     header()
     st.markdown("### ⚙️ Settings")
@@ -477,8 +528,6 @@ def view_settings():
         "- UI gọi **Upload** ➜ `POST /cv/upload` ; **Search** ➜ `POST /query`.\n"
         "- UI gửi thêm `provider` & `model` trong body `/query` để backend chọn LLM."
     )
-
-    
 
 # ---------------- Router ----------------
 with st.sidebar:

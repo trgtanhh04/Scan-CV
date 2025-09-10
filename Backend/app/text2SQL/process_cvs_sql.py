@@ -12,39 +12,6 @@ from models.ingest import insert_candidate_to_db
 from config.storage import MEDIA_ROOT
 from services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 
-# ---- Attachment ghi vào DB ----
-# def save_attachment_for_batch(
-#     db: Session,
-#     *,
-#     candidate_id: int,
-#     rel_path: str,
-#     original_name: Optional[str],
-#     storage: str = "local",
-#     public_url: Optional[str] = None,
-# ):
-#     """Ghi 1 bản ghi Attachment (đã có model Attachment)."""
-#     from app.models.models import Attachment  # import cục bộ tránh vòng lặp
-
-#     mime = mimetypes.guess_type(rel_path)[0] or "application/pdf"
-#     size = None
-#     try:
-#         size = (MEDIA_ROOT / rel_path).stat().st_size
-#     except Exception:
-#         pass
-
-#     att = Attachment(
-#         candidate_id=candidate_id,
-#         original_name=original_name,
-#         mime_type=mime,
-#         size_bytes=size,
-#         storage=storage,
-#         path=rel_path,
-#         public_url=public_url,
-#     )
-#     db.add(att)
-#     db.commit()
-#     db.refresh(att)
-#     return att
 
 def save_attachment_for_batch(
     db: Session,
@@ -129,13 +96,6 @@ def process_cvs_sql(
             file_url = gcs_uploader(str(src))
 
         object_key = _object_key_from_gcs_url(file_url) or f"resumes/{uuid.uuid4().hex}.pdf"
-        # save_attachment_for_batch(
-        #     db=db,
-        #     candidate_id=cand.id,
-        #     object_key=object_key,
-        #     original_name=original_name or filename,
-        #     public_url=file_url,
-        # )
         save_attachment_for_batch(
             db=db,
             candidate_id=cand.id,
