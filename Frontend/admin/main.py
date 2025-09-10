@@ -4,10 +4,7 @@ import os
 import requests
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid
-import urllib.parse
-import re
-from difflib import get_close_matches
+import html
 from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query
 
 
@@ -221,152 +218,253 @@ def view_upload():
         st.json(results)
         
 
-# --- Lấy dữ liệu filter options ---
+# ---------------- Filter helpers ----------------
 def extract_filter_options(rows):
+    # rows: list[dict]
     job_titles, skills, degrees, schools = set(), set(), set(), set()
     for row in rows:
-        if row.get("job_title"):
-            job_titles.add(row["job_title"])
-        for s in row.get("skills", []):
+        if not isinstance(row, dict):
+            continue
+        jt = row.get("job_title") or row.get("Job Title")
+        if jt:
+            job_titles.add(jt)
+        for s in row.get("skills", []) or []:
             if s:
                 skills.add(s)
-        for edu in row.get("educations", []):
-            if edu.get("degree"):
-                degrees.add(edu["degree"])
-            if edu.get("university"):
-                schools.add(edu["university"])
+        for edu in row.get("educations", []) or []:
+            if isinstance(edu, dict):
+                d = edu.get("degree")
+                u = edu.get("university") or edu.get("school")
+                if d:
+                    degrees.add(d)
+                if u:
+                    schools.add(u)
     return sorted(job_titles), sorted(skills), sorted(degrees), sorted(schools)
 
+def render_badge_html(text, kind="skill"):
+    cls = "badge"
+    if kind == "skill":
+        cls += " badge-skill"
+    elif kind == "degree":
+        cls += " badge-degree"
+    elif kind == "school":
+        cls += " badge-school"
+    return f'<span class="{cls}">{html.escape(str(text))}</span>'
+
+def skills_to_html(sk_list):
+    if not sk_list:
+        return ""
+    return " ".join([render_badge_html(s, "skill") for s in sk_list if s])
+
+def educations_to_html(edu_list):
+    # edu_list: list of dict
+    if not edu_list:
+        return ""
+    parts = []
+    for edu in edu_list:
+        if not isinstance(edu, dict):
+            continue
+        deg = edu.get("degree")
+        uni = edu.get("university") or edu.get("school")
+        if deg:
+            parts.append(render_badge_html(deg, "degree"))
+        if uni:
+            parts.append(render_badge_html(uni, "school"))
+    return " ".join(parts)
 
 def filter_ui_dynamic(df, rows):
-    st.header("🔽 Bộ lọc")
-
+    st.markdown(
+        '<div class="header-with-icon">'
+        '<img src="https://cdn-icons-png.flaticon.com/512/9293/9293112.png" style="width:18px;height:18px;" />'
+        '<h3 style="margin:0;color:#e6eef8">Bộ lọc</h3>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
     job_titles, skills, degrees, schools = extract_filter_options(rows)
 
-    # --- Sử dụng session_state để giữ filter ---
-    job_filter = st.multiselect(
-        "Job Title", options=job_titles,
-        default=st.session_state.get("job_filter", [])
-    )
+    # default values from session_state to persist selection across reruns
+    job_filter = st.multiselect("Job Title", options=job_titles, default=st.session_state.get("job_filter", []), key="ui_job")
     st.session_state["job_filter"] = job_filter
-
-    skill_filter = st.multiselect(
-        "Skills", options=skills,
-        default=st.session_state.get("skill_filter", [])
-    )
+    skill_filter = st.multiselect("Skills", options=skills, default=st.session_state.get("skill_filter", []), key="ui_skill")
     st.session_state["skill_filter"] = skill_filter
-
-    degree_filter = st.multiselect(
-        "Degree", options=degrees,
-        default=st.session_state.get("degree_filter", [])
-    )
+    degree_filter = st.multiselect("Degree", options=degrees, default=st.session_state.get("degree_filter", []), key="ui_degree")
     st.session_state["degree_filter"] = degree_filter
-
-    school_filter = st.multiselect(
-        "University", options=schools,
-        default=st.session_state.get("school_filter", [])
-    )
+    school_filter = st.multiselect("University", options=schools, default=st.session_state.get("school_filter", []), key="ui_school")
     st.session_state["school_filter"] = school_filter
 
-    # --- Scoring function ---
+    # keep original scoring logic, slightly hardened for missing fields
     def cv_match_score(row):
         score = 0
-        # Job Title
-        if job_filter and row.get("job_title") in job_filter:
-            score += 2 
-
-        # Skills
-        skills_list = row.get("skills", [])
+        # normalize row from pd.Series or dict-like
+        job = row.get("job_title") or row.get("Job Title") or ""
+        if job_filter and job in job_filter:
+            score += 2
+        # skills
+        skills_list = row.get("skills", []) or []
         if isinstance(skills_list, str):
             skills_list = [s.strip() for s in skills_list.split(",") if s.strip()]
         elif isinstance(skills_list, list):
             skills_list = [str(s).strip() for s in skills_list if s]
+        else:
+            skills_list = []
         if skill_filter:
             score += sum(1 for s in skill_filter if s in skills_list)
-
-        # Degree
+        # degree
         if degree_filter:
-            for edu in row.get("educations", []):
-                if edu.get("degree") in degree_filter:
+            for edu in row.get("educations", []) or []:
+                if isinstance(edu, dict) and edu.get("degree") in degree_filter:
                     score += 1
-        # School
+        # school
         if school_filter:
-            for edu in row.get("educations", []):
+            for edu in row.get("educations", []) or []:
+                if not isinstance(edu, dict):
+                    continue
                 if edu.get("school") in school_filter or edu.get("university") in school_filter:
                     score += 1
         return score
 
-    # --- Apply scoring ---
     df_scored = df.copy()
     df_scored["_match_score"] = df_scored.apply(cv_match_score, axis=1)
-    df_scored = df_scored.sort_values("_match_score", ascending=False)
+    df_scored = df_scored.sort_values("_match_score", ascending=False).reset_index(drop=True)
+    return df_scored
 
-    # df_scored = df_scored[df_scored["_match_score"] > 0] nếu muốn lọc bớt CV không khớp
+# ------------------ RENDER TABLE ------------------
+def render_table_view(df: pd.DataFrame):
+    """Hiển thị CV dạng bảng."""
+    display_df = df.copy()
+
+    if "resume_url" in display_df.columns:
+        display_df["resume_url"] = display_df["resume_url"].apply(
+            lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
+        )
+
+    if "skills" in display_df.columns:
+        display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
+    if "educations" in display_df.columns:
+        display_df["educations"] = display_df["educations"].apply(lambda e: educations_to_html(e) if e else "")
+
+    st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
-    return df_scored.drop(columns=["_match_score"])
+# ------------------ RENDER CARD ------------------
+def render_card_view(df: pd.DataFrame):
+    """Hiển thị CV dạng card."""
+    for _, row in df.iterrows():
+        job = row.get("job_title") or "N/A"
+        email = row.get("email") or ""
+        resume_url = row.get("resume_url") or ""
+        score = int(row.get("_match_score", 0))
+        skills_html = skills_to_html(row.get("skills", []) or [])
+        edu_html = educations_to_html(row.get("educations", []) or [])
+
+        # match progress width (cap at 10 for 100%)
+        max_expected = 10
+        pct = min(int((score / max_expected) * 100), 100) if max_expected > 0 else 0
+
+        resume_link = (
+            f'<a href="{resume_url}" target="_blank" '
+            f'style="color:#06b6d4;text-decoration:none;">🔗 Open resume</a>'
+            if resume_url else ""
+        )
+
+        card_html = f"""
+        <div class="card" style="margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div style="font-size:1.05rem;font-weight:600">{html.escape(str(job))}</div>
+              <div class="small-muted">📧 {html.escape(str(email))}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.85rem;" class="small-muted">Match score</div>
+              <div style="width:120px;">{score}</div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;">
+            <div style="margin-bottom:6px;"><b>Skills:</b> {skills_html}</div>
+            <div style="margin-bottom:6px;"><b>Education:</b> {edu_html}</div>
+            <div style="margin-bottom:8px;">{resume_link}</div>
+            <div class="progress-bar"><div class="progress-fill" style="width:{pct}%;"></div></div>
+          </div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
 
-
+# ------------------ MAIN VIEW SEARCH ------------------
 def view_search():
-    st.markdown("<div style='margin-top:2rem'></div>", unsafe_allow_html=True)
-    st.header("🔍 Candidate Search")
-    q = st.text_input(
-        "Câu hỏi",
-        placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm của Marco Russo / Ứng viên > 3 năm kinh nghiệm…"
-    )
+    header()
+    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
+
+    # Top row: question + view toggle
+    top_col1, top_col2 = st.columns([3, 1])
+    with top_col1:
+        q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
+    with top_col2:
+        view_mode = st.selectbox("View", ["Card", "Table"], index=0, help="Chọn chế độ hiển thị")
+
     run = st.button("Run Query", type="primary", use_container_width=True)
 
-    # Nếu query mới -> gọi API và lưu state
-    if run and q.strip():
+    # Fetch data from API
+    if run and q and q.strip():
         with st.spinner("Đang thực thi..."):
-            try:
-                data = call_query(q.strip())
-                if not data:
-                    st.warning("Không có kết quả CV nào.")
-                    return
-
-                fa = data.get("final_answer", {})
-                rows = fa.get("rows", [])
-                cols = fa.get("columns", [])
-                if not rows or not cols:
-                    st.warning("Không có kết quả CV nào.")
-                    return
-                
-                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
-
-                df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first")
-
-                # Lưu vào session_state
-                st.session_state["rows"] = rows
-                st.session_state["df_original"] = df_original
-            except Exception as e:
-                st.error(f"Lỗi khi gọi API: {e}")
+            data = call_query(q.strip())
+            if not data:
+                st.warning("Không có kết quả CV nào.")
                 return
 
-    # Dùng dữ liệu đã lưu nếu có
+            fa = data.get("final_answer", {})
+            cols = fa.get("columns", []) or []
+            rows_raw = fa.get("rows", []) or []
+
+            rows = []
+            for r in rows_raw:
+                if isinstance(r, dict):
+                    rows.append(r)
+                elif isinstance(r, (list, tuple)):
+                    try:
+                        rows.append(dict(zip(cols, r)))
+                    except Exception:
+                        continue
+                else:
+                    continue
+
+            # Remove empty rows
+            rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
+            df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
+
+            # Save to session
+            st.session_state["rows"] = rows
+            st.session_state["df_original"] = df_original
+
     rows = st.session_state.get("rows")
     df_original = st.session_state.get("df_original")
 
-    if rows is None or df_original is None:
-        return  
+    if not rows or df_original is None or df_original.empty:
+        st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
+        return
 
-    # Chia màn hình khi có kết quả
-    col_left, col_right = st.columns([0.2, 0.8])
+    # Layout: left filter, right results
+    col_left, col_right = st.columns([0.28, 0.72])
     with col_left:
-        df_filtered = filter_ui_dynamic(df_original, rows)
+        df_scored = filter_ui_dynamic(df_original, rows)
+        show_only_matches = st.checkbox("Chỉ hiện CV có điểm > 0", value=False, key="only_matches")
+        if show_only_matches:
+            df_scored = df_scored[df_scored["_match_score"] > 0].reset_index(drop=True)
+        st.markdown(
+            f"<div class='small-muted'>🔎 Tổng CV: <b>{len(df_original)}</b> — Sau lọc: <b>{len(df_scored)}</b></div>",
+            unsafe_allow_html=True,
+        )
+        st.divider()
+        if st.button("Export CSV (filtered)"):
+            csv_bytes = df_scored.drop(columns=["_match_score"]).to_csv(index=False).encode("utf-8")
+            st.download_button("Download CSV", data=csv_bytes, file_name="candidates_filtered.csv", mime="text/csv")
 
     with col_right:
-        if "resume_url" in df_filtered.columns:
-            df_filtered["resume_url"] = df_filtered["resume_url"].apply(
-                lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
-            )
-
-        if df_filtered.empty:
-            st.warning("Không còn CV nào sau khi áp dụng bộ lọc.")
+        if view_mode == "Table":
+            render_table_view(df_scored)
         else:
-            st.markdown(df_filtered.to_html(escape=False, index=False), unsafe_allow_html=True)
-
+            render_card_view(df_scored)
 
 # ------------------------------------
 

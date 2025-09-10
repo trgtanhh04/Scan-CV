@@ -420,12 +420,6 @@ def answer_sql(
             id_col = "candidate_id" if "candidate_id" in cols else ("id" if "id" in cols else None)
             enriched = enrich_with_resume_urls(engine, cols, raw_rows, base_url=base_url, id_column=id_col)
 
-            # if enriched:
-            #     if "resume_url" not in cols:
-            #         cols = cols + ["resume_url"]
-            #     packed_rows: List[List[Any]] = [[rec.get(c) for c in cols] for rec in enriched]
-            # else:
-            #     packed_rows = [list(r) for r in raw_rows]
 
             desired_cols = ["id", "email", "resume_url"]
             packed_rows: List[List[Any]] = [[rec.get(c) for c in desired_cols] for rec in enriched]
