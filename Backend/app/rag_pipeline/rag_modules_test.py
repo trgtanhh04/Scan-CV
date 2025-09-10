@@ -158,35 +158,142 @@ def generate_sql(question: str, llm):
     return response.content.strip()
 
 
+# def generate_vector_query(question: str, llm, collection_name, limit):
+#     vector_prompt = ChatPromptTemplate.from_template("""
+#         You are a TEXT2VECTORQUERY system. 
+#         Translate user questions into a valid Qdrant query in JSON format. 
+#         Use one of two actions: "search" or "scroll".
+
+#         Rules:
+#         - If the question asks for attributes of a specific candidate (skills or experiences),
+#           use "scroll" with a filter on candidate_name and type.
+#         - If the question asks to find candidates by skill OR experience, 
+#           use "search" with query_text and type filter (only one type per query).
+#         - If the question asks to combine skills AND experiences 
+#           (e.g., "candidates with Python skill and worked at Google"),
+#           return an array of multiple queries, one for skills and one for experiences.
+#         - Never mix type=skill and type=experience in the same query_filter.
+#         - Always return raw JSON only, no explanation.
+#         - If you're using scroll, the filter argument is "scroll_filter".
+#         - If you're using search, the filter argument is "query_filter".
+                                                                                                      
+
+#         collection_name: {collection_name}
+#         limit: {limit}
+
+#         Question: {question}
+#         Output format: JSON object OR array of JSON objects
+#     """)
+#     response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name, limit=limit))
+#     response = response.content.strip()
+#     cleaned = re.sub(r"^```json\s*|\s*```$", "", response.strip())
+#     return cleaned.strip()
+
 def generate_vector_query(question: str, llm, collection_name, limit):
     vector_prompt = ChatPromptTemplate.from_template("""
-        You are a TEXT2VECTORQUERY system. 
-        Translate user questions into a valid Qdrant query in JSON format. 
+        You are a TEXT2VECTORQUERY system.
+        Translate user questions into valid Qdrant queries in JSON format.
         Use one of two actions: "search" or "scroll".
+        ALWAYS RETURN RAW JSON (a single JSON object OR an array of JSON objects) — NO EXPLANATION.
 
-        Rules:
-        - If the question asks for attributes of a specific candidate (skills or experiences),
-          use "scroll" with a filter on candidate_name and type.
-        - If the question asks to find candidates by skill OR experience, 
-          use "search" with query_text and type filter (only one type per query).
-        - If the question asks to combine skills AND experiences 
-          (e.g., "candidates with Python skill and worked at Google"),
-          return an array of multiple queries, one for skills and one for experiences.
-        - Never mix type=skill and type=experience in the same query_filter.
-        - Always return raw JSON only, no explanation.
-        - If you're using scroll, the filter argument is "scroll_filter".
-        - If you're using search, the filter argument is "query_filter".
-                                                                                                      
+        Collection: {collection_name}
+        Default limit: {limit}
+
+        Types available in the collection:
+          - "skill"            -> skill vectors
+          - "exp_position"     -> vectors built from "Job Title + Company"
+          - "exp_description"  -> vectors built from description text
+        Payload fields useful for filtering:
+          - "candidate_name"
+          - "exp_company"      (company name stored in description/position payload)
+          - "exp_job_title"
+          - "type"             (one of the types above)
+
+        RULES (use these to choose action/type/filter):
+
+        1) Specific candidate attribute requests:
+           - If the question asks about a particular candidate (e.g. "What did X do?", "Show Mohamad El Ghali's descriptions"),
+             use "scroll" with scroll_filter containing candidate_name and optionally type.
+           - Example: 
+            {{
+            "action": "scroll", "collection_name": "candidates", "limit": 50, "scroll_filter": 
+            {{"must":[{{"key":"candidate_name","match":{{"value":"Mohamad El Ghali"}}}}, 
+                    {{"key":"type","match":{{"value":"exp_description"}}}}]}}
+            }}
+
+        2) Skill queries:
+           - If the question asks to find candidates by skill (e.g. "who knows Python?"),
+             use "search" with query_text equal to the skill phrase and query_filter where type="skill".
+           - Example: 
+            {{
+            "action":"search","collection_name":"...","query_text":"Python","limit":10,"query_filter":
+                {{"must":[{{"key":"type","match":{{"value":"skill"}}}}]}}
+            }}
+
+
+        3) Experience queries (company or job title only):
+           - If the question focuses on company or job title only (e.g. "worked at Google", "was Software Engineer"),
+             use "search" with type="exp_position" (semantic on job+company).
+           - Example:
+            {{
+            "action":"search","collection_name":"...","query_text":"worked at Google","limit":10,"query_filter":
+            {{"must":[{{"key":"type","match":{{"value":"exp_position"}}}}]}}
+            }}
+
+                                                     
+        4) Experience description queries (what they did / technologies / responsibilities):
+           - If the question asks about what they did in a role (e.g. "microservices", "built CI/CD"),
+             use "search" with type="exp_description" and query_text describing the task/tech.
+           - Example: 
+            {{
+            "action":"search","collection_name":"...","query_text":"microservices","limit":10,"query_filter":
+            {{"must":[{{"key":"type","match":{{"value":"exp_description"}}}}]}}
+            }}
+                                
+        5) EXPERIENCE + COMPANY (must be true in the SAME experience) — IMPORTANT:
+           - If the user requires that the description match AND the company be the same experience
+             (phrases like "Data Scientist at Google", "built microservices at Amazon"),
+             produce **a single "search"** on type="exp_description" with:
+               - query_text = the part about role/task (e.g. "Data Scientist", "microservices")
+               - query_filter MUST include type="exp_description" AND exp_company match the company value.
+           - This ensures the description match is constrained to experiences at that company.
+           - Example: 
+            {{
+            "action":"search","collection_name":"...","query_text":"Data Scientist","limit":10,"query_filter":
+            {{"must":[{{"key":"type","match":{{"value":"exp_description"}}}},{{"key":"exp_company","match":{{"value":"Google"}}}}]}}
+            }}
+        
+        6) COMBINED CONDITIONS (INDEPENDENT) — return an ARRAY of queries:
+           - If the question requests independent conditions that can be satisfied by different experiences
+             and you will later intersect candidates (e.g. "candidates with Python skill and worked at Google"),
+             return an array of queries, one per atomic condition (skill OR exp_position OR exp_description).
+           - For multiple companies (e.g. "worked at Google and Amazon"), return separate exp_position queries for each company.
+           - NEVER mix different types inside the same query_filter; use separate queries instead.
+           - Example array:
+             [
+               {{"action":"search","collection_name":"...","query_text":"Python","limit":10,"query_filter":{{"must":[{{"key":"type","match":{{"value":"skill"}}}}]}}}},
+               {{"action":"search","collection_name":"...","query_text":"Google","limit":10,"query_filter":{{"must":[{{"key":"type","match":{{"value":"exp_position"}}}}]}}}}
+             ]
+
+        7) AMBIGUOUS COMPANY NAMES:
+           - If the question contains a company name, use that literal string as exp_company in the filter.
+           - If the company in the question is ambiguous or not explicit, DO NOT invent a company filter — instead prefer exp_position semantic search.
+
+        8) FORMATTING / OUTPUT:
+           - For "search" queries include: action, collection_name, query_text, limit, query_filter (must: list of field-match objects).
+           - For "scroll" queries include: action, collection_name, limit, scroll_filter.
+           - Use the payload keys exactly: "type", "exp_company", "candidate_name", ...
+           - Output only JSON (object or array). No markdown, no commentary.
 
         collection_name: {collection_name}
         limit: {limit}
 
         Question: {question}
-        Output format: JSON object OR array of JSON objects
+        Output: JSON object OR array of JSON objects
     """)
     response = llm.invoke(vector_prompt.format(question=question, collection_name=collection_name, limit=limit))
     response = response.content.strip()
-    cleaned = re.sub(r"^```json\s*|\s*```$", "", response.strip())
+    cleaned = re.sub(r"^```json\\s*|\\s*```$", "", response.strip())
     return cleaned.strip()
 
 def build_filter(filter_json: dict):
