@@ -242,7 +242,8 @@ def process_cv_rag(
             id=make_id(f"skill-{filename}-{skill}-{uuid.uuid4().hex[:8]}"),
             vector=vec,
             payload={
-                "type": "skill", "skill": skill,
+                "type": "skill", 
+                "skill": skill,
                 "job_title": info.get("job_title"),
                 "source_file": filename,
                 "candidate_name": info.get("full_name"),
@@ -268,6 +269,7 @@ def process_cv_rag(
                 "resume_url": resume_url, 
             },
         ))
+
 
     if points:
         vector_db.upsert(collection_name=collection_name, points=points)

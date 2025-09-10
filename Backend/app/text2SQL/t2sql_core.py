@@ -7,6 +7,7 @@ import sys
 import logging
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Any, Optional
+from sqlalchemy.orm import Session
 
 import sqlglot
 import sqlglot.expressions as exp
@@ -19,6 +20,7 @@ from langchain_deepseek import ChatDeepSeek
 from .selector_and_prompt import build_schema_prompt, selector_lite
 from .schema_utils import load_schema, render_schema, SchemaSummary
 from .enrich import enrich_with_resume_urls
+
 
 sys.path.append(os.path.abspath('../../'))
 from config.config import DEEPSEEK_API_KEY, DATABASE_URL
@@ -57,47 +59,6 @@ def sql_guard(sql: str) -> None:
         raise ValueError("Only SELECT queries are allowed.")
     if FORBIDDEN.search(sql):
         raise ValueError("Dangerous SQL keyword detected.")
-
-
-# ---- schema guard helpers
-# _TBL_PATTERN = re.compile(r'\bFROM\s+([a-zA-Z_]\w*)|\bJOIN\s+([a-zA-Z_]\w*)', re.IGNORECASE)
-# _COL_DOTS    = re.compile(r'\b([a-zA-Z_]\w*)\.([a-zA-Z_]\w*)\b')
-
-# def _extract_tables(sql: str) -> List[str]:
-#     return [a or b for (a, b) in _TBL_PATTERN.findall(sql)]
-
-# def _extract_qualified_cols(sql: str) -> List[Tuple[str, str]]:
-#     return _COL_DOTS.findall(sql)  # (aliasOrTable, col)
-
-# def schema_guard(sql: str, schema: SchemaSummary) -> Optional[str]:
-#     """
-#     Trả về chuỗi cảnh báo nếu có bảng/cột không tồn tại theo schema; Hợp lệ -> None.
-#     """
-#     known_tables = set(schema.tables.keys())
-#     used_tables  = set(_extract_tables(sql))
-#     unknown_tbls = sorted([t for t in used_tables if t not in known_tables])
-
-#     if unknown_tbls:
-#         return f"Unknown tables: {unknown_tbls}. Allowed: {sorted(known_tables)}."
-
-#     table_cols: Dict[str, set] = {t.name: set(t.columns) for t in schema.tables.values()}
-
-#     alias_map: Dict[str, str] = {}
-#     for m in re.finditer(r'\b(FROM|JOIN)\s+([a-zA-Z_]\w*)(?:\s+(?:AS\s+)?([a-zA-Z_]\w*))?', sql, re.IGNORECASE):
-#         table = m.group(2)
-#         alias = m.group(3)
-#         alias_map[alias or table] = table
-
-#     bad_cols: List[Tuple[str, str, str]] = []  # (alias, real_table, col)
-#     for alias, col in set(_extract_qualified_cols(sql)):
-#         real_table = alias_map.get(alias, alias)
-#         if real_table in table_cols and col not in table_cols[real_table]:
-#             bad_cols.append((alias, real_table, col))
-
-#     if bad_cols:
-#         msg = ", ".join([f"{a}.{c} (table {t})" for a, t, c in bad_cols])
-#         return f"Unknown columns: {msg}. Please use only existing columns per schema."
-#     return None
 
 def _extract_tables(sql: str) -> List[str]:
     """
@@ -210,20 +171,20 @@ def run_sql(engine: Engine, sql: str) -> Tuple[List[str], List[Tuple[Any, ...]]]
 
 def refine_prompt(schema_txt: str, user_query: str, prev_sql: str, reason: str) -> str:
     return f"""
-The schema is:
-{schema_txt}
+        The schema is:
+        {schema_txt}
 
-User question:
-{user_query}
+        User question:
+        {user_query}
 
-The previous SQL was:
-{prev_sql}
+        The previous SQL was:
+        {prev_sql}
 
-It failed or returned empty because:
-{reason}
+        It failed or returned empty because:
+        {reason}
 
-Please return ONLY a corrected PostgreSQL SELECT query (no explanation).
-""".strip()
+        Please return ONLY a corrected PostgreSQL SELECT query (no explanation).
+    """.strip()
 
 
 # ===================== DISTINCT/EXISTS post-process =====================
@@ -440,34 +401,46 @@ def answer_sql(
                     else:
                         pretty_sql = postprocess_sql(sql)
                         return {
-                            "sql": pretty_sql, "columns": [], "rows": [],
-                            "trials": trials + [(sql, warn)], "warning": warn,
+                            "sql": pretty_sql, 
+                            "columns": [], 
+                            "rows": [],
+                            "trials": trials + [(sql, warn)], 
+                            "warning": warn,
                         }
 
             # ---- Post-process + Execute
             sql = postprocess_sql(sql)
-            log.info("[answer_sql] EXEC_SQL:\n%s", sql)
+            # log.info("[answer_sql] EXEC_SQL:\n%s", sql)
 
             cols, raw_rows = run_sql(engine, sql)
-            log.info("[answer_sql] RES rows=%d cols=%d", len(raw_rows), len(cols or []))
+            # log.info("[answer_sql] RES rows=%d cols=%d", len(raw_rows), len(cols or []))
             cols = list(cols or [])
 
             # ---- Enrich resume_url
             id_col = "candidate_id" if "candidate_id" in cols else ("id" if "id" in cols else None)
             enriched = enrich_with_resume_urls(engine, cols, raw_rows, base_url=base_url, id_column=id_col)
 
-            if enriched:
-                if "resume_url" not in cols:
-                    cols = cols + ["resume_url"]
-                packed_rows: List[List[Any]] = [[rec.get(c) for c in cols] for rec in enriched]
-            else:
-                packed_rows = [list(r) for r in raw_rows]
+            # if enriched:
+            #     if "resume_url" not in cols:
+            #         cols = cols + ["resume_url"]
+            #     packed_rows: List[List[Any]] = [[rec.get(c) for c in cols] for rec in enriched]
+            # else:
+            #     packed_rows = [list(r) for r in raw_rows]
+
+            desired_cols = ["id", "email", "resume_url"]
+            packed_rows: List[List[Any]] = [[rec.get(c) for c in desired_cols] for rec in enriched]
+            cols = desired_cols
+
 
             # ---- Empty -> refine
             if len(packed_rows) == 0 and attempt < max_refine:
                 trials.append((sql, "empty result"))
                 sql = llm.gen(refine_prompt(schema_txt, user_query, sql, "empty result"))
                 continue
+            
+            print("Final SQL:", sql)
+            print("Final Columns:", cols)
+            print("Final Rows:", packed_rows)
 
             return {"sql": sql, "columns": cols, "rows": packed_rows, "trials": trials}
 
@@ -501,3 +474,4 @@ if __name__ == "__main__":
     print("Columns:", result["columns"])
     print("Results:", result["rows"])
     print("Trials:", result["trials"])
+

@@ -13,6 +13,10 @@ from langchain_core.messages import HumanMessage
 from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from unidecode import unidecode
+from typing import List
+
+from sqlalchemy.orm import Session
+from app.models.models import SessionLocal, Candidate, Skill, Educations
 
 # === LangGraph ===
 from langgraph.graph import StateGraph, END
@@ -34,19 +38,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, DATABASE_URL
 
 # === Engine & LLM setup ===
-llm_chat = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-# == LLM cho Text2SQL ===
+# == Set up cho Text2SQL ===
 engine = create_engine(DATABASE_URL, future=True)
 def _invoke(prompt: str) -> str:
-    resp = llm_chat.invoke([HumanMessage(content=prompt)])
+    resp = deepseek.invoke([HumanMessage(content=prompt)])
     return resp.content
 llm_sql = LLM(_invoke)
 
-# === WORKFLOW ===
+# == Set up Qdrant cho RAG ===
+embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+qdrant = QdrantClient(url=QDRANT_URL)
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
+# === WORKFLOW ===
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+# from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
 
 class CandidateState(dict):
     question: str
@@ -57,48 +64,8 @@ class CandidateState(dict):
     sql_result: list
     vector_result: list
     vector_query: dict
-    vector_query: dict
     final_answer: str
 
-
-# def is_sql(question: str) -> bool:
-#     q = unidecode(question.lower())             # "3 nam kinh nghiem tro len"
-#     patterns = [
-#         r"\b\d+\s*nam\b",                       # 3 nam
-#         r">=?\s*\d+\s*nam",                     # >= 3 nam, > 5 nam
-#         r"\bat\s*least\b.*\d+\s*year",          # at least 3 years
-#         r"\btroi?\s*len\b",                     # trở lên / tro len
-#         r"\btoi\s*thieu\b",                     # tối thiểu / toi thieu
-#         r"\bkinh\s*nghiem\b.*\d+\s*nam",        # kinh nghiem 3 nam
-
-#     ]
-#     if any(re.search(p, q) for p in patterns):
-#         return True
-#     # if re.search(r"(python|java|aws|spark|golang|skill|ky\s*nang)", q) and \
-#     #    re.search(r"(experience|kinh\s*nghiem|job|vi\s*tri|position|software|engineer)", q):
-#     #     return True
-
-#     return False
-
-# def is_rag(question: str) -> bool:
-#     q = unidecode(question.lower())
-#     # cho RAG khi chỉ hỏi skill/experience listing, không có ràng buộc số/so sánh
-#     has_skill = bool(re.search(r"\b(skill|ky\s*nang|python|java|aws|spark|golang)\b", q))
-#     has_list_exp = bool(re.search(r"(liet\s*ke|ke)\s*.*(experience|kinh\s*nghiem)", q))
-#     return (has_skill or has_list_exp) and not is_sql(question)
-
-
-# def router_node(state: CandidateState):
-#     if is_rag(state["question"]):   # match pattern skill/exp
-#         state["route"] = "VECTOR"
-#         state["rag_mode"] = {"type": "skill_or_exp"}
-#     elif is_sql(state["question"]):
-#         state["route"] = "SQL"
-#         state["rag_mode"] = {"type": None}
-#     else:
-#         state["route"] = "SQL"
-#         state["rag_mode"] = {"type": None}
-#     return state
 
 def router_condition(state):
     if state["route"] == "SQL":
@@ -114,30 +81,22 @@ def router_node(state: CandidateState, llm):
     state["route"] = route
     return state
 
-
-
 def sql_node(state: CandidateState, limit: int):
     try:
         result = answer_sql(engine, llm_sql, state["question"], max_refine=1, limit=limit)
-        print('result:', result)
-
-        state["sql_query"] = result.get("sql")
-        state["columns"]  = result.get("columns") or []
         state["sql_result"] = result.get("rows") or []
-        state["trials"]     = result.get("trials", [])
 
-        # (optional) nếu UI đọc final_answer
         state["final_answer"] = {
             "type": "table",
-            "columns": state["columns"],
-            "rows": state["sql_result"],
+            "sql_query": result.get("sql") or "",
+            "columns": result.get("columns") or [],
+            "rows": result.get("rows") or [],
         }
+
         return state
     except Exception as e:
         state["sql_query"]   = None
-        state["columns"]     = []
         state["sql_result"]  = []
-        state["trials"]      = []
         state["final_answer"]= {"type": "error", "message": f"Text2SQL failed: {e}"}
         return state
 
@@ -145,11 +104,12 @@ def sql_node(state: CandidateState, limit: int):
 def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
     results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     state["vector_result"] = results
-    state["vector_query"] = plan
-    # return state
+
     state["final_answer"] = {
         "type": "vector",
-        "rows": results,
+        "rag_query": plan,
+        "columns": results['columns'] or [],
+        "rows": results['rows'] or [],
     }
     return state
 
@@ -159,9 +119,9 @@ def summarizer_node(state: CandidateState):
     vector_result = state.get("vector_result", [])
 
     if sql_result:               # Ưu tiên SQL
-        state["final_answer"] = sql_result
+        return state
     elif vector_result:          # chỉ xét vector nếu không có SQL
-        state["final_answer"] = vector_result
+        return state
     else:
         state["final_answer"] = "I don't know"
 
@@ -196,12 +156,119 @@ def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_thr
 
     return graph.compile()
 
+# ---- Enrich Education, Skills, Job Title ----
+def enrich_with_skills_and_edu(session: Session, candidate_emails: List[str]):
+    """
+    Trả về dict:
+    {
+        candidate_id: {
+            "job_title": ...,
+            "skills": [...],
+            "educations": [{"degree":..., "university":...}, ...]
+        }
+    }
+    """
+    # Lấy map email -> id
+    email_id_map = {}
+    if candidate_emails:
+        rows = session.query(Candidate.id, Candidate.email).filter(Candidate.email.in_(candidate_emails)).all()
+        for cid, email in rows:
+            email_id_map[email] = cid
+
+    candidate_ids = list(email_id_map.values())
+    result_map = {cid: {"skills": [], "educations": [], "job_title": None} for cid in candidate_ids}
+
+    # Lấy job_title
+    if candidate_ids:
+        job_rows = (
+            session.query(Candidate.id, Candidate.job_title)
+            .filter(Candidate.id.in_(candidate_ids))
+            .all()
+        )
+        for cid, job_title in job_rows:
+            result_map[cid]["job_title"] = job_title
+
+    # Lấy skills
+    if candidate_ids:
+        skill_rows = (
+            session.query(Candidate.id, Skill.name)
+            .join(Candidate.skills)
+            .filter(Candidate.id.in_(candidate_ids))
+            .all()
+        )
+        for cid, sname in skill_rows:
+            result_map[cid]["skills"].append(sname)
+
+    # Lấy educations
+    if candidate_ids:
+        edu_rows = (
+            session.query(Candidate.id, Educations.degree, Educations.university)
+            .join(Candidate.educations)
+            .filter(Candidate.id.in_(candidate_ids))
+            .all()
+        )
+        for cid, degree, uni in edu_rows:
+            result_map[cid]["educations"].append({"degree": degree, "university": uni})
+
+    # Trả về map id -> info, và map email -> id
+    return result_map, email_id_map
+
+
+def enrich_final_answer(state: dict) -> dict:
+    flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
+    answer = flow.invoke(state)
+
+    # Lấy danh sách email từ kết quả
+    final = answer.get("final_answer", {})
+    rows = final.get("rows", [])
+    columns = final.get("columns", [])
+    email_idx = None
+    for idx, col in enumerate(columns):
+        if col == "email":
+            email_idx = idx
+            break
+    candidate_emails = [row[email_idx] for row in rows if email_idx is not None and row[email_idx]] if email_idx is not None else []
+
+    # enrich thêm thông tin
+    with SessionLocal() as session:
+        enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)
+
+    # Mount thêm vào từng row
+    id_idx = None
+    email_idx = None
+    for idx, col in enumerate(columns):
+        if col == "id":
+            id_idx = idx
+        if col == "email":
+            email_idx = idx
+    new_rows = []
+    for row in rows:
+        cid = row[id_idx] if id_idx is not None else None
+        email = row[email_idx] if email_idx is not None else None
+        # Nếu id không có, thử lấy từ email
+        if not cid and email:
+            cid = email_id_map.get(email)
+        enrich = enrich_map.get(cid, {}) if cid is not None else {}
+        row_dict = {col: row[i] for i, col in enumerate(columns)}
+        row_dict["job_title"] = enrich.get("job_title")
+        row_dict["skills"] = enrich.get("skills", [])
+        row_dict["educations"] = enrich.get("educations", [])
+        new_rows.append(row_dict)
+
+    # Update final_answer
+    final["rows"] = new_rows
+    for col in ["job_title", "skills", "educations"]:
+        if col not in final.get("columns", []):
+            final["columns"].append(col)
+    answer["final_answer"] = final
+    return answer
+
 
 # Test local
 if __name__ == "__main__":
     embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
     qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
-    flow = build_flow(llm_chat, embedding_model, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
+    flow = build_flow(deepseek, embedding_model, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
 
     result = flow.invoke({"question": "Find candidates that know both Python and Java, and have experience in at least 2 different companies."})
     if isinstance(result["final_answer"], list) and result.get("sql_result"):

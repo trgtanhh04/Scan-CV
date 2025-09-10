@@ -419,12 +419,26 @@ def execute_vector_query(plan, client: QdrantClient, embedding_model, limit=None
 #     else:
 #         raise ValueError(f"Unknown action type: {action}")
 
+
+def format_rag_output(results):
+    columns = ["id", "email", "resume_url"]
+    rows = []
+    for r in results:
+        payload = r.get("payload", r)
+        row = [
+            payload.get("id"),
+            payload.get("email"),
+            payload.get("resume_url"),
+        ]
+        rows.append(row)
+    return {"columns": columns, "rows": rows}
+
 def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
     output = generate_vector_query(query, llm, collection, limit)
     plan = json.loads(output)
-    print(plan)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
-    return results, plan
+    formatted = format_rag_output(results)
+    return formatted, plan
 
 
 

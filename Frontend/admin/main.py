@@ -85,9 +85,10 @@ def provider_badge():
         )
 
 def header():
+    st.markdown("<div style='margin-top: 1.5rem'></div>", unsafe_allow_html=True)
     c1, c2 = st.columns([0.78, 0.22])
     with c1:
-        st.title("📄 CV Manager")
+        st.markdown("<h1 style='margin-bottom:0.5rem;'>📄 CV Manager</h1>", unsafe_allow_html=True)
     with c2:
         st.markdown(f"""
         <div class="card-light"><b>API</b><br>{st.session_state.api_base}</div>
@@ -114,12 +115,11 @@ def call_query(question):
     # --- Check query trước khi gọi API ---
     if not validate_candidate_query(question_en):
         st.warning("⚠️ Invalid query for candidate search")
-        return None, question_en
+        return None
     
-    fintuned = False
     if needs_finetune(question_en):
         question_ft = convert_job_to_question(question_en)
-        fintuned = True
+
     else:
         question_ft = question_en
 
@@ -132,7 +132,7 @@ def call_query(question):
     try:
         resp = requests.post(url, json=body, timeout=180)
         resp.raise_for_status()
-        return resp.json(), question_ft, fintuned
+        return resp.json()
     except Exception as e:
         st.error(f"Query error: {e}")
         if hasattr(e, 'response') and e.response is not None:
@@ -219,217 +219,156 @@ def view_upload():
 
     with st.expander("🔎 Debug uploads (raw JSON)", expanded=False):
         st.json(results)
-            
-def call_query_links(question: str):
-    url = f"{st.session_state.api_base}/query"
-    body = {
-        "question": question,
-        "provider": st.session_state.provider,
-        "model": st.session_state.model,
-        "links_only": True,  
-    }
-    try:
-        resp = requests.post(url, json=body, timeout=120)
-        resp.raise_for_status()
-        return resp.json()    # { route, cv_links: [...] }
-    except Exception as e:
-        st.error(f"Links-only query error: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            st.error(f"Response: {e.response.text}")
-        raise
+        
 
-# -------------- Download & check File --------------
-def _suggest_filename(name: str | None, url: str) -> str:
-    # suy tên file hợp lý: <name>.pdf hoặc lấy từ URL
-    if name:
-        base = re.sub(r"[^A-Za-z0-9._-]+", "_", name.strip())
-        return f"{base or 'resume'}.pdf"
-    tail = url.split("/")[-1].split("?")[0]
-    return tail or "resume.pdf"
+# --- Lấy dữ liệu filter options ---
+def extract_filter_options(rows):
+    job_titles, skills, degrees, schools = set(), set(), set(), set()
+    for row in rows:
+        if row.get("job_title"):
+            job_titles.add(row["job_title"])
+        for s in row.get("skills", []):
+            if s:
+                skills.add(s)
+        for edu in row.get("educations", []):
+            if edu.get("degree"):
+                degrees.add(edu["degree"])
+            if edu.get("university"):
+                schools.add(edu["university"])
+    return sorted(job_titles), sorted(skills), sorted(degrees), sorted(schools)
 
-def _force_download_url(url: str, filename: str) -> str:
-    # ép header tải xuống qua query param cho GCS/CDN phổ biến
-    sep = "&" if "?" in url else "?"
-    disp = f"attachment%3B%20filename%3D{urllib.parse.quote(filename)}"
-    return f"{url}{sep}response-content-disposition={disp}"
+
+def filter_ui_dynamic(df, rows):
+    st.header("🔽 Bộ lọc")
+
+    job_titles, skills, degrees, schools = extract_filter_options(rows)
+
+    # --- Sử dụng session_state để giữ filter ---
+    job_filter = st.multiselect(
+        "Job Title", options=job_titles,
+        default=st.session_state.get("job_filter", [])
+    )
+    st.session_state["job_filter"] = job_filter
+
+    skill_filter = st.multiselect(
+        "Skills", options=skills,
+        default=st.session_state.get("skill_filter", [])
+    )
+    st.session_state["skill_filter"] = skill_filter
+
+    degree_filter = st.multiselect(
+        "Degree", options=degrees,
+        default=st.session_state.get("degree_filter", [])
+    )
+    st.session_state["degree_filter"] = degree_filter
+
+    school_filter = st.multiselect(
+        "University", options=schools,
+        default=st.session_state.get("school_filter", [])
+    )
+    st.session_state["school_filter"] = school_filter
+
+    # --- Scoring function ---
+    def cv_match_score(row):
+        score = 0
+        # Job Title
+        if job_filter and row.get("job_title") in job_filter:
+            score += 2 
+
+        # Skills
+        skills_list = row.get("skills", [])
+        if isinstance(skills_list, str):
+            skills_list = [s.strip() for s in skills_list.split(",") if s.strip()]
+        elif isinstance(skills_list, list):
+            skills_list = [str(s).strip() for s in skills_list if s]
+        if skill_filter:
+            score += sum(1 for s in skill_filter if s in skills_list)
+
+        # Degree
+        if degree_filter:
+            for edu in row.get("educations", []):
+                if edu.get("degree") in degree_filter:
+                    score += 1
+        # School
+        if school_filter:
+            for edu in row.get("educations", []):
+                if edu.get("school") in school_filter or edu.get("university") in school_filter:
+                    score += 1
+        return score
+
+    # --- Apply scoring ---
+    df_scored = df.copy()
+    df_scored["_match_score"] = df_scored.apply(cv_match_score, axis=1)
+    df_scored = df_scored.sort_values("_match_score", ascending=False)
+
+    # df_scored = df_scored[df_scored["_match_score"] > 0] nếu muốn lọc bớt CV không khớp
+
+
+    return df_scored.drop(columns=["_match_score"])
+
+
 
 def view_search():
-    header()
+    st.markdown("<div style='margin-top:2rem'></div>", unsafe_allow_html=True)
+    st.header("🔍 Candidate Search")
     q = st.text_input(
         "Câu hỏi",
         placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm của Marco Russo / Ứng viên > 3 năm kinh nghiệm…"
     )
+    run = st.button("Run Query", type="primary", use_container_width=True)
 
-    col_run, col_links = st.columns([0.7, 0.3])
-    with col_links:
-        links_only = st.checkbox("Chỉ lấy link CV (links_only)", value=False)
-    with col_run:
-        run = st.button("Run Query", type="primary", use_container_width=True)
-
-    if not (run and q.strip()):
-        return
-
-    with st.spinner("Đang thực thi..."):
-        try:
-            # --- LINKS ONLY ---
-            if links_only:
-                data = call_query_links(q.strip())
-                route = data.get("route")
-                links = data.get("cv_links") or []
-                
-                # drop trùng link
-                seen = set()
-                unique_links = []
-                for item in links:
-                    url = item.get("resume_url")
-                    if url and url not in seen:
-                        seen.add(url)
-                        unique_links.append(item)
-                links = unique_links
-
-                st.caption(f"Route: **{route or 'UNKNOWN'}** · Tổng {len(links)} CV")
-
-                if not links:
-                    st.warning("Không có link CV nào khớp.")
+    # Nếu query mới -> gọi API và lưu state
+    if run and q.strip():
+        with st.spinner("Đang thực thi..."):
+            try:
+                data = call_query(q.strip())
+                if not data:
+                    st.warning("Không có kết quả CV nào.")
                     return
-                i = 1
-                for item in links:
-                    name = item.get("full_name") or "Unknown"
-                    url  = item.get("resume_url")
-                    email = item.get("email") or ""
 
-                    st.markdown(f"### Candidate {i}")
-                    i += 1
-                    if email:
-                        st.caption(email)
+                fa = data.get("final_answer", {})
+                rows = fa.get("rows", [])
+                cols = fa.get("columns", [])
+                if not rows or not cols:
+                    st.warning("Không có kết quả CV nào.")
+                    return
+                
+                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
 
-                    if not url:
-                        st.warning("Không có URL CV cho ứng viên này.")
-                        continue
+                df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first")
 
-                    # ép tải về
-                    filename = _suggest_filename(item.get("full_name"), url)
-                    dl_url   = _force_download_url(url, filename)
-
-                    st.markdown(
-                        f'🔗 <a href="{dl_url}" download>{dl_url}</a>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.markdown(
-                        f"""
-                        <div style="border:1px solid #1f2937; border-radius:12px; overflow:hidden; margin:10px 0;">
-                          <object data="{url}" type="application/pdf" width="100%" height="560px">
-                            <p>Không thể nhúng PDF (CORS). Hãy tải về qua link trên.</p>
-                          </object>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-                with st.expander("Raw JSON", expanded=False):
-                    st.json(data)
+                # Lưu vào session_state
+                st.session_state["rows"] = rows
+                st.session_state["df_original"] = df_original
+            except Exception as e:
+                st.error(f"Lỗi khi gọi API: {e}")
                 return
 
-            # --- FULL SEARCH ---
-            data, query_ft, fintuned = call_query(q.strip())  
-            if not data:
-                return
-            if fintuned:
-                st.markdown(f"**Query đã finetune:** `{query_ft}`")
-            route = data.get("route")
+    # Dùng dữ liệu đã lưu nếu có
+    rows = st.session_state.get("rows")
+    df_original = st.session_state.get("df_original")
 
-            st.caption(f"🔧 route={route} | rows={len(data.get('rows') or [])}")
+    if rows is None or df_original is None:
+        return  
 
-            # ----------------------------
-            # CASE 1: SQL
-            # ----------------------------
-            if route == "SQL":
-                sql  = data.get("sql") or "-- no sql --"
-                cols = data.get("columns") or []
-                rows = data.get("rows") or []
-                trials = data.get("trials") or []
+    # Chia màn hình khi có kết quả
+    col_left, col_right = st.columns([0.2, 0.8])
+    with col_left:
+        df_filtered = filter_ui_dynamic(df_original, rows)
 
-                st.subheader("🗄️ SQL Query")
-                st.code(sql, language="sql")
+    with col_right:
+        if "resume_url" in df_filtered.columns:
+            df_filtered["resume_url"] = df_filtered["resume_url"].apply(
+                lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
+            )
 
-                if not rows:
-                    st.warning("Không tìm thấy kết quả.")
-                else:
-                    df = pd.DataFrame(rows, columns=cols if cols else None)
-                    if "resume_url" in df.columns:
-                        df["resume_url"] = df["resume_url"].apply(
-                            lambda u: f"[Open]({u})" if u else ""
-                        )
-                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+        if df_filtered.empty:
+            st.warning("Không còn CV nào sau khi áp dụng bộ lọc.")
+        else:
+            st.markdown(df_filtered.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-                with st.expander("Trials / Diagnostics", expanded=False):
-                    st.json(trials)
 
-            # ----------------------------
-            # CASE 2: VECTOR
-            # ----------------------------
-            elif route == "VECTOR":
-                vector_query  = data.get("vector_query")
-                vector_result = data.get("vector_result", []) or []
-
-                st.subheader("🔎 Vector Query")
-                st.code(vector_query or "{}", language="json")
-
-                if not vector_result:
-                    st.warning("Không tìm thấy kết quả.")
-                else:
-                    # Chuẩn hoá: hỗ trợ cả 2 dạng (có/không có 'payload')
-                    norm_rows = []
-                    for item in vector_result:
-                        payload = item.get("payload", item)
-                        norm_rows.append({
-                            "Candidate":   payload.get("candidate_name"),
-                            "Job Title":   payload.get("job_title"),
-                            "Skill":       payload.get("skill"),
-                            "Type":        payload.get("type"),
-                            "Source File": payload.get("source_file"),
-                            "Resume":      payload.get("resume_url"),
-                            "Score":       round(item.get("score", 0), 4) if isinstance(item, dict) else None,
-                        })
-
-                    df = pd.DataFrame(norm_rows)
-                    df = pd.DataFrame(norm_rows)
-                    if not df.empty:
-                        df["_has_resume"] = df["Resume"].notna() & df["Resume"].astype(str).str.len().gt(0)
-                        df.sort_values(["Candidate","_has_resume"], ascending=[True, False], inplace=True)
-                        df = df.drop_duplicates(subset=["Candidate"], keep="first").drop(columns=["_has_resume"])
-
-                    # Link cột Resume
-                    if "Resume" in df.columns:
-                        df["Resume"] = df["Resume"].apply(
-                            lambda u: f'<a href="{u}" target="_blank">Open</a>' if u else ""
-                        )
-
-                    st.markdown("#### Top matches")
-                    st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-                    # Nếu phần tử đầu là 'experience' thì show chi tiết
-                    first_payload = vector_result[0].get("payload", vector_result[0])
-                    if first_payload.get("type") == "experience":
-                        st.subheader("📌 Candidate Experiences")
-                        for item in vector_result:
-                            p = item.get("payload", item)
-                            exp = p.get("experience_detail", {}) or {}
-                            title = f"{exp.get('job_title','?')} @ {exp.get('company','?')}"
-                            with st.expander(title):
-                                st.write(f"**Candidate:** {p.get('candidate_name')}")
-                                st.write(f"**Period:** {exp.get('start_date')} - {exp.get('end_date')}")
-                                st.write(f"**Description:** {exp.get('description')}")
-                                if p.get("resume_url"):
-                                    st.markdown(f"📂 **Resume:** [Open]({p['resume_url']})", unsafe_allow_html=True)
-
-            else:
-                st.error("Không xác định được loại kết quả (SQL/VECTOR).")
-
-        except Exception as e:
-            st.error(f"Lỗi khi gọi API: {e}")
-
+# ------------------------------------
 
 
 def view_settings():

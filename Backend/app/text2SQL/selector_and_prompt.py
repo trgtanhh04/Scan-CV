@@ -61,7 +61,7 @@ def selector_lite(user_query: str) -> Tuple[List[str], str]:
 EXAMPLES = [
     (
         "ứng viên biết Angular và ở HCM",
-        """SELECT c.id, c.full_name, c.location
+        """SELECT c.id, c.full_name, c.email, c.location
         FROM candidates c
         JOIN candidate_skills cs ON cs.candidate_id = c.id
         JOIN skills s ON s.id = cs.skill_id
@@ -70,7 +70,7 @@ EXAMPLES = [
     ),
     (
         "ai từng làm ở Accenture sau 2018",
-        """SELECT c.id, c.full_name, e.company, e.start_date, e.end_date
+        """SELECT c.id, c.full_name, c.email, e.company, e.start_date, e.end_date
         FROM candidates c
         JOIN experiences e ON e.candidate_id = c.id
         WHERE e.company ILIKE '%Accenture%'
@@ -80,7 +80,7 @@ EXAMPLES = [
     ),
     (
         "names and universities of candidates who studied Computer Science",
-        """SELECT DISTINCT c.id, c.full_name, e.university, e.degree
+        """SELECT DISTINCT c.id, c.full_name, c.email, e.university, e.degree
         FROM candidates c
         JOIN educations e ON e.candidate_id = c.id
         WHERE e.degree ILIKE '%Computer Science%'
@@ -88,7 +88,7 @@ EXAMPLES = [
     ),
     (
         "List all candidate names.",
-        """SELECT id, full_name FROM candidates_info LIMIT 50;"""
+        """SELECT id, full_name, c.email FROM candidates_info LIMIT 50;"""
     )
 ]
 
@@ -105,6 +105,7 @@ def build_schema_prompt(schema_txt: str, hints: str, user_query: str, limit: int
         - Add LIMIT 50 unless user asks otherwise.
         - Many-to-many joins (skills/languages) create duplicates: if returning a candidate list, use SELECT DISTINCT or use EXISTS for multiple skill conditions.
         - ALWAYS include the candidate id column (e.g. id) in the SELECT result, even if the user only asks for names. This is required for downstream enrichment (e.g. resume_url).
+        - ALWAYS include the candidate email column (e.g. email) in the SELECT result if available, even if the user does not explicitly ask for it. This is required for downstream enrichment.
         - Hint: When subtracting two DATE columns in PostgreSQL, result is in days (integer). Do NOT use INTERVAL literal.
         - If the user asks for only names, return both id and name.
 

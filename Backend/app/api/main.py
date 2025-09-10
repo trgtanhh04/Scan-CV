@@ -1,13 +1,13 @@
 # E:\Scan-CV\Backend\app\api\main.py
-from fastapi import FastAPI, Request, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import tempfile, shutil, os, uuid
-from fastapi.staticfiles import StaticFiles
+
 
 from app.models.models import SessionLocal
-from app.rag_pipeline.workflow import build_flow 
+from app.rag_pipeline.workflow import enrich_final_answer 
 from app.text2SQL.process_cvs_sql import process_cvs_sql     
 from app.services.extract_cv import process_cv_rag
 from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs  
@@ -21,11 +21,12 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from sqlalchemy import text as sa_text
 from fastapi import FastAPI, Depends
 
+
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL)
-flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10)
+
 
 app = FastAPI(title="CV Manager API")
 
@@ -85,10 +86,6 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
 
         if not sql_results:
             return {"error": "Không xử lý được"}
-        # return {
-        #     "rag_info": info,      # JSON từ bước RAG
-        #     "sql_info": results[0] # JSON từ bước Text2SQL
-        # }
 
         return sql_results[0]
 
@@ -103,64 +100,19 @@ class QueryRequest(BaseModel):
     model: str = "deepseek-chat"
     links_only: bool = False   
 
-
 @app.post("/query")
 async def query_api(request: QueryRequest):
     question = request.question.strip()
-    print("Received question:", question)
     state = {"question": question}
-    result = flow.invoke(state)
-
-    # print('result:', result)
-    if request.links_only:
-        route = result.get("route")
-        cv_links = []
-
-        if route == "SQL":
-            cols = result.get("columns") or []
-            rows = result.get("sql_result") or []
-
-            for r in rows:
-                if "resume_url" in cols:
-                    resume_url = r[cols.index("resume_url")]
-                elif len(r) > len(cols):
-                    resume_url = r[-1]   
-                else:
-                    resume_url = None
-
-                rec = dict(zip(cols, r[:len(cols)]))
-
-                cv_links.append({
-                    "candidate_id": rec.get("id") or rec.get("candidate_id"),
-                    "full_name": rec.get("full_name"),
-                    "email": rec.get("email"),
-                    "resume_url": resume_url,
-                })
-
-        elif route == "VECTOR":
-            for item in result.get("vector_result") or []:
-                p = item.get("payload", item)
-                cv_links.append({
-                    "candidate_id": None,
-                    "full_name": p.get("candidate_name"),
-                    "email": p.get("email"),
-                    "resume_url": p.get("resume_url"),
-                })
-
-        return {"route": route, "cv_links": cv_links}
+    # invoke flow
+    result = enrich_final_answer(state)
 
     return {
         "question": request.question,
         "provider": request.provider,
         "model": request.model,
         "route": result.get("route"),
-        "sql": result.get("sql_query"),
-        "columns": result.get("columns"),
-        "rows": result.get("sql_result"),
-        "trials": result.get("trials"),
         "final_answer": result.get("final_answer"),
-        "vector_query": result.get("vector_query"),
-        "vector_result": result.get("vector_result"),
     }
 
 
