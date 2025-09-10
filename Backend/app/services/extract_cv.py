@@ -252,22 +252,63 @@ def process_cv_rag(
             },
         ))
 
+    # for i, exp in enumerate(experiences):
+    #     exp_text = f"{exp.get('job_title','')} at {exp.get('company','')} ({exp.get('start_date','')} - {exp.get('end_date','')}) {exp.get('description','')}"
+    #     vec = embedding_model.embed_query(exp_text)
+    #     points.append(PointStruct(
+    #         id=make_id(f"exp-{filename}-{exp.get('company','unknown')}-{i}-{uuid.uuid4().hex[:8]}"),
+    #         vector=vec,
+    #         payload={
+    #             "type": "experience",
+    #             "experience": exp_text,
+    #             "experience_detail": exp,
+    #             "job_title": info.get("job_title"),
+    #             "source_file": filename,
+    #             "candidate_name": info.get("full_name"),
+    #             "email": email_norm,
+    #             "resume_url": resume_url, 
+    #         },
+    #     ))
     for i, exp in enumerate(experiences):
-        exp_text = f"{exp.get('job_title','')} at {exp.get('company','')} ({exp.get('start_date','')} - {exp.get('end_date','')}) {exp.get('description','')}"
-        vec = embedding_model.embed_query(exp_text)
+        job_title = exp.get("job_title", "")
+        company = exp.get("company", "")
+        description = exp.get("description", "")
+        
+        exp_position = f"Job Title: {job_title} | Company: {company}" if job_title and company else ""
+
+        exp_description = f"Description: {description}" if description else ""
+
+        vec_exp_pos = embedding_model.embed_query(exp_position)
+        vec_exp_des = embedding_model.embed_query(exp_description)
+
         points.append(PointStruct(
-            id=make_id(f"exp-{filename}-{exp.get('company','unknown')}-{i}-{uuid.uuid4().hex[:8]}"),
-            vector=vec,
-            payload={
-                "type": "experience",
-                "experience": exp_text,
-                "experience_detail": exp,
-                "job_title": info.get("job_title"),
-                "source_file": filename,
-                "candidate_name": info.get("full_name"),
-                "email": email_norm,
-                "resume_url": resume_url, 
-            },
+                id=make_id(f"exp-{filename}-{job_title}-{company}-{i}-{uuid.uuid4().hex[:8]}"),
+                vector=vec_exp_pos,
+                payload={
+                    "type": "exp_position",
+                    "exp_company": company,
+                    "exp_job_title": job_title,
+                    "job_title": info.get("job_title"),
+                    "source_file": filename,                    
+                    "candidate_name": info.get("full_name"),
+                    "email": email_norm,
+                    "resume_url": resume_url,
+                },
+        ))        
+        points.append(PointStruct(
+                id=make_id(f"exp-{filename}-{exp_description}-{i}-{uuid.uuid4().hex[:8]}"),
+                vector=vec_exp_des,
+                payload={
+                    "type": "exp_description",
+                    "exp_company": company,
+                    "exp_job_title": job_title,
+                    "exp_description": exp_description,
+                    "job_title": info.get("job_title"),
+                    "source_file": filename,                    
+                    "candidate_name": info.get("full_name"),
+                    "email": email_norm,
+                    "resume_url": resume_url,
+                },
         ))
 
 
