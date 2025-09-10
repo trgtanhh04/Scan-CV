@@ -15,12 +15,8 @@ from typing import Tuple, Literal
 # from langchain_google_genai import  GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 
 
-# DEEPSEEK_API_KEY='sk-700f6bb0b3b341bba6f9f7c4db53d028'
-
-
 # deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-# GOOGLE_API_KEY = 'AIzaSyBJ86qCzZw5qIVhhdb_VB28OaQz42Oj6GU'
 # embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", google_api_key=GOOGLE_API_KEY)
 # # engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
 
