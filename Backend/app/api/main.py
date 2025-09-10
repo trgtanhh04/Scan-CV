@@ -104,9 +104,11 @@ class QueryRequest(BaseModel):
 async def query_api(request: QueryRequest):
     question = request.question.strip()
     state = {"question": question}
+
     # invoke flow
     result = enrich_final_answer(state)
-    print("result", result)
+    # print("result", result)
+    print(request.provider, request.model)
 
     return {
         "question": request.question,

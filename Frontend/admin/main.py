@@ -48,17 +48,14 @@ with st.sidebar:
 
     st.divider()
     st.markdown("#### 🤖 Model Provider")
-    colA, colB = st.columns(2)
-    with colA:
-        if st.checkbox("DeepSeek", value=(st.session_state.provider=="deepseek")):
-            st.session_state.provider = "deepseek"
-            if st.session_state.model.startswith("gpt"):
-                st.session_state.model = "deepseek-chat"
-    with colB:
-        if st.checkbox("OpenAI", value=(st.session_state.provider=="openai")):
-            st.session_state.provider = "openai"
-            if not st.session_state.model.startswith("gpt"):
-                st.session_state.model = "gpt-4o-mini"  # gợi ý nhẹ
+
+    provider = st.radio("Provider", ["deepseek", "openai"], index=0 if st.session_state.provider=="deepseek" else 1)
+    st.session_state.provider = provider
+
+    if provider == "deepseek":
+        st.session_state.model = "deepseek-chat"
+    else:
+        st.session_state.model = "gpt-4o-mini"
 
     st.text_input("Model name", key="model", help="VD: deepseek-chat | gpt-4o-mini | gpt-4o | gpt-4.1-mini ...")
 
@@ -544,4 +541,4 @@ if __name__ == "__main__" or True:
     else:
         view_settings()
 
-# streamlit run main.py 
+# streamlit run main.py
