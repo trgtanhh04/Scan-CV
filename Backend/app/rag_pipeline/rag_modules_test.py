@@ -537,8 +537,10 @@ def format_rag_output(results):
 
 def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
     output = generate_vector_query(query, llm, collection, limit)
+    print("Generated vector query plan:", output)
     plan = json.loads(output)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
+    print("Raw results:", results)
     formatted = format_rag_output(results)
     return formatted, plan
 

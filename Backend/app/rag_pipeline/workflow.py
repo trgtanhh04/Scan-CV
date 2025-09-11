@@ -215,49 +215,56 @@ def enrich_final_answer(state: dict) -> dict:
     answer = flow.invoke(state)
 
     # Lấy danh sách email từ kết quả
-    final = answer.get("final_answer", {})
-    rows = final.get("rows", [])
-    columns = final.get("columns", [])
-    email_idx = None
-    for idx, col in enumerate(columns):
-        if col == "email":
-            email_idx = idx
-            break
-    candidate_emails = [row[email_idx] for row in rows if email_idx is not None and row[email_idx]] if email_idx is not None else []
+    try:
+        final = answer.get("final_answer", {})
+        # Nếu final không phải dict (ví dụ: str "I don't know"), trả về luôn
+        if not isinstance(final, dict):
+            return answer
+        rows = final.get("rows", [])
+        columns = final.get("columns", [])
+        email_idx = None
+        for idx, col in enumerate(columns):
+            if col == "email":
+                email_idx = idx
+                break
+        candidate_emails = [row[email_idx] for row in rows if email_idx is not None and row[email_idx]] if email_idx is not None else []
 
-    # enrich thêm thông tin
-    with SessionLocal() as session:
-        enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)
+        # enrich thêm thông tin
+        with SessionLocal() as session:
+            enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)
 
-    # Mount thêm vào từng row
-    id_idx = None
-    email_idx = None
-    for idx, col in enumerate(columns):
-        if col == "id":
-            id_idx = idx
-        if col == "email":
-            email_idx = idx
-    new_rows = []
-    for row in rows:
-        cid = row[id_idx] if id_idx is not None else None
-        email = row[email_idx] if email_idx is not None else None
-        # Nếu id không có, thử lấy từ email
-        if not cid and email:
-            cid = email_id_map.get(email)
-        enrich = enrich_map.get(cid, {}) if cid is not None else {}
-        row_dict = {col: row[i] for i, col in enumerate(columns)}
-        row_dict["job_title"] = enrich.get("job_title")
-        row_dict["skills"] = enrich.get("skills", [])
-        row_dict["educations"] = enrich.get("educations", [])
-        new_rows.append(row_dict)
+        # Mount thêm vào từng row
+        id_idx = None
+        email_idx = None
+        for idx, col in enumerate(columns):
+            if col == "id":
+                id_idx = idx
+            if col == "email":
+                email_idx = idx
+        new_rows = []
+        for row in rows:
+            cid = row[id_idx] if id_idx is not None else None
+            email = row[email_idx] if email_idx is not None else None
+            # Nếu id không có, thử lấy từ email
+            if not cid and email:
+                cid = email_id_map.get(email)
+            enrich = enrich_map.get(cid, {}) if cid is not None else {}
+            row_dict = {col: row[i] for i, col in enumerate(columns)}
+            row_dict["job_title"] = enrich.get("job_title")
+            row_dict["skills"] = enrich.get("skills", [])
+            row_dict["educations"] = enrich.get("educations", [])
+            new_rows.append(row_dict)
 
-    # Update final_answer
-    final["rows"] = new_rows
-    for col in ["job_title", "skills", "educations"]:
-        if col not in final.get("columns", []):
-            final["columns"].append(col)
-    answer["final_answer"] = final
-    return answer
+        # Update final_answer
+        final["rows"] = new_rows
+        for col in ["job_title", "skills", "educations"]:
+            if col not in final.get("columns", []):
+                final["columns"].append(col)
+        answer["final_answer"] = final
+        return answer
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return {"error": str(e)}
 
 
 # Test local

@@ -281,24 +281,36 @@ def filter_ui_dynamic(df, rows):
     )
     job_titles, skills, degrees, schools = extract_filter_options(rows)
 
-    # default values from session_state to persist selection across reruns
-    job_filter = st.multiselect("Job Title", options=job_titles, default=st.session_state.get("job_filter", []), key="ui_job")
+    # helper: filter default values to only include options
+    def filter_defaults(options, defaults):
+        return [d for d in defaults if d in options]
+
+    # job titles
+    default_jobs = filter_defaults(job_titles, st.session_state.get("job_filter", []))
+    job_filter = st.multiselect("Job Title", options=job_titles, default=default_jobs, key="ui_job")
     st.session_state["job_filter"] = job_filter
-    skill_filter = st.multiselect("Skills", options=skills, default=st.session_state.get("skill_filter", []), key="ui_skill")
+
+    # skills
+    default_skills = filter_defaults(skills, st.session_state.get("skill_filter", []))
+    skill_filter = st.multiselect("Skills", options=skills, default=default_skills, key="ui_skill")
     st.session_state["skill_filter"] = skill_filter
-    degree_filter = st.multiselect("Degree", options=degrees, default=st.session_state.get("degree_filter", []), key="ui_degree")
+
+    # degrees
+    default_degrees = filter_defaults(degrees, st.session_state.get("degree_filter", []))
+    degree_filter = st.multiselect("Degree", options=degrees, default=default_degrees, key="ui_degree")
     st.session_state["degree_filter"] = degree_filter
-    school_filter = st.multiselect("University", options=schools, default=st.session_state.get("school_filter", []), key="ui_school")
+
+    # schools
+    default_schools = filter_defaults(schools, st.session_state.get("school_filter", []))
+    school_filter = st.multiselect("University", options=schools, default=default_schools, key="ui_school")
     st.session_state["school_filter"] = school_filter
 
-    # keep original scoring logic, slightly hardened for missing fields
+    # scoring logic (giữ nguyên)
     def cv_match_score(row):
         score = 0
-        # normalize row from pd.Series or dict-like
         job = row.get("job_title") or row.get("Job Title") or ""
         if job_filter and job in job_filter:
             score += 2
-        # skills
         skills_list = row.get("skills", []) or []
         if isinstance(skills_list, str):
             skills_list = [s.strip() for s in skills_list.split(",") if s.strip()]
@@ -308,12 +320,10 @@ def filter_ui_dynamic(df, rows):
             skills_list = []
         if skill_filter:
             score += sum(1 for s in skill_filter if s in skills_list)
-        # degree
         if degree_filter:
             for edu in row.get("educations", []) or []:
                 if isinstance(edu, dict) and edu.get("degree") in degree_filter:
                     score += 1
-        # school
         if school_filter:
             for edu in row.get("educations", []) or []:
                 if not isinstance(edu, dict):
@@ -326,6 +336,7 @@ def filter_ui_dynamic(df, rows):
     df_scored["_match_score"] = df_scored.apply(cv_match_score, axis=1)
     df_scored = df_scored.sort_values("_match_score", ascending=False).reset_index(drop=True)
     return df_scored
+
 
 # ------------------ RENDER TABLE ------------------
 # def render_table_view(df: pd.DataFrame):
@@ -393,22 +404,40 @@ def list_to_chips(val):
     return chip_html(str(val))
 
 
-def education_to_chips(educations):
-    """Format education để hiển thị rõ degree - university."""
-    if not educations:
-        return ""
+# def education_to_chips(educations):
+#     """Format education để hiển thị rõ degree - university."""
+#     if not educations:
+#         return ""
     
+#     chips = []
+#     for edu in educations:
+#         # Lấy degree và university
+#         degree = edu.get("degree", "")
+#         university = edu.get("university", "")
+#         # Format gọn gàng
+#         text = degree
+#         if university:
+#             text += f" @ {university}"
+#         chips.append(chip_html(text))
+#     return "".join(chips)
+def education_to_chips(val):
+    """Render education thành chip với degree + university."""
+    if not val:
+        return ""
+
     chips = []
-    for edu in educations:
-        # Lấy degree và university
-        degree = edu.get("degree", "")
-        university = edu.get("university", "")
-        # Format gọn gàng
-        text = degree
-        if university:
-            text += f" @ {university}"
-        chips.append(chip_html(text))
+    for edu in val:
+        if isinstance(edu, dict):
+            degree = edu.get("degree") or ""
+            university = edu.get("university") or ""
+            text = degree.strip()
+            if university:
+                text = f"{text} @ {university}"
+            chips.append(chip_html(text))
+        else:
+            chips.append(chip_html(str(edu)))
     return "".join(chips)
+
 
 
 def render_table_view(df: pd.DataFrame):
@@ -465,6 +494,9 @@ def view_search():
                 return
 
             fa = data.get("final_answer", {})
+            if not isinstance(fa, dict):
+                st.warning(str(fa))
+                return
             cols = fa.get("columns", []) or []
             rows_raw = fa.get("rows", []) or []
 
@@ -483,8 +515,14 @@ def view_search():
             # Remove empty rows
             rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
             df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
-            if df_original['id'].isnull().all():
-                df_original['id'] = range(1, len(df_original) + 1)
+            # if df_original['id'].isnull().all():
+            #     df_original['id'] = range(1, len(df_original) + 1)
+            st.write(df_original)
+
+            id_col = df_original.get('id')
+            if id_col is None or id_col.isnull().all():
+                st.warning("Cột ID không tồn tại hoặc tất cả giá trị đều null")
+
 
             # Save to session
             st.session_state["rows"] = rows
