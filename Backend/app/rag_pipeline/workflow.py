@@ -47,11 +47,11 @@ def _invoke(prompt: str) -> str:
     return resp.content
 llm_sql = LLM(_invoke)
 
-# == Set up Qdrant cho RAG ===
+# === Set up Qdrant cho RAG ===
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL)
 
-# === WORKFLOW ===
+# ==== WORKFLOW ====
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 # from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
 
@@ -66,14 +66,12 @@ class CandidateState(dict):
     vector_query: dict
     final_answer: str
 
-
 def router_condition(state):
     if state["route"] == "SQL":
         return "sql"
     elif state["route"] == "VECTOR":
         return "vector"
     return END
-
 
 # ---- Node functions ----
 def router_node(state: CandidateState, llm):
@@ -113,7 +111,6 @@ def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collectio
     }
     return state
 
-    
 def summarizer_node(state: CandidateState):
     sql_result = state.get("sql_result", [])
     vector_result = state.get("vector_result", [])
@@ -124,7 +121,6 @@ def summarizer_node(state: CandidateState):
         return state
     else:
         state["final_answer"] = "I don't know"
-
     return state
 
 # ---- Build Flow ----

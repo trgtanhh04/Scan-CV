@@ -415,7 +415,6 @@ def execute_vector_query(plan, client: QdrantClient, embedding_model, limit=None
 #     else:
 #         raise ValueError(f"Unknown action type: {action}")
 
-
 def format_rag_output(results):
     columns = ["id", "email", "resume_url"]
     rows = []
@@ -435,9 +434,6 @@ def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
     formatted = format_rag_output(results)
     return formatted, plan
-
-
-
 
 # results, plan = search_vector(
 #     query="Find candidates with Python skill and had experience in Software",
