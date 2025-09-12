@@ -106,8 +106,6 @@ async def query_api(request: QueryRequest):
 
     # invoke flow
     result = enrich_final_answer(state)
-    # print("result", result.get("final_answer"))
-    print(request.provider, request.model)
 
     return {
         "question": request.question,
