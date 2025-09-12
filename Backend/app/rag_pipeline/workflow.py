@@ -29,7 +29,7 @@ from langgraph.graph import StateGraph, END
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # from text2SQL.enrich import enrich_with_resume_urls
 # from text2SQL.t2sql_core import LLM, answer_sql
-from app.rag_pipeline.rag_modules_test import search_vector, route_query
+from app.rag_pipeline.rag_modules_test import search_vector, route_query, split_hybrid_query
 from app.text2SQL.t2sql_core import LLM, answer_sql
 
 # === Config ===
@@ -66,11 +66,15 @@ class CandidateState(dict):
     vector_query: dict
     final_answer: str
 
+
+
 def router_condition(state):
     if state["route"] == "SQL":
         return "sql"
     elif state["route"] == "VECTOR":
         return "vector"
+    elif state["route"] == "HYBRID":
+        return "hybrid"
     return END
 
 # ---- Node functions ----
@@ -111,6 +115,77 @@ def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collectio
     }
     return state
 
+def hybrid_node(state: CandidateState, llm, embedding_model, qdrant_db, collection, limit, search_threshold):
+    subqueries = split_hybrid_query(state["question"], llm)
+    # if isinstance(subqueries.get("sql_query"), str):
+    #     print("SQL:", subqueries.get("sql_query"))
+    # if isinstance(subqueries.get("vector_query"), str):
+    #     print("Vector:", subqueries.get("vector_query"))
+    sql_q = subqueries.get("sql_query", "")
+    vector_q = subqueries.get("vector_query", "")
+
+    sql_result, vector_result = [], {}
+    sql_rows, vector_rows = [], []
+    sql_columns, vector_columns = [], []
+
+    # --- SQL ---
+    if sql_q:
+        try:
+            print("Executing SQL query:", sql_q)
+            result = answer_sql(engine, llm_sql, sql_q, max_refine=1, limit=limit)
+            sql_result = result.get("rows") or []
+            sql_columns = ["id", "email", "resume_url"]  # biết trước cột
+            sql_rows = [dict(zip(sql_columns, row)) for row in sql_result]
+        except Exception as e:
+            print("SQL error:", e)
+
+    # --- VECTOR ---
+    if vector_q:
+        try:
+            results, plan = search_vector(vector_q, llm, embedding_model, qdrant_db, collection, limit, search_threshold)
+            vector_result = results or {}
+            vector_columns = vector_result.get("columns", [])
+            vrows = vector_result.get("rows", [])
+            vector_rows = [dict(zip(vector_columns, row)) for row in vrows]
+        except Exception as e:
+            print("Vector error:", e)
+
+    # --- JOIN (intersection by email) ---
+    merged = []
+    if sql_rows and vector_rows:
+        sql_dict = {row.get("email"): row for row in sql_rows if row.get("email")}
+        for vrow in vector_rows:
+            email = vrow.get("email")
+            if email and email in sql_dict:
+                # merge giữ thông tin cả 2 phía
+                # merged.append({**sql_dict[email], **vrow})
+                merged_row = {**vrow, **sql_dict[email]}  # ✅ id từ SQL sẽ override
+                merged.append(merged_row)
+            #     merged_row = {**vrow}
+            # # force giữ id từ SQL
+            #     merged_row["id"] = sql_dict[email].get("id")
+            #     merged.update(sql_dict[email])  # merge thêm các cột khác
+            #     merged.append(merged_row)
+    else:
+        merged = sql_rows or vector_rows
+
+    # print("Merged rows:", merged)
+
+    # --- Chuẩn hoá columns ---
+    merged_columns = list({col for row in merged for col in row.keys()}) if merged else (sql_columns or vector_columns)
+    merged_rows = [[row.get(col) for col in merged_columns] for row in merged]
+
+    state["sql_result"] = sql_rows
+    state["vector_result"] = vector_rows
+    state["final_answer"] = {
+        "type": "hybrid",
+        "sql_query": sql_q,
+        "vector_query": vector_q,
+        "columns": merged_columns,
+        "rows": merged_rows,   # luôn là list[dict]
+    }
+    return state
+
 def summarizer_node(state: CandidateState):
     sql_result = state.get("sql_result", [])
     vector_result = state.get("vector_result", [])
@@ -123,34 +198,64 @@ def summarizer_node(state: CandidateState):
         state["final_answer"] = "I don't know"
     return state
 
-# ---- Build Flow ----
+
 def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_threshold=0.72):
     graph = StateGraph(CandidateState)
 
-    # Add nodes
     graph.add_node("router", lambda state: router_node(state, llm))
     graph.add_node("sql", lambda state: sql_node(state, limit))
     graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
+    graph.add_node("hybrid", lambda state: hybrid_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
     graph.add_node("summarizer", lambda state: summarizer_node(state))
 
-    # Conditional edge từ router
     graph.add_conditional_edges(
         "router",
         router_condition,  
         {
             "sql": "sql",
             "vector": "vector",
+            "hybrid": "hybrid",   # thêm HYBRID
             END: END,
         },
     )
 
-    # Entry point
     graph.add_edge("sql", "summarizer")
     graph.add_edge("vector", "summarizer")
+    graph.add_edge("hybrid", "summarizer")
     graph.add_edge("summarizer", END)
+
     graph.set_entry_point("router")
 
     return graph.compile()
+
+# ---- Build Flow ----
+# def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_threshold=0.72):
+#     graph = StateGraph(CandidateState)
+
+#     # Add nodes
+#     graph.add_node("router", lambda state: router_node(state, llm))
+#     graph.add_node("sql", lambda state: sql_node(state, limit))
+#     graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
+#     graph.add_node("summarizer", lambda state: summarizer_node(state))
+
+#     # Conditional edge từ router
+#     graph.add_conditional_edges(
+#         "router",
+#         router_condition,  
+#         {
+#             "sql": "sql",
+#             "vector": "vector",
+#             END: END,
+#         },
+#     )
+
+#     # Entry point
+#     graph.add_edge("sql", "summarizer")
+#     graph.add_edge("vector", "summarizer")
+#     graph.add_edge("summarizer", END)
+#     graph.set_entry_point("router")
+
+#     return graph.compile()
 
 # ---- Enrich Education, Skills, Job Title ----
 def enrich_with_skills_and_edu(session: Session, candidate_emails: List[str]):
@@ -214,6 +319,13 @@ def enrich_final_answer(state: dict) -> dict:
     flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
     answer = flow.invoke(state)
 
+    print("Route chosen:", answer.get("route"))
+
+    if isinstance(answer.get("sql_query"), str):
+        print("SQL query:", answer.get("sql_query"))
+    if isinstance(answer.get("vector_query"), str):
+        print("Vector query:", answer.get("vector_query"))
+
     # Lấy danh sách email từ kết quả
     try:
         final = answer.get("final_answer", {})
@@ -226,9 +338,9 @@ def enrich_final_answer(state: dict) -> dict:
         for idx, col in enumerate(columns):
             if col == "email":
                 email_idx = idx
+                print("Email index:", email_idx)
                 break
         candidate_emails = [row[email_idx] for row in rows if email_idx is not None and row[email_idx]] if email_idx is not None else []
-
         # enrich thêm thông tin
         with SessionLocal() as session:
             enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)

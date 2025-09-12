@@ -41,16 +41,16 @@ def fix_sql_quotes(query: str) -> str:
 #     return response.content.strip()
 
 
-RAG_SOFT_SKILL_PATTERNS = [
-    r"work\s+well\s+with\s+others",
-    r"team\s*player",
-    r"teamwork",
-    r"collaborat(e|ion|ive)",
+# RAG_SOFT_SKILL_PATTERNS = [
+#     r"work\s+well\s+with\s+others",
+#     r"team\s*player",
+#     r"teamwork",
+#     r"collaborat(e|ion|ive)",
     r"leadership",
-]
+# ]
 
-def _norm(q: str) -> str:
-    return unidecode(q or "").lower().strip()
+# def _norm(q: str) -> str:
+#     return unidecode(q or "").lower().strip()
 
 # def _is_sql_hard(qn: str) -> bool:
 #     """Các câu nâng cao -> SQL: số năm, so sánh, đếm, top, khoảng thời gian, etc."""
@@ -64,20 +64,6 @@ def _norm(q: str) -> str:
 #         r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*(years?)\b",
 #     ]
 #     return any(re.search(p, qn) for p in pats)
-
-def _is_sql_hard(qn: str) -> bool:
-    """Advanced/structured queries → SQL branch"""
-    pats = [
-        r"\b\d+\s*(years?)\b",               # 3 years
-        r"\b(>=|>|<=|<|more than|over|at least)\b",
-        r"\b(count|how many|number of|total)\b",
-        r"\b(top|max|min|average|avg|sum)\b",
-        r"\bbetween\b|\bfrom\s+\d{4}\s+to\s+\d{4}\b",
-        r"\b(in|within)\s+\d+\s*years?\b",
-        r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*years?\b",
-        r"\bgpa\b|\bscore\b|\bdegree\b|\buniversity\b",
-    ]
-    return any(re.search(p, qn) for p in pats)
 
 # def _is_rag_simple(qn: str) -> bool:
 #     """Những câu cơ bản cho RAG (VECTOR)."""
@@ -106,57 +92,25 @@ def _is_sql_hard(qn: str) -> bool:
 
 #     return False
 
-def _is_rag_simple(qn: str) -> bool:
-    """Simple semantic (vector) queries"""
-    # 1) Find all skills of candidate <name>
-    if re.search(r"\b(find|list|show)\b.*\b(all\s+)?skills?\b.*\b(of)\b", qn):
-        return True
-    # 2) Find all experience of candidate <name>
-    if re.search(r"\b(find|list|show)\b.*\b(all\s+)?experiences?\b.*\b(of)\b", qn):
-        return True
-    # 3) Find candidates that know <skill>
-    if re.search(r"\b(find)\b.*\bcandidates?\b.*\b(know|skill|proficient)\b", qn):
-        return True
-    # 4) Soft skills
-    if any(re.search(p, qn) for p in RAG_SOFT_SKILL_PATTERNS):
-        return True
-    # 5) Have experience in Software
-    if re.search(r"\bhave\s+experience\s+in\s+software\b", qn):
-        return True
-    # 6) Combined: know Python AND experience in Software
-    if re.search(r"know\s+python.*have\s+experience\s+in\s+software", qn):
-        return True
+# def route_query(question: str, llm=None) -> str:
+#     """
+#     Quy tắc định tuyến:
+#     - Nếu là câu RAG cơ bản -> 'VECTOR'
+#     - Nếu là câu SQL khó (năm kinh nghiệm, so sánh, đếm, top, …) -> 'SQL'
+#     - Mặc định -> 'SQL' (Text2SQL mạnh hơn ở câu phức tạp/không rõ)
+#     """
+#     qn = _norm(question)
 
-    return False
+#     # Hard/advanced → SQL
+#     if _is_sql_hard(qn):
+#         return "SQL"
 
+#     # Simple RAG intents → VECTOR
+#     if _is_rag_simple(qn):
+#         return "VECTOR"
 
-def _is_hybrid(qn: str) -> bool:
-    """
-    Hybrid = query that mixes structured (SQL-like) + unstructured (semantic).
-    E.g.: top GPA + teamwork, >=5 years experience + leadership
-    """
-    sql_like = _is_sql_hard(qn)
-    vector_like = _is_rag_simple(qn)
-    return sql_like and vector_like
+#     return "SQL"
 
-def route_query(question: str, llm=None) -> str:
-    """
-    Quy tắc định tuyến:
-    - Nếu là câu RAG cơ bản -> 'VECTOR'
-    - Nếu là câu SQL khó (năm kinh nghiệm, so sánh, đếm, top, …) -> 'SQL'
-    - Top GPA (structured) + teamwork (unstructured), >=5 years experience + leadership -> 'HYBRID'
-    - Mặc định -> 'SQL' (Text2SQL mạnh hơn ở câu phức tạp/không rõ)
-    """
-    qn = _norm(question)
-
-    # if _is_hybrid(qn):
-    #     return "HYBRID"
-    if _is_sql_hard(qn):
-        return "SQL"
-    if _is_rag_simple(qn):
-        return "VECTOR"
-
-    return "SQL"  # fallback
 
 # def route_query(question: str, llm):
 #     router_prompt = ChatPromptTemplate.from_template("""
@@ -169,6 +123,61 @@ def route_query(question: str, llm=None) -> str:
 #     response = llm.invoke(router_prompt.format(question=question))
 #     print(response.content.strip())
 #     return response.content.strip()
+
+def route_query(question: str, llm):
+    router_prompt = ChatPromptTemplate.from_template("""
+        You are a query classification system.  
+        Your task is to decide whether a user question should be handled by:
+        - "SQL": questions that can be answered from structured data fields in the PostgreSQL database,  
+        - "VECTOR": questions that need semantic search over unstructured text (skills, experience descriptions, project descriptions),  
+        - "HYBRID": questions that require both SQL and VECTOR to answer.  
+
+        Rules:
+        1. Choose **SQL** if the question is about:
+        - structured fields: full_name, email, phone, job_title, certifications, languages, degree, graduation_year
+        - numeric reasoning over structured or experience data: "at least", "minimum", "more than N years", "count how many", "with 2 or more companies"
+
+        2. Choose **VECTOR** if the question is about:
+        - skills or technologies (Python, Docker, TensorFlow, leadership, etc.)
+        - unstructured experience descriptions (work history, achievements, projects)
+        - semantic search where synonyms or paraphrasing matter.
+
+        3. Choose **HYBRID** if the question combines both structured requirements and unstructured experience/skills, for example:
+        - "Find candidates named John (structured) who have experience in Python (unstructured)."
+        - "List candidates with a Master's degree (structured) and at least 5 years in data engineering (numeric/structured + semantic)."
+
+        Answer only with one of these exact labels: SQL, VECTOR, HYBRID.  
+
+        Question: {question}
+    """)
+    response = llm.invoke(router_prompt.format(question=question))
+    print(response.content.strip())
+    return response.content.strip()
+
+def split_hybrid_query(question: str, llm):
+    prompt = ChatPromptTemplate.from_template("""
+        You are a query decomposition system.
+        Given a user question, split it into 2 sub-questions in natural language:
+        - "sql_query": a natural language sub-question about structured fields 
+          (full_name, email, phone, job_title, certifications, languages, degree, 
+          numeric filters like 'at least 2 companies', 'more than 3 years', etc.)
+        - "vector_query": a natural language sub-question about unstructured fields 
+          (skills, experience descriptions, project details).
+
+        Output format must be strictly JSON:
+        {{"sql_query": "...", "vector_query": "..."}}
+
+        If a part is not needed, return "" for it.
+
+        Example:
+        User: "Find candidates who are Software Engineers and know Python"
+        Output: {{"sql_query": "Tìm người là Software Engineer", 
+                  "vector_query": "Tìm người có kỹ năng Python"}}
+
+        Question: {question}
+    """)
+    response = llm.invoke(prompt.format(question=question))
+    return json.loads(response.content)
 
 
 def generate_sql(question: str, llm):
@@ -566,6 +575,7 @@ def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit
     output = generate_vector_query(query, llm, collection, limit)
     plan = json.loads(output)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
+    print("Raw results:", results)
     formatted = format_rag_output(results)
     return formatted, plan
 
