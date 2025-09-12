@@ -339,21 +339,6 @@ def filter_ui_dynamic(df, rows):
 
 
 # ------------------ RENDER TABLE ------------------
-# def render_table_view(df: pd.DataFrame):
-#     """Hiển thị CV dạng bảng."""
-#     display_df = df.copy()
-
-#     if "resume_url" in display_df.columns:
-#         display_df["resume_url"] = display_df["resume_url"].apply(
-#             lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
-#         )
-
-#     if "skills" in display_df.columns:
-#         display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
-#     if "educations" in display_df.columns:
-#         display_df["educations"] = display_df["educations"].apply(lambda e: educations_to_html(e) if e else "")
-
-#     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 # Style chip
 CHIP_STYLE = """
@@ -404,22 +389,6 @@ def list_to_chips(val):
     return chip_html(str(val))
 
 
-# def education_to_chips(educations):
-#     """Format education để hiển thị rõ degree - university."""
-#     if not educations:
-#         return ""
-    
-#     chips = []
-#     for edu in educations:
-#         # Lấy degree và university
-#         degree = edu.get("degree", "")
-#         university = edu.get("university", "")
-#         # Format gọn gàng
-#         text = degree
-#         if university:
-#             text += f" @ {university}"
-#         chips.append(chip_html(text))
-#     return "".join(chips)
 def education_to_chips(val):
     """Render education thành chip với degree + university."""
     if not val:
@@ -439,41 +408,58 @@ def education_to_chips(val):
     return "".join(chips)
 
 
-
 def render_table_view(df: pd.DataFrame):
-    """Render bảng đẹp + chip bo tròn cho Open CV và Download."""
+    """Hiển thị CV dạng bảng."""
     display_df = df.copy()
 
-    # Open CV
     if "resume_url" in display_df.columns:
-        display_df["CV"] = display_df.apply(
-            lambda row: chip_html("🔗 Open", row["resume_url"]) if row["resume_url"] else "",
-            axis=1
+        display_df["resume_url"] = display_df["resume_url"].apply(
+            lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
         )
 
-    # Skills
     if "skills" in display_df.columns:
-        display_df["skills"] = display_df["skills"].apply(list_to_chips)
+        display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
 
-    # Education
-    # if "educations" in display_df.columns:
-    #     display_df["educations"] = display_df["educations"].apply(list_to_chips)
-    # Education
     if "educations" in display_df.columns:
         display_df["educations"] = display_df["educations"].apply(education_to_chips)
 
-    # Download
-    display_df["Download"] = display_df.apply(
-        lambda row: create_download_link(row["resume_url"], f"{row.get('email','cv')}.pdf")
-        if row.get("resume_url") else "",
-        axis=1
-    )
-
-    # Cột hiển thị
-    cols = [c for c in ["id", "email", "CV", "job_title", "skills", "educations", "_match_score", "Download"] if c in display_df.columns]
-    display_df = display_df[cols]
-
     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+
+# def render_table_view(df: pd.DataFrame):
+#     """Render bảng đẹp + chip bo tròn cho Open CV và Download."""
+#     display_df = df.copy()
+
+#     # Open CV
+#     if "resume_url" in display_df.columns:
+#         display_df["CV"] = display_df.apply(
+#             lambda row: chip_html("🔗 Open", row["resume_url"]) if row["resume_url"] else "",
+#             axis=1
+#         )
+
+#     # Skills
+#     if "skills" in display_df.columns:
+#         display_df["skills"] = display_df["skills"].apply(list_to_chips)
+
+#     # Education
+#     # if "educations" in display_df.columns:
+#     #     display_df["educations"] = display_df["educations"].apply(list_to_chips)
+#     # Education
+#     if "educations" in display_df.columns:
+#         display_df["educations"] = display_df["educations"].apply(education_to_chips)
+
+#     # Download
+#     display_df["Download"] = display_df.apply(
+#         lambda row: create_download_link(row["resume_url"], f"{row.get('email','cv')}.pdf")
+#         if row.get("resume_url") else "",
+#         axis=1
+#     )
+
+#     # Cột hiển thị
+#     cols = [c for c in ["id", "email", "CV", "job_title", "skills", "educations", "_match_score", "Download"] if c in display_df.columns]
+#     display_df = display_df[cols]
+
+#     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
 
@@ -492,7 +478,7 @@ def view_search():
             if not data:
                 st.warning("Không có kết quả CV nào.")
                 return
-
+            st.json(data)  # debug
             fa = data.get("final_answer", {})
             if not isinstance(fa, dict):
                 st.warning(str(fa))
@@ -515,9 +501,9 @@ def view_search():
             # Remove empty rows
             rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
             df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
-            # if df_original['id'].isnull().all():
-            #     df_original['id'] = range(1, len(df_original) + 1)
-            st.write(df_original)
+            # Nếu cột id toàn bộ là None nhưng vẫn có dữ liệu, đánh số lại
+            if 'id' not in df_original.columns or df_original['id'].isnull().all():
+                df_original['id'] = range(1, len(df_original) + 1)
 
             id_col = df_original.get('id')
             if id_col is None or id_col.isnull().all():

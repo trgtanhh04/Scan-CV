@@ -432,9 +432,9 @@ def answer_sql(
                 sql = llm.gen(refine_prompt(schema_txt, user_query, sql, "empty result"))
                 continue
             
-            # print("Final SQL:", sql)
-            # print("Final Columns:", cols)
-            # print("Final Rows:", packed_rows)
+            print("Final SQL:", sql)
+            print("Final Columns:", cols)
+            print("Final Rows:", packed_rows)
 
             return {"sql": sql, "columns": cols, "rows": packed_rows, "trials": trials}
 

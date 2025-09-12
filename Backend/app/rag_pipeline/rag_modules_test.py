@@ -1,28 +1,10 @@
 from langchain.prompts import ChatPromptTemplate
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 from qdrant_client import QdrantClient
-from sqlalchemy import create_engine, text
+from unidecode import unidecode
 import json
 import re
-from typing import Tuple, Literal
 
-# import os  
-
-# # from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY
-# # from config.storage import MEDIA_ROOT, build_public_url 
-# from langchain_deepseek import ChatDeepSeek
-# from qdrant_client import QdrantClient
-# from langchain_google_genai import  GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-
-
-# deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
-
-# embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", google_api_key=GOOGLE_API_KEY)
-# # engine = create_engine("postgresql://postgres:phatdeptrai123@localhost:5432/candidates")
-
-# db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../qdrant_gemini_db"))
-# qdrant = QdrantClient(path=db_path)
-# COLLECTION_NAME = "candidates"
 
 def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
@@ -59,77 +41,122 @@ def fix_sql_quotes(query: str) -> str:
 #     return response.content.strip()
 
 
-from unidecode import unidecode
-
 RAG_SOFT_SKILL_PATTERNS = [
     r"work\s+well\s+with\s+others",
     r"team\s*player",
     r"teamwork",
-    r"lam\s+viec\s+nhom",
+    r"collaborat(e|ion|ive)",
+    r"leadership",
 ]
 
 def _norm(q: str) -> str:
     return unidecode(q or "").lower().strip()
 
+# def _is_sql_hard(qn: str) -> bool:
+#     """Các câu nâng cao -> SQL: số năm, so sánh, đếm, top, khoảng thời gian, etc."""
+#     pats = [
+#         r"\b\d+\s*(years?|nam)\b",                # 3 years / 3 năm
+#         r"\b(>=|>|<=|<|more than|over|at least|toi thieu|tro len)\b",
+#         r"\b(count|so luong|bao nhieu|how many)\b",
+#         r"\b(top|max|min|average|avg|sum)\b",
+#         r"\bbetween\b|\bfrom\s+\d{4}\s+to\s+\d{4}\b",
+#         r"\b(in|within)\s+\d+\s*(years?|nam)\b",
+#         r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*(years?)\b",
+#     ]
+#     return any(re.search(p, qn) for p in pats)
+
 def _is_sql_hard(qn: str) -> bool:
-    """Các câu nâng cao -> SQL: số năm, so sánh, đếm, top, khoảng thời gian, etc."""
+    """Advanced/structured queries → SQL branch"""
     pats = [
-        r"\b\d+\s*(years?|nam)\b",                # 3 years / 3 năm
-        r"\b(>=|>|<=|<|more than|over|at least|toi thieu|tro len)\b",
-        r"\b(count|so luong|bao nhieu|how many)\b",
+        r"\b\d+\s*(years?)\b",               # 3 years
+        r"\b(>=|>|<=|<|more than|over|at least)\b",
+        r"\b(count|how many|number of|total)\b",
         r"\b(top|max|min|average|avg|sum)\b",
         r"\bbetween\b|\bfrom\s+\d{4}\s+to\s+\d{4}\b",
-        r"\b(in|within)\s+\d+\s*(years?|nam)\b",
-        r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*(years?)\b",
+        r"\b(in|within)\s+\d+\s*years?\b",
+        r"\bexperience\s*(?:of|>=|>|at least)\s*\d+\s*years?\b",
+        r"\bgpa\b|\bscore\b|\bdegree\b|\buniversity\b",
     ]
     return any(re.search(p, qn) for p in pats)
 
+# def _is_rag_simple(qn: str) -> bool:
+#     """Những câu cơ bản cho RAG (VECTOR)."""
+#     # 1) Find all skills of candidate <name>
+#     if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?skills?\b.*\b(of|cua)\b", qn):
+#         return True
+#     # 2) Find all experience of candidate <name>
+#     if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?experiences?\b.*\b(of|cua)\b", qn):
+#         return True
+#     # 3) Find candidates that know <skill> (Python, Java, …)
+#     if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\b(know|ky\s*nang|skill|thanh\s*thao)\b", qn):
+#         return True
+#     # 4) Find candidates that know Java (trường hợp riêng cũng đã cover bởi (3), giữ cho rõ ràng)
+#     if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\bknow\b.*\bjava\b", qn):
+#         return True
+#     # 5) Soft skill "work well with others" / teamwork
+#     if any(re.search(p, qn) for p in RAG_SOFT_SKILL_PATTERNS):
+#         return True
+#     # 6) Have experience in Software (keyword trong experience)
+#     if re.search(r"\bhave\s+experience\s+in\s+software\b", qn) or re.search(r"kinh\s*nghiem\s+.*software", qn):
+#         return True
+#     # 7) Kết hợp: biết Python AND có experience in Software
+#     if re.search(r"know\s+python.*have\s+experience\s+in\s+software", qn) or \
+#        re.search(r"ky\s*nang\s+python.*kinh\s*nghiem\s+.*software", qn):
+#         return True
+
+#     return False
+
 def _is_rag_simple(qn: str) -> bool:
-    """Những câu cơ bản cho RAG (VECTOR)."""
+    """Simple semantic (vector) queries"""
     # 1) Find all skills of candidate <name>
-    if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?skills?\b.*\b(of|cua)\b", qn):
+    if re.search(r"\b(find|list|show)\b.*\b(all\s+)?skills?\b.*\b(of)\b", qn):
         return True
     # 2) Find all experience of candidate <name>
-    if re.search(r"\b(find|list|liet\s*ke|tim)\b.*\b(all\s+)?experiences?\b.*\b(of|cua)\b", qn):
+    if re.search(r"\b(find|list|show)\b.*\b(all\s+)?experiences?\b.*\b(of)\b", qn):
         return True
-    # 3) Find candidates that know <skill> (Python, Java, …)
-    if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\b(know|ky\s*nang|skill|thanh\s*thao)\b", qn):
+    # 3) Find candidates that know <skill>
+    if re.search(r"\b(find)\b.*\bcandidates?\b.*\b(know|skill|proficient)\b", qn):
         return True
-    # 4) Find candidates that know Java (trường hợp riêng cũng đã cover bởi (3), giữ cho rõ ràng)
-    if re.search(r"\b(find|tim)\b.*\bcandidates?\b.*\bknow\b.*\bjava\b", qn):
-        return True
-    # 5) Soft skill "work well with others" / teamwork
+    # 4) Soft skills
     if any(re.search(p, qn) for p in RAG_SOFT_SKILL_PATTERNS):
         return True
-    # 6) Have experience in Software (keyword trong experience)
-    if re.search(r"\bhave\s+experience\s+in\s+software\b", qn) or re.search(r"kinh\s*nghiem\s+.*software", qn):
+    # 5) Have experience in Software
+    if re.search(r"\bhave\s+experience\s+in\s+software\b", qn):
         return True
-    # 7) Kết hợp: biết Python AND có experience in Software
-    if re.search(r"know\s+python.*have\s+experience\s+in\s+software", qn) or \
-       re.search(r"ky\s*nang\s+python.*kinh\s*nghiem\s+.*software", qn):
+    # 6) Combined: know Python AND experience in Software
+    if re.search(r"know\s+python.*have\s+experience\s+in\s+software", qn):
         return True
 
     return False
+
+
+def _is_hybrid(qn: str) -> bool:
+    """
+    Hybrid = query that mixes structured (SQL-like) + unstructured (semantic).
+    E.g.: top GPA + teamwork, >=5 years experience + leadership
+    """
+    sql_like = _is_sql_hard(qn)
+    vector_like = _is_rag_simple(qn)
+    return sql_like and vector_like
 
 def route_query(question: str, llm=None) -> str:
     """
     Quy tắc định tuyến:
     - Nếu là câu RAG cơ bản -> 'VECTOR'
     - Nếu là câu SQL khó (năm kinh nghiệm, so sánh, đếm, top, …) -> 'SQL'
+    - Top GPA (structured) + teamwork (unstructured), >=5 years experience + leadership -> 'HYBRID'
     - Mặc định -> 'SQL' (Text2SQL mạnh hơn ở câu phức tạp/không rõ)
     """
     qn = _norm(question)
 
-    # Hard/advanced → SQL
+    # if _is_hybrid(qn):
+    #     return "HYBRID"
     if _is_sql_hard(qn):
         return "SQL"
-
-    # Simple RAG intents → VECTOR
     if _is_rag_simple(qn):
         return "VECTOR"
 
-    return "SQL"
-
+    return "SQL"  # fallback
 
 # def route_query(question: str, llm):
 #     router_prompt = ChatPromptTemplate.from_template("""
@@ -537,10 +564,8 @@ def format_rag_output(results):
 
 def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
     output = generate_vector_query(query, llm, collection, limit)
-    print("Generated vector query plan:", output)
     plan = json.loads(output)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)
-    print("Raw results:", results)
     formatted = format_rag_output(results)
     return formatted, plan
 
