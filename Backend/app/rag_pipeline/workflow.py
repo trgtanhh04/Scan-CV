@@ -21,14 +21,6 @@ from app.models.models import SessionLocal, Candidate, Skill, Educations
 # === LangGraph ===
 from langgraph.graph import StateGraph, END
 
-# === Local modules ===
-# from rag_modules import route_query, search_vector
-# from app.rag_pipeline.rag_modules import route_query, generate_sql, search_vector
-
-# === text2SQL modules ===
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# from text2SQL.enrich import enrich_with_resume_urls
-# from text2SQL.t2sql_core import LLM, answer_sql
 from app.rag_pipeline.rag_modules_test import search_vector, route_query, split_hybrid_query
 from app.text2SQL.t2sql_core import LLM, answer_sql
 
@@ -65,8 +57,6 @@ class CandidateState(dict):
     vector_result: list
     vector_query: dict
     final_answer: str
-
-
 
 def router_condition(state):
     if state["route"] == "SQL":
@@ -124,15 +114,22 @@ def hybrid_node(state: CandidateState, llm, embedding_model, qdrant_db, collecti
     sql_q = subqueries.get("sql_query", "")
     vector_q = subqueries.get("vector_query", "")
 
+    # Initialize locals so every path has defined variables
+    sql = ""
+    vector = {}
     sql_result, vector_result = [], {}
     sql_rows, vector_rows = [], []
     sql_columns, vector_columns = [], []
+    merged_columns = []
+    merged_rows = []
+    limit = 100
 
     # --- SQL ---
     if sql_q:
         try:
             print("Executing SQL query:", sql_q)
             result = answer_sql(engine, llm_sql, sql_q, max_refine=1, limit=limit)
+            sql = result.get("sql") or ""
             sql_result = result.get("rows") or []
             sql_columns = ["id", "email", "resume_url"]  # biết trước cột
             sql_rows = [dict(zip(sql_columns, row)) for row in sql_result]
@@ -144,9 +141,16 @@ def hybrid_node(state: CandidateState, llm, embedding_model, qdrant_db, collecti
         try:
             results, plan = search_vector(vector_q, llm, embedding_model, qdrant_db, collection, limit, search_threshold)
             vector_result = results or {}
+            vector = plan
             vector_columns = vector_result.get("columns", [])
             vrows = vector_result.get("rows", [])
             vector_rows = [dict(zip(vector_columns, row)) for row in vrows]
+            unique_vector = {}
+            for vrow in vector_rows:
+                email = vrow.get("email")
+                if email and email not in unique_vector:
+                    unique_vector[email] = vrow
+            vector_rows = list(unique_vector.values())
         except Exception as e:
             print("Vector error:", e)
 
@@ -157,30 +161,42 @@ def hybrid_node(state: CandidateState, llm, embedding_model, qdrant_db, collecti
         for vrow in vector_rows:
             email = vrow.get("email")
             if email and email in sql_dict:
-                # merge giữ thông tin cả 2 phía
-                # merged.append({**sql_dict[email], **vrow})
-                merged_row = {**vrow, **sql_dict[email]}  # ✅ id từ SQL sẽ override
+                # merge keeping both sides (SQL fields may overwrite duplicates)
+                merged_row = {**vrow, **sql_dict[email]}
                 merged.append(merged_row)
-            #     merged_row = {**vrow}
-            # # force giữ id từ SQL
-            #     merged_row["id"] = sql_dict[email].get("id")
-            #     merged.update(sql_dict[email])  # merge thêm các cột khác
-            #     merged.append(merged_row)
     else:
-        merged = sql_rows or vector_rows
+        merged = sql_rows or vector_rows or []
 
     # print("Merged rows:", merged)
 
     # --- Chuẩn hoá columns ---
-    merged_columns = list({col for row in merged for col in row.keys()}) if merged else (sql_columns or vector_columns)
+    # --- Normalize columns deterministically ---
+    desired_order = ["id", "email", "resume_url", "job_title", "skills", "educations"]
+    if merged:
+        seen_cols = []
+        for row in merged:
+            for col in row.keys():
+                if col not in seen_cols:
+                    seen_cols.append(col)
+        merged_columns = seen_cols
+    else:
+        merged_columns = list(sql_columns or vector_columns or [])
+
+    # Apply desired ordering first, keep remaining columns afterwards
+    merged_columns = [col for col in desired_order if col in merged_columns] + [col for col in merged_columns if col not in desired_order]
     merged_rows = [[row.get(col) for col in merged_columns] for row in merged]
+    merged_rows = merged_rows[:10]
 
     state["sql_result"] = sql_rows
     state["vector_result"] = vector_rows
     state["final_answer"] = {
         "type": "hybrid",
         "sql_query": sql_q,
+        "sql_result": sql,
+        "sql_rows": sql_rows,
         "vector_query": vector_q,
+        "vector_result": vector,
+        "vector_rows": vector_rows,
         "columns": merged_columns,
         "rows": merged_rows,   # luôn là list[dict]
     }
@@ -227,35 +243,6 @@ def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_thr
     graph.set_entry_point("router")
 
     return graph.compile()
-
-# ---- Build Flow ----
-# def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_threshold=0.72):
-#     graph = StateGraph(CandidateState)
-
-#     # Add nodes
-#     graph.add_node("router", lambda state: router_node(state, llm))
-#     graph.add_node("sql", lambda state: sql_node(state, limit))
-#     graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
-#     graph.add_node("summarizer", lambda state: summarizer_node(state))
-
-#     # Conditional edge từ router
-#     graph.add_conditional_edges(
-#         "router",
-#         router_condition,  
-#         {
-#             "sql": "sql",
-#             "vector": "vector",
-#             END: END,
-#         },
-#     )
-
-#     # Entry point
-#     graph.add_edge("sql", "summarizer")
-#     graph.add_edge("vector", "summarizer")
-#     graph.add_edge("summarizer", END)
-#     graph.set_entry_point("router")
-
-#     return graph.compile()
 
 # ---- Enrich Education, Skills, Job Title ----
 def enrich_with_skills_and_edu(session: Session, candidate_emails: List[str]):
@@ -341,9 +328,16 @@ def enrich_final_answer(state: dict) -> dict:
                 print("Email index:", email_idx)
                 break
         candidate_emails = [row[email_idx] for row in rows if email_idx is not None and row[email_idx]] if email_idx is not None else []
-        # enrich thêm thông tin
-        with SessionLocal() as session:
-            enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)
+        
+        # Enrich thêm thông tin from DB. If DB is unavailable, log and continue without enrichment.
+        enrich_map = {}
+        email_id_map = {}
+        try:
+            with SessionLocal() as session:
+                enrich_map, email_id_map = enrich_with_skills_and_edu(session, candidate_emails)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            print(f"Warning: enrichment skipped due to DB error: {e}")
 
         # Mount thêm vào từng row
         id_idx = None

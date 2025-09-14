@@ -44,7 +44,12 @@ with st.sidebar:
     st.markdown("### 📄 CV Manager")
     st.divider()
 
-    nav = st.radio("Điều hướng", ["📤 Upload CV", "🔎 Search", "⚙️ Settings"], label_visibility="collapsed")
+    nav = st.radio(
+        "Điều hướng",
+        ["📤 Upload CV", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
+        label_visibility="collapsed"
+    )
+
 
     st.divider()
     st.markdown("#### 🤖 Model Provider")
@@ -540,7 +545,7 @@ def view_search():
     with col_right:
         render_table_view(df_scored)
 
-# ------------------------------------
+# --------------SETTING----------------------
 def view_settings():
     header()
     st.markdown("### ⚙️ Settings")
@@ -549,6 +554,84 @@ def view_settings():
         "- UI gọi **Upload** ➜ `POST /cv/upload` ; **Search** ➜ `POST /query`.\n"
         "- UI gửi thêm `provider` & `model` trong body `/query` để backend chọn LLM."
     )
+
+# ------------ SEND EMAIL ----------------
+def call_send_invite(candidate_email, subject, body, interview_time=None):
+    url = f"{st.session_state.api_base}/invite"
+    payload = {
+        "email": candidate_email,
+        "subject": subject,
+        "body": body,
+        "interview_time": interview_time
+    }
+    try:
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"Invite error: {e}")
+        return None
+
+def invite_model(candidate):
+    with st.form(f"invite_form_{candidate['id']}"):
+        st.markdown(f"""
+        <h3>📩 Interview Invitation for <b>{candidate['full_name']}</b></h3>
+        <hr style="border:1px solid #ddd;">
+        <p>Please review the details below and send the invitation email.</p>
+        """, unsafe_allow_html=True)
+
+        # Company details
+        company_name = st.text_input("🏢 Company Name", value="ABC Tech Ltd.")
+        hr_email = st.text_input("📧 HR Contact Email", value="hr@abctech.com")
+        phone_number = st.text_input("📞 Contact Phone", value="+84 123 456 789")
+        location = st.text_input("📍 Interview Location", value="123 Nguyen Trai, Hanoi")
+
+        # Email content (HTML body)
+        subject = st.text_input("✉️ Email Subject", value="Interview Invitation")
+        template = st.text_area(
+            "📝 Email Body (HTML Supported)",
+            value=f"""
+<html>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Dear <b>{candidate.get('full_name','')}</b>,</p>
+
+    <p>We are pleased to invite you for an interview for the position of 
+    <b>{candidate.get('job_title','')}</b> at <b>{company_name}</b>.</p>
+
+    <table style="border-collapse: collapse; margin: 15px 0;">
+      <tr><td style="padding: 6px 12px;">📅 <b>Interview Date:</b></td><td>[Choose below]</td></tr>
+      <tr><td style="padding: 6px 12px;">⏰ <b>Time:</b></td><td>[Choose below]</td></tr>
+      <tr><td style="padding: 6px 12px;">📍 <b>Location:</b></td><td>{location}</td></tr>
+      <tr><td style="padding: 6px 12px;">📞 <b>Contact:</b></td><td>{phone_number}</td></tr>
+      <tr><td style="padding: 6px 12px;">📧 <b>HR Email:</b></td><td>{hr_email}</td></tr>
+    </table>
+
+    <p>Please confirm your availability at your earliest convenience.</p>
+
+    <p>Best regards,<br>
+    <b>{company_name} Recruitment Team</b></p>
+  </body>
+</html>
+            """.strip()
+        )
+
+        # Interview scheduling
+        interview_date = st.date_input("📅 Interview Date")
+        time_slot = st.selectbox("⏰ Time Slot", ["09:00", "10:00", "14:00", "16:00"])
+
+        submitted = st.form_submit_button("📤 Send Invitation")
+        if submitted:
+            res = call_send_invite(
+                candidate_email=candidate["email"],
+                subject=subject,
+                body=template,
+                interview_time=f"{interview_date} {time_slot}"
+            )
+            if res:
+                st.success("✅ Invitation email sent successfully!")
+            else:
+                st.error("❌ Failed to send email.")
+
 
 # ---------------- Router ----------------
 with st.sidebar:
@@ -562,6 +645,9 @@ if __name__ == "__main__" or True:
         view_upload()
     elif "Search" in nav:
         view_search()
+    elif "Invite" in nav:
+        invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
+
     else:
         view_settings()
 
