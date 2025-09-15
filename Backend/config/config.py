@@ -11,6 +11,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgre
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "candidates")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 GCS_BUCKET = os.getenv("GCS_BUCKET")
 GCS_MAKE_PUBLIC = os.getenv("GCS_MAKE_PUBLIC", "false").lower() == "true"
