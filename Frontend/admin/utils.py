@@ -21,6 +21,16 @@ def convert_job_to_question(job_description):
         - For simple queries like "Find candidates that know Python", keep them as is.
         - For complex job descriptions, convert them into a clear search query highlighting skills, experience, and job-specific keywords.
         - Output the result in English, question only, no explanations.
+        - Expand abbreviations if they appear:
+            * PM -> Project Manager (not Product Manager unless context clearly says otherwise)
+            * DE -> Data Engineer
+            * SE -> Software Engineer
+            * BA -> Business Analyst
+            * QA -> Quality Assurance Engineer
+            * FE -> Frontend Engineer
+            * BE -> Backend Engineer
+            * AI -> Artificial Intelligence
+            - Always output **only one sentence**, starting with "Find candidates ...".
 
         Examples:
         Input: "Find candidates that know Python."
@@ -32,11 +42,53 @@ def convert_job_to_question(job_description):
         Input: "5+ years as a Fullstack Engineer, AI Specialist, or similar, with a strong track record of deploying scalable, AI-integrated applications."
         Output: "Find candidates with 5+ years of fullstack engineer or AI specialist experience and a proven track record of deploying scalable, AI-integrated applications."
 
-        Input: "Tìm ứng viên có kinh nghiệm 5 năm trong lĩnh vực data engineer, biết python và java, và có GPA xuất sắc."
-        Output: "Find candidates with 5 years of experience in data engineer, knowledge of Python and Java, and an excellent GPA."
+        Input: "Find candidates with PM experience"
+        Output: "Find candidates with experience as a Project Manager."
+
+        Input: "Find candidates with DE experience"
+        Output: "Find candidates with experience as a Data Engineer."
     """
     response = deepseek.invoke(search_query_prompt + f"\nInput: '{job_description}'\nOutput:")
     return response.content.strip()
+
+# def convert_job_to_question(job_description):
+#     search_query_prompt = f"""
+#         You are an assistant that converts job descriptions into precise English search queries for finding candidates.
+
+#         Rules:
+#         - If the input is already a simple English query like "Find candidates that know Python", keep it as is.
+#         - If the input is in another language (e.g., Vietnamese), always translate and convert it into English.
+#         - Expand abbreviations if they appear:
+#         * PM → Project Manager (not Product Manager unless context clearly says otherwise)
+#         * DE → Data Engineer
+#         * SE → Software Engineer
+#         * BA → Business Analyst
+#         * QA → Quality Assurance Engineer
+#         * FE → Frontend Engineer
+#         * BE → Backend Engineer
+#         * AI → Artificial Intelligence
+#         - Always output **only one sentence**, starting with "Find candidates ...".
+#         - Do not add explanations, notes, or code fences.
+
+#         Examples:
+
+#         Input: "Find candidates that know Python."
+#         Output: "Find candidates that know Python."
+
+#         Input: "5+ years as a Fullstack Engineer, AI Specialist, or similar, with a strong track record of deploying scalable, AI-integrated applications."
+#         Output: "Find candidates with 5+ years of fullstack engineer or AI specialist experience and a proven track record of deploying scalable, AI-integrated applications."
+
+#         Input: "Tìm ứng viên có kinh nghiệm 5 năm trong lĩnh vực data engineer, biết python và java, và có GPA xuất sắc."
+#         Output: "Find candidates with 5 years of experience in data engineer, knowledge of Python and Java, and an excellent GPA."
+
+#         Input: "Tìm ứng viên có kinh nghiệm làm PM"
+#         Output: "Find candidates with experience as a Project Manager."
+
+#         ---
+
+#         Input: '{job_description}'
+#         Output:
+#     """
 
 # Decision to fine-tune or not based on clarity/complexity of job description
 def needs_finetune(job_description: str) -> bool:

@@ -107,10 +107,6 @@ def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collectio
 
 def hybrid_node(state: CandidateState, llm, embedding_model, qdrant_db, collection, limit, search_threshold):
     subqueries = split_hybrid_query(state["question"], llm)
-    # if isinstance(subqueries.get("sql_query"), str):
-    #     print("SQL:", subqueries.get("sql_query"))
-    # if isinstance(subqueries.get("vector_query"), str):
-    #     print("Vector:", subqueries.get("vector_query"))
     sql_q = subqueries.get("sql_query", "")
     vector_q = subqueries.get("vector_query", "")
 

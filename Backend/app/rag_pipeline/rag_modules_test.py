@@ -57,11 +57,13 @@ def split_hybrid_query(question: str, llm):
 
         Example:
         User: "Find candidates who are Software Engineers and know Python"
-        Output: {{"sql_query": "Tìm người là Software Engineer", 
-                  "vector_query": "Tìm người có kỹ năng Python"}}
+        Output: {{"sql_query": "Find candidates who are Software Engineers", 
+                  "vector_query": "Find candidates with skill Python"}}
 
-        Question: {question}
-    """)
+        Note: Return the output in English.
+
+            Question: {question}
+        """)
     response = llm.invoke(prompt.format(question=question))
     return json.loads(response.content)
 

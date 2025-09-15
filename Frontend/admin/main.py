@@ -117,10 +117,9 @@ def call_query(question):
     if not validate_candidate_query(question_en):
         st.warning("⚠️ Invalid query for candidate search")
         return None
-    
+
     if needs_finetune(question_en):
         question_ft = convert_job_to_question(question_en)
-
     else:
         question_ft = question_en
 
