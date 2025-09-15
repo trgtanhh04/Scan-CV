@@ -43,26 +43,62 @@
 
 # # Command để compose override cho gọn
 # CMD ["bash", "-lc", "uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT}"]
-FROM python:3.10-slim AS base
+# -------------
+# FROM python:3.10-slim AS base
+# ENV PYTHONDONTWRITEBYTECODE=1 \
+#     PYTHONUNBUFFERED=1 \
+#     PIP_NO_CACHE_DIR=1
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     build-essential gcc libpq-dev tesseract-ocr tesseract-ocr-vie libtesseract-dev libleptonica-dev \
+#     && rm -rf /var/lib/apt/lists/*
+
+# WORKDIR /app
+# COPY requirements.txt /app/requirements.txt
+# RUN python -m pip install --upgrade pip && pip install -r requirements.txt
+# COPY . /app/
+
+# RUN useradd -m appuser && chown -R appuser:appuser /app
+# USER appuser
+
+# # Cloud Run sẽ cấp PORT=8080; để mặc định là 8080 cho rõ ràng
+# ENV PORT=8080
+# EXPOSE 8080
+
+# # Dùng shell form để chắc chắn expand biến môi trường PORT
+# CMD ["sh","-c","uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# syntax=docker/dockerfile:1.6
+FROM python:3.10-slim
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
+# System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential gcc libpq-dev tesseract-ocr tesseract-ocr-vie libtesseract-dev libleptonica-dev \
+    build-essential gcc libpq-dev \
+    tesseract-ocr tesseract-ocr-vie libtesseract-dev libleptonica-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-COPY requirements.txt /app/requirements.txt
-RUN python -m pip install --upgrade pip && pip install -r requirements.txt
-COPY . /app/
+# Làm việc trực tiếp trong thư mục Backend
+WORKDIR /app/Backend
 
+# Cài deps trước để cache layer
+COPY Backend/requirements.txt ./requirements.txt
+RUN python -m pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy code Backend
+COPY Backend/ .
+
+# Không chạy root
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Cloud Run sẽ cấp PORT=8080; để mặc định là 8080 cho rõ ràng
-ENV PORT=8080
+# PORT Cloud Run
+ENV PORT=8080 \
+    PYTHONPATH=/app/Backend
 EXPOSE 8080
 
-# Dùng shell form để chắc chắn expand biến môi trường PORT
-CMD ["sh","-c","uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Run Uvicorn từ đúng thư mục (đã WORKDIR /app/Backend)
+CMD ["sh","-c","uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --lifespan off"]
+
