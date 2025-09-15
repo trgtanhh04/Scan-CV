@@ -45,7 +45,7 @@ def split_hybrid_query(question: str, llm):
         You are a query decomposition system.
         Given a user question, split it into 2 sub-questions in natural language:
         - "sql_query": a natural language sub-question about structured fields 
-          (full_name, email, phone, job_title, certifications, languages, degree, 
+          (full_name, email, phone, job_title, certifications, languages, degree, education (university...)
           numeric filters like 'at least 2 companies', 'more than 3 years', etc.)
         - "vector_query": a natural language sub-question about unstructured fields 
           (skills, experience descriptions, project details).
@@ -57,8 +57,8 @@ def split_hybrid_query(question: str, llm):
 
         Example:
         User: "Find candidates who are Software Engineers and know Python"
-        Output: {{"sql_query": "Find candidates who are Software Engineers", 
-                  "vector_query": "Find candidates with skill Python"}}
+        Output: {{"sql_query": "Find people who is Software Engineer", 
+                  "vector_query": "Find people who know Python"}}
 
         Note: Return the output in English.
 
