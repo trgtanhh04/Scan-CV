@@ -27,7 +27,7 @@ from app.text2SQL.t2sql_core import LLM, answer_sql
 # === Config ===
 # sys.path.append(os.path.abspath('../../'))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, DATABASE_URL
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, DATABASE_URL, QDRANT_API_KEY
 
 # === Engine & LLM setup ===
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
@@ -41,7 +41,7 @@ llm_sql = LLM(_invoke)
 
 # === Set up Qdrant cho RAG ===
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
-qdrant = QdrantClient(url=QDRANT_URL)
+qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 # ==== WORKFLOW ====
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -372,7 +372,7 @@ def enrich_final_answer(state: dict) -> dict:
 # Test local
 if __name__ == "__main__":
     embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY)
-    qdrant = QdrantClient(url=QDRANT_URL, check_compatibility=False)
+    qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY, check_compatibility=False)
     flow = build_flow(deepseek, embedding_model, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
 
     result = flow.invoke({"question": "Find candidates that know both Python and Java, and have experience in at least 2 different companies."})
