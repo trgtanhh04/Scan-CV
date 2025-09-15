@@ -67,7 +67,7 @@ EXPOSE 8080
 
 # Dùng shell form để chắc chắn expand biến môi trường PORT
 CMD ["sh","-c","uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
-syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.6
 # FROM python:3.10-slim
 
 # ENV PYTHONDONTWRITEBYTECODE=1 \
