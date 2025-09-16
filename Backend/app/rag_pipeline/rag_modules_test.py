@@ -260,14 +260,58 @@ def execute_vector_query(plan, client: QdrantClient, embedding_model, limit=None
         query_text = plan["query_text"]
         query_vector  = embedding_model.embed_query(query_text) 
 
-        results = client.search(
-            collection_name=collection_name,
-            query_vector=query_vector,
-            score_threshold=search_threshold,
-            limit=limit,
-            query_filter=qdrant_filter
-        )
-        return [{"payload": r.payload, "score": r.score} for r in results]
+        try:
+            results = client.search(
+                collection_name=collection_name,
+                query_vector=query_vector,
+                score_threshold=search_threshold,
+                limit=limit,
+                query_filter=qdrant_filter
+            )
+            return [{"payload": r.payload, "score": r.score} for r in results]
+        except Exception as e:
+            msg = str(e)
+            # Qdrant returns 400 when a payload filter key lacks an index: "Index required but not found for \"type\""
+            if "Index required" in msg or "Index required but not found" in msg or "index required" in msg.lower():
+                # Fallback: run the same search without filter, then locally filter payloads matching the 'must' conditions.
+                try:
+                    raw_results = client.search(
+                        collection_name=collection_name,
+                        query_vector=query_vector,
+                        score_threshold=search_threshold,
+                        limit=limit,
+                    )
+                    out = []
+                    musts = (plan.get("query_filter") or {}).get("must", [])
+                    for r in raw_results:
+                        payload = r.payload or {}
+                        ok = True
+                        for cond in musts:
+                            k = cond.get("key")
+                            v = cond.get("match", {}).get("value")
+                            if k is None:
+                                continue
+                            # simple equality check (case-insensitive for strings)
+                            pv = payload.get(k)
+                            if pv is None:
+                                ok = False
+                                break
+                            if isinstance(pv, str) and isinstance(v, str):
+                                if pv.strip().lower() != v.strip().lower():
+                                    ok = False
+                                    break
+                            else:
+                                if pv != v:
+                                    ok = False
+                                    break
+                        if ok:
+                            out.append({"payload": payload, "score": r.score})
+                    return out
+                except Exception:
+                    # If fallback also fails, surface original error to help debugging
+                    raise
+            # Not the missing-index error -> re-raise
+            raise
 
     else:
         raise ValueError(f"Unknown action type: {action}")

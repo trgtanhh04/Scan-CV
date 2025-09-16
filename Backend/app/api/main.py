@@ -159,11 +159,12 @@ def dbg_qdrant():
     except Exception as e:
         return {"error": str(e)}
     
-from qdrant_client.http.models import CountRequest, Filter
 @app.get("/__debug/qcount")
 def qcount():
     try:
-        req = CountRequest(exact=True, filter=Filter(must=[]))  # hoặc filter={}
+        # Count whole collection (no filter). Construct CountRequest with only `exact`.
+        from qdrant_client.models import CountRequest
+        req = CountRequest(exact=True)
         return qdrant.count(QDRANT_COLLECTION, req).dict()
     except Exception as e:
         return {"error": f"qcount failed: {e}"}
