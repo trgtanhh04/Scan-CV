@@ -225,5 +225,3 @@ def qcount():
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
-
-curl -sS -H "api-key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.rGkBygcN2fAzHyqEYBBG73UYr1AThjGiwbYb2o8REUA" "https://06567224-97bc-4b0c-94ed-a493b8092853.us-east4-0.gcp.cloud.qdrant.io:6333"
