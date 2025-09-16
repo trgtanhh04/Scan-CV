@@ -124,6 +124,7 @@ def call_upload(file):
     # url = f"{st.session_state.api_base}/cv/upload"
     url = api_url("/cv/upload")
     try:
+        st.write(f"⚙️ calling: {url}")
         resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=(10, 600))
         resp.raise_for_status()
         return resp.json()
@@ -136,6 +137,8 @@ def call_upload(file):
 def call_query(question):
     # url = f"{st.session_state.api_base}/query"
     url = api_url("/query")
+    st.write(f"⚙️ calling: {url}")
+    
     question_en = translate_to_english(question).strip()
     
     # --- Check query trước khi gọi API ---
