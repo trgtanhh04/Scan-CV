@@ -193,7 +193,6 @@ def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_mode
             dim = len(embedding_model.embed_query("dimension_probe"))  
             qdrant.create_collection(                       
                 collection_name=collection_name,
-
                 vectors_config=rest.VectorParams(size=dim, distance=rest.Distance.COSINE),
                 on_disk_payload=True,
             )
@@ -213,6 +212,9 @@ def process_cv_rag(
 ) -> dict:
     filename = os.path.basename(file_path)
     print(f"Processing {filename}...")
+
+    # ensure collection exists
+    ensure_collection(vector_db, collection_name, embedding_model)
 
     # dùng text có sẵn nếu được truyền, nếu không thì mới đọc PDF
     text = pre_text if pre_text is not None else extract_text_from_pdf(file_path)
