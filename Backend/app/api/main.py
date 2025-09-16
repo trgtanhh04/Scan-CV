@@ -115,21 +115,62 @@ class QueryRequest(BaseModel):
     model: str = "deepseek-chat"
     links_only: bool = False   
 
+# @app.post("/query")
+# async def query_api(request: QueryRequest):
+#     question = request.question.strip()
+#     state = {"question": question}
+
+#     # invoke flow
+#     result = enrich_final_answer(state)
+
+#     return {
+#         "question": request.question,
+#         "provider": request.provider,
+#         "model": request.model,
+#         "route": result.get("route"),
+#         "final_answer": result.get("final_answer"),
+#     }
+from fastapi.responses import JSONResponse
+from qdrant_client.models import CountRequest
+
 @app.post("/query")
 async def query_api(request: QueryRequest):
-    question = request.question.strip()
-    state = {"question": question}
+    try:
+        question = (request.question or "").strip()
+        if not question:
+            return JSONResponse(status_code=400, content={"error": "question is empty"})
 
-    # invoke flow
-    result = enrich_final_answer(state)
+        # Smoke-check nhanh Qdrant trước khi gọi pipeline
+        try:
+            cnt = qdrant.count(QDRANT_COLLECTION, CountRequest(exact=True)).count
+        except Exception as e:
+            # Lỗi kết nối / auth Qdrant
+            return JSONResponse(status_code=200, content={"error": f"Qdrant error: {e}"})
 
-    return {
-        "question": request.question,
-        "provider": request.provider,
-        "model": request.model,
-        "route": result.get("route"),
-        "final_answer": result.get("final_answer"),
-    }
+        # Gọi pipeline chính
+        result = enrich_final_answer({"question": question})
+
+        return {
+            "question": request.question,
+            "provider": request.provider,
+            "model": request.model,
+            "route": (result or {}).get("route"),
+            "final_answer": (result or {}).get("final_answer"),
+            "qdrant_count": cnt,
+        }
+
+    # Bắt mọi lỗi còn lại để trả JSON thay vì 500 text/plain
+    except Exception as e:
+        import traceback
+        print("QUERY_ERROR\n", traceback.format_exc())  # sẽ thấy stacktrace trong Cloud Run logs
+        return JSONResponse(
+            status_code=200,
+            content={
+                "error": str(e),
+                "hint": "Xem Cloud Run logs (ERROR) để thấy stacktrace chi tiết.",
+            },
+        )
+
 
 @app.get("/__debug/qenv")
 def dbg_qenv():
@@ -251,6 +292,24 @@ def admin_init_db(x_token: str = Header(None)):
     url = os.getenv("DATABASE_URL")
     create_all(url)
     return {"ok": True}
+
+@app.get("/__debug/query-smoke")
+def query_smoke():
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
+    try:
+        # 1) test embed
+        _ = embedding.embed_query("hello world")
+
+        # 2) test Qdrant search (không filter nếu bạn chưa có payload phù hợp)
+        res = qdrant.search(
+            collection_name=QDRANT_COLLECTION,
+            query_vector=embedding.embed_query("data engineer 3 years"),
+            limit=3
+        )
+        return {"ok": True, "hits": len(res)}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
