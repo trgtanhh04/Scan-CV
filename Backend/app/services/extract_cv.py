@@ -161,6 +161,25 @@ def exists_email(qdrant, collection: str, email: str) -> bool:
             return len(pts) > 0
         except AssertionError:
             continue
+        except Exception as e:
+            # Qdrant may return 400 if there's no payload index for this key (eg. 'email').
+            # Fall back to a one-time payload scan (less efficient) to avoid failing the whole upload.
+            msg = str(e)
+            if "Index required" in msg or "Index required but not found" in msg or "index required" in msg.lower():
+                try:
+                    pts, _ = qdrant.scroll(collection_name=collection, limit=1000, with_payload=True)
+                    for p in pts:
+                        payload = getattr(p, 'payload', None) or (p.payload if hasattr(p, 'payload') else p.get('payload', {}))
+                        if not payload:
+                            continue
+                        if payload.get('email') == email:
+                            return True
+                    return False
+                except Exception:
+                    # If even fallback fails, err on the side of allowing upload (avoid blocking users).
+                    return False
+            # Not the specific missing-index error -> re-raise
+            raise
     return False
 
 def _exp_signature(exp: dict) -> Tuple[str, str, str, str, str]:
