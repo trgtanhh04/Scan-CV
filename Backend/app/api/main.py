@@ -238,5 +238,19 @@ def qcount():
     except Exception as e:
         return {"error": str(e)}
 
+
+from fastapi import Header, HTTPException
+from app.models.models import create_all
+
+ADMIN_INIT_TOKEN = os.getenv("ADMIN_INIT_TOKEN")  # đặt secret này ở Cloud Run
+
+@app.post("/__admin/init-db")
+def admin_init_db(x_token: str = Header(None)):
+    if not ADMIN_INIT_TOKEN or x_token != ADMIN_INIT_TOKEN:
+        raise HTTPException(status_code=403, detail="forbidden")
+    url = os.getenv("DATABASE_URL")
+    create_all(url)
+    return {"ok": True}
+
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
