@@ -162,6 +162,42 @@ def debug_db():
         "counts": {"candidates": cands, "experiences": exps},
         "test_query_rows": [dict(r._mapping) for r in rows],
     }
+from google.cloud import storage
+import google.auth
+@app.get("/__debug/gcs")
+def debug_gcs():
+    info = {}
+    # 1) In ra SA đang chạy
+    try:
+        import requests
+        email = requests.get(
+            "http://metadata/computeMetadata/v1/instance/service-accounts/default/email",
+            headers={"Metadata-Flavor":"Google"},
+            timeout=2
+        ).text
+        info["runtime_service_account"] = email
+    except Exception as e:
+        info["runtime_service_account"] = f"unknown: {e}"
+
+    # 2) Thử upload 1 object nhỏ
+    bucket = os.getenv("GCS_BUCKET", "cv-uploads-prod")
+    key = f"debug/{uuid.uuid4().hex}.txt"
+    try:
+        client = storage.Client()
+        blob = client.bucket(bucket).blob(key)
+        blob.upload_from_string("hello-from-cloud-run", content_type="text/plain")
+        public_url = f"https://storage.googleapis.com/{bucket}/{key}"
+        return {"ok": True, "sa": info["runtime_service_account"], "bucket": bucket, "key": key, "url": public_url}
+    except Exception as e:
+        import traceback
+        return {
+            "ok": False,
+            "sa": info.get("runtime_service_account"),
+            "bucket": bucket,
+            "key": key,
+            "error": str(e),
+            "trace": traceback.format_exc(),
+        }
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
