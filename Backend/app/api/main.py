@@ -150,6 +150,27 @@ async def query_api(request: QueryRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+# app/api/main.py
+@app.post("/__admin/ensure-indexes")
+def ensure_indexes():
+    from qdrant_client import models as qm
+    created = []
+    for field, schema in [
+        ("type", qm.PayloadSchemaType.KEYWORD),
+        ("candidate_name", qm.PayloadSchemaType.KEYWORD),
+        ("email", qm.PayloadSchemaType.KEYWORD),
+        ("exp_company", qm.PayloadSchemaType.KEYWORD),
+        ("exp_job_title", qm.PayloadSchemaType.KEYWORD),
+        ("skill", qm.PayloadSchemaType.KEYWORD),
+    ]:
+        try:
+            qdrant.create_payload_index(QDRANT_COLLECTION, field, schema, wait=True)
+            created.append(field)
+        except Exception as e:
+            if "already exists" not in str(e).lower():
+                return {"ok": False, "failed": field, "error": str(e)}
+    return {"ok": True, "created": created}
+
 
 
 @app.get("/__debug/qdrant")
@@ -159,15 +180,6 @@ def dbg_qdrant():
     except Exception as e:
         return {"error": str(e)}
     
-@app.get("/__debug/qcount")
-def qcount():
-    try:
-        # Count whole collection (no filter). Construct CountRequest with only `exact`.
-        from qdrant_client.models import CountRequest
-        req = CountRequest(exact=True)
-        return qdrant.count(QDRANT_COLLECTION, req).dict()
-    except Exception as e:
-        return {"error": f"qcount failed: {e}"}
 
 
 # from fastapi import Header, HTTPException
@@ -182,41 +194,6 @@ def qcount():
 #     url = os.getenv("DATABASE_URL")
 #     create_all(url)
 #     return {"ok": True}
-
-@app.get("/__debug/query-smoke")
-def query_smoke():
-    from qdrant_client.models import Filter, FieldCondition, MatchValue
-    try:
-        # 1) test embed
-        _ = embedding.embed_query("hello world")
-
-        # 2) test Qdrant search (không filter nếu bạn chưa có payload phù hợp)
-        res = qdrant.search(
-            collection_name=QDRANT_COLLECTION,
-            query_vector=embedding.embed_query("data engineer 3 years"),
-            limit=3
-        )
-        return {"ok": True, "hits": len(res)}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-
-@app.get("/__debug/qinfo")
-def dbg_qinfo():
-    try:
-        info = qdrant.get_collection(QDRANT_COLLECTION).dict()
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-    try:
-        dim = len(embedding.embed_query("hello"))
-    except Exception as e:
-        dim = f"embed_error: {e}"
-    return {
-        "ok": True,
-        "collection": QDRANT_COLLECTION,
-        "collection_info": info,  # sẽ thấy vectors_config
-        "embedding_dim": dim,
-    }
-
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
