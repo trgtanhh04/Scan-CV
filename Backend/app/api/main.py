@@ -13,7 +13,7 @@ from app.services.extract_cv import process_cv_rag
 from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs  
 from app.services.extract_cv import extract_text_from_pdf, extract_info
 
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, QDRANT_API_KEY
 from config.storage import MEDIA_ROOT 
 from langchain_deepseek import ChatDeepSeek
 from qdrant_client import QdrantClient
@@ -25,7 +25,7 @@ from fastapi import FastAPI, Depends
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
-qdrant = QdrantClient(url=QDRANT_URL)
+qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 app = FastAPI(title="CV Manager API")
 

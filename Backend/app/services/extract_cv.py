@@ -193,6 +193,7 @@ def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_mode
             dim = len(embedding_model.embed_query("dimension_probe"))  
             qdrant.create_collection(                       
                 collection_name=collection_name,
+
                 vectors_config=rest.VectorParams(size=dim, distance=rest.Distance.COSINE),
                 on_disk_payload=True,
             )
@@ -318,7 +319,9 @@ def process_cv_rag(
     return info
 
 if __name__ == "__main__":
-    qdrant = QdrantClient(url="http://localhost:6333", check_compatibility=False)
+    # honor QDRANT_API_KEY from config if present
+    from config.config import QDRANT_URL, QDRANT_API_KEY
+    qdrant = QdrantClient(url=QDRANT_URL or "http://localhost:6333", api_key=QDRANT_API_KEY, check_compatibility=False)
     embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
 
     file_path = '../../raw/cvs/02.pdf'
