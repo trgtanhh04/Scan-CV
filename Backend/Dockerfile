@@ -80,24 +80,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr tesseract-ocr-vie libtesseract-dev libleptonica-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/Backend
+# Làm việc trong chính layer code BE
+WORKDIR /app
 
-# Cài deps theo file trong Backend
-COPY Backend/requirements.txt ./requirements.txt
+# vì Dockerfile nằm trong Backend/, context = Backend/
+# nên chỉ cần tên file, KHÔNG có tiền tố Backend/
+COPY requirements.txt ./requirements.txt
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy code Backend
-COPY Backend/ .
+# copy toàn bộ code của Backend/ vào /app
+COPY . .
 
 # Không chạy root
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Khai báo cổng Cloud Run
+# Cho FastAPI/uvicorn
 ENV PORT=8080 \
-    PYTHONPATH=/app/Backend
+    PYTHONPATH=/app
 EXPOSE 8080
 
-# Chạy uvicorn từ đúng module path
 CMD ["sh","-c","uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers --lifespan off"]
-
