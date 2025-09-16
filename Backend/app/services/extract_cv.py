@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from langchain_qdrant import Qdrant
 import hashlib
 from typing import List, Tuple
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models as qm
 from qdrant_client.http import models as rest
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from qdrant_client.models import Filter, FieldCondition, MatchValue
@@ -206,17 +206,54 @@ def _dedup_experiences(exps_in) -> List[dict]:
     return uniq
 
 
-def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_model) -> None:
+# def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_model) -> None:
+#     try:
+#         if not qdrant.collection_exists(collection_name):  
+#             dim = len(embedding_model.embed_query("dimension_probe"))  
+#             qdrant.create_collection(                       
+#                 collection_name=collection_name,
+#                 vectors_config=rest.VectorParams(size=dim, distance=rest.Distance.COSINE),
+#                 on_disk_payload=True,
+#             )
+#     except Exception as e:
+#         print(f"[WARN] ensure_collection failed: {e}")
+
+REQUIRED_INDEXES = [
+    ("type", qm.PayloadSchemaType.KEYWORD),
+    ("candidate_name", qm.PayloadSchemaType.KEYWORD),
+    ("email", qm.PayloadSchemaType.KEYWORD),
+    ("exp_company", qm.PayloadSchemaType.KEYWORD),
+    ("exp_job_title", qm.PayloadSchemaType.KEYWORD),
+    # (tùy chọn) nếu bạn lọc theo skill/value:
+    ("skill", qm.PayloadSchemaType.KEYWORD),
+]
+
+def ensure_collection(client: QdrantClient, collection: str, embedding_dim: int):
+    # 1) Tạo collection nếu chưa có
     try:
-        if not qdrant.collection_exists(collection_name):  
-            dim = len(embedding_model.embed_query("dimension_probe"))  
-            qdrant.create_collection(                       
-                collection_name=collection_name,
-                vectors_config=rest.VectorParams(size=dim, distance=rest.Distance.COSINE),
-                on_disk_payload=True,
+        client.get_collection(collection)
+    except Exception:
+        client.recreate_collection(
+            collection_name=collection,
+            vectors_config=qm.VectorParams(size=embedding_dim, distance=qm.Distance.COSINE),
+            optimizers_config=qm.OptimizersConfigDiff(memmap_threshold=20000),
+            # ghi bền hơn một chút trên prod
+            replication_factor=1, write_consistency_factor=1
+        )
+
+    # 2) Tạo index cho các trường cần lọc
+    for field, schema in REQUIRED_INDEXES:
+        try:
+            client.create_payload_index(
+                collection_name=collection,
+                field_name=field,
+                field_schema=schema,
+                wait=True
             )
-    except Exception as e:
-        print(f"[WARN] ensure_collection failed: {e}")
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                continue
+            raise
 
 
 def process_cv_rag(
