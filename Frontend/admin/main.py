@@ -97,8 +97,32 @@ def header():
         {provider_badge()}
         """, unsafe_allow_html=True)
 
+
+from urllib.parse import urljoin
+        
+def get_api_base() -> str:
+    # ưu tiên session_state; nếu chưa có thì lấy từ ENV hoặc secrets
+    if "api_base" in st.session_state and st.session_state.api_base:
+        return st.session_state.api_base
+
+    base = (
+        os.getenv("API_BASE_URL", "").strip()
+        or st.secrets.get("API_BASE_URL", "").strip()
+    )
+    if not base or not base.startswith(("http://", "https://")):
+        st.error(f"API_BASE_URL chưa hợp lệ hoặc chưa cấu hình: {base!r}")
+        st.stop()
+
+    st.session_state.api_base = base.rstrip("/")
+    return st.session_state.api_base
+
+def api_url(path: str) -> str:
+    # ghép URL an toàn (tránh tạo ra 'https:///cv/upload')
+    return urljoin(get_api_base() + "/", path.lstrip("/"))
+
 def call_upload(file):
-    url = f"{st.session_state.api_base}/cv/upload"
+    # url = f"{st.session_state.api_base}/cv/upload"
+    url = api_url("/cv/upload")
     try:
         resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=(10, 600))
         resp.raise_for_status()
@@ -110,7 +134,8 @@ def call_upload(file):
         raise
     
 def call_query(question):
-    url = f"{st.session_state.api_base}/query"
+    # url = f"{st.session_state.api_base}/query"
+    url = api_url("/cv/upload")
     question_en = translate_to_english(question).strip()
     
     # --- Check query trước khi gọi API ---
