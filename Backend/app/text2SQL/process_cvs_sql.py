@@ -9,6 +9,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from services.extract_cv import extract_text_from_pdf, extract_info
 from models.ingest import insert_candidate_to_db
+# use models.create_all helper for creating tables
+from app.models.models import create_all as models_create_all, SessionLocal
+from sqlalchemy import text as sa_text
 from config.storage import MEDIA_ROOT
 from services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 
@@ -70,6 +73,23 @@ def process_cvs_sql(
     pre_text: Optional[str] = None, 
     pre_info: Optional[dict] = None,  
 ) -> List[dict]:
+    
+    # create all tables if not exist (opt-in via AUTO_CREATE_DB)
+    try:
+        # acquire raw connection from the configured SessionLocal's engine
+        with SessionLocal().get_bind().connect() as conn:
+            # simple check: does 'candidates' table exist?
+            res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
+            if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
+                # create tables using project's helper; prefer explicit DATABASE_URL if provided
+                url = os.getenv('DATABASE_URL')
+                if url:
+                    models_create_all(url)
+                else:
+                    models_create_all()
+    except Exception:
+        # ignore errors here — we'll surface real errors later during upload
+        pass
     input_dir = str(input_dir)
     results: List[dict] = []
 

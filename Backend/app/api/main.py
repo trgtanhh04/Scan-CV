@@ -46,6 +46,21 @@ def health(): return {"status": "ok"}
 @app.post("/cv/upload")
 async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
+        # # --- Opt-in: auto-create DB schema when missing ---
+        # # This is disabled by default. Set AUTO_CREATE_DB=true in env to enable (useful for testing).
+        # import os
+        # try:
+        #     with SessionLocal().get_bind().connect() as conn:
+        #         # simple check: does 'candidates' table exist?
+        #         res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
+        #         if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
+        #             # create tables using project's helper
+        #             url = os.getenv('DATABASE_URL')
+        #             models_create_all(url)
+        # except Exception:
+        #     # ignore errors here — we'll surface real errors later during upload
+        #     pass
+
         # Lưu tạm file người dùng up
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, f"{uuid.uuid4().hex}.pdf")

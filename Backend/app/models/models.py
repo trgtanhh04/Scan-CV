@@ -107,7 +107,7 @@ class Experience(Base):
     candidate_id = Column(Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False)
     job_title    = Column(String, nullable=True)
     company      = Column(String, nullable=True)
-    start_date   = Column(Date,   nullable=True)    # chuẩn hoá ở bước ingest
+    start_date   = Column(Date,   nullable=True)   
     end_date     = Column(Date,   nullable=True)
     is_current   = Column(Boolean, nullable=True)   # True nếu “Present”
     description  = Column(Text,   nullable=True)
