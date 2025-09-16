@@ -135,7 +135,7 @@ def call_upload(file):
     
 def call_query(question):
     # url = f"{st.session_state.api_base}/query"
-    url = api_url("/cv/upload")
+    url = api_url("/query")
     question_en = translate_to_english(question).strip()
     
     # --- Check query trước khi gọi API ---
