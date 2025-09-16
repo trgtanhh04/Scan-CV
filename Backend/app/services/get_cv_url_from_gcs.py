@@ -12,7 +12,8 @@ GCS_BUCKET = os.getenv("GCS_BUCKET", "cv-uploads-prod")
 GCS_PUBLIC_BASE = os.getenv("GCS_PUBLIC_BASE", "https://storage.googleapis.com").rstrip("/")
 GCS_MAKE_PUBLIC = os.getenv("GCS_MAKE_PUBLIC", "true").lower() in ("1","true","yes","y","on")
 GCS_SIGNED_URL_EXPIRES = int(os.getenv("GCS_SIGNED_URL_EXPIRES", "604800"))
-GCS_SIGNING_SA = os.getenv("GCS_SIGNING_SA")  
+GCS_SIGNING_SA = os.getenv("GCS_SIGNING_SA")
+GCP_PROJECT = "interns-2025-467409"
 
 def _build_key(file_path: str, object_key: str | None = None) -> str:
     if object_key: return object_key.lstrip("/")
@@ -35,11 +36,19 @@ def upload_pdf_and_get_url_gcs(file_path: str, object_key: str | None = None) ->
     if not os.path.exists(file_path): raise FileNotFoundError(file_path)
     if not GCS_BUCKET: raise RuntimeError("Missing GCS_BUCKET")
 
+    print("DEBUG GCS:", {
+        "bucket": GCS_BUCKET,
+        "public": GCS_MAKE_PUBLIC
+    })
+
+
     object_key = _build_key(file_path, object_key)
 
     # Public mode (khuyên dùng để đơn giản): chỉ cần bucket đã cấp public-read (allUsers -> objectViewer)
     if GCS_MAKE_PUBLIC:
-        client = storage.Client()  # ADC: local/Cloud Run
+        # client = storage.Client()  # ADC: local/Cloud Run
+        client = storage.Client(project=os.getenv("GCP_PROJECT"))
+
         blob = client.bucket(GCS_BUCKET).blob(object_key)
         ctype, _ = mimetypes.guess_type(file_path)
         blob.cache_control = "public, max-age=31536000"
