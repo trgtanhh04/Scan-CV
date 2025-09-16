@@ -33,42 +33,45 @@ def _impersonated_client_and_signer():
     return storage.Client(credentials=tgt), tgt
 
 def upload_pdf_and_get_url_gcs(file_path: str, object_key: str | None = None) -> str:
-    if not os.path.exists(file_path): raise FileNotFoundError(file_path)
-    if not GCS_BUCKET: raise RuntimeError("Missing GCS_BUCKET")
 
-    print("DEBUG GCS:", {
-        "bucket": GCS_BUCKET,
-        "public": GCS_MAKE_PUBLIC
-    })
+    try: 
+        if not os.path.exists(file_path): raise FileNotFoundError(file_path)
+        if not GCS_BUCKET: raise RuntimeError("Missing GCS_BUCKET")
 
+        print("DEBUG GCS:", {
+            "bucket": GCS_BUCKET,
+            "public": GCS_MAKE_PUBLIC
+        })
 
-    object_key = _build_key(file_path, object_key)
+        object_key = _build_key(file_path, object_key)
 
-    # Public mode (khuyên dùng để đơn giản): chỉ cần bucket đã cấp public-read (allUsers -> objectViewer)
-    if GCS_MAKE_PUBLIC:
-        # client = storage.Client()  # ADC: local/Cloud Run
-        client = storage.Client(project=os.getenv("GCP_PROJECT"))
+        # Public mode (khuyên dùng để đơn giản): chỉ cần bucket đã cấp public-read (allUsers -> objectViewer)
+        if GCS_MAKE_PUBLIC:
+            # client = storage.Client()  # ADC: local/Cloud Run
+            client = storage.Client(project=os.getenv("GCP_PROJECT"))
 
+            blob = client.bucket(GCS_BUCKET).blob(object_key)
+            ctype, _ = mimetypes.guess_type(file_path)
+            blob.cache_control = "public, max-age=31536000"
+            blob.upload_from_filename(file_path, content_type=ctype or "application/pdf")
+            return f"{GCS_PUBLIC_BASE}/{GCS_BUCKET}/{object_key}"
+
+        # Private mode: cần ký URL
+        if not GCS_SIGNING_SA:
+            raise RuntimeError("Set GCS_MAKE_PUBLIC=true hoặc cung cấp GCS_SIGNING_SA để ký signed URL")
+
+        client, signer = _impersonated_client_and_signer()
         blob = client.bucket(GCS_BUCKET).blob(object_key)
         ctype, _ = mimetypes.guess_type(file_path)
-        blob.cache_control = "public, max-age=31536000"
         blob.upload_from_filename(file_path, content_type=ctype or "application/pdf")
-        return f"{GCS_PUBLIC_BASE}/{GCS_BUCKET}/{object_key}"
-
-    # Private mode: cần ký URL
-    if not GCS_SIGNING_SA:
-        raise RuntimeError("Set GCS_MAKE_PUBLIC=true hoặc cung cấp GCS_SIGNING_SA để ký signed URL")
-
-    client, signer = _impersonated_client_and_signer()
-    blob = client.bucket(GCS_BUCKET).blob(object_key)
-    ctype, _ = mimetypes.guess_type(file_path)
-    blob.upload_from_filename(file_path, content_type=ctype or "application/pdf")
-    return blob.generate_signed_url(
-        expiration=timedelta(seconds=GCS_SIGNED_URL_EXPIRES),
-        method="GET",
-        credentials=signer,
-        version="v4",
-    )
+        return blob.generate_signed_url(
+            expiration=timedelta(seconds=GCS_SIGNED_URL_EXPIRES),
+            method="GET",
+            credentials=signer,
+            version="v4",
+        )
+    except Exception as e:
+        raise RuntimeError(f"Failed to upload to GCS: {e}")
 
 if __name__ == "__main__":
     test_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "raw", "cvs", "01.pdf"))

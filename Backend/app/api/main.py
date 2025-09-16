@@ -54,6 +54,7 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
 
         # (1) get url from gcs
         resume_url = upload_pdf_and_get_url_gcs(temp_path)
+        
 
         # (2) Extract 1 lần
         text = extract_text_from_pdf(temp_path)
@@ -198,6 +199,12 @@ def debug_gcs():
             "error": str(e),
             "trace": traceback.format_exc(),
         }
+@app.get("/__debug/qdrant")
+def dbg_qdrant():
+    try:
+        return qdrant.get_collections().dict()
+    except Exception as e:
+        return {"error": str(e)}
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
