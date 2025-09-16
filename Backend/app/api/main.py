@@ -116,6 +116,15 @@ async def query_api(request: QueryRequest):
         "final_answer": result.get("final_answer"),
     }
 
+@app.get("/__debug/qenv")
+def dbg_qenv():
+    import os
+    return {
+      "has_url": bool(os.getenv("QDRANT_URL")),
+      "has_key": bool(os.getenv("QDRANT_API_KEY")),
+      "collection": os.getenv("QDRANT_COLLECTION"),
+    }
+
 
 @app.get("/__debug/db")
 def debug_db():
@@ -205,6 +214,16 @@ def dbg_qdrant():
         return qdrant.get_collections().dict()
     except Exception as e:
         return {"error": str(e)}
+    
+@app.get("/__debug/qcount")
+def qcount():
+    from qdrant_client.models import CountRequest
+    try:
+        return qdrant.count(os.getenv("QDRANT_COLLECTION"), CountRequest(exact=True)).dict()
+    except Exception as e:
+        return {"error": str(e)}
 
 # giao diện Qdrant: http://localhost:6333/dashboard
 # uvicorn app.api.main:app --reload --port 8000
+
+curl -sS -H "api-key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.rGkBygcN2fAzHyqEYBBG73UYr1AThjGiwbYb2o8REUA" "https://06567224-97bc-4b0c-94ed-a493b8092853.us-east4-0.gcp.cloud.qdrant.io:6333"
