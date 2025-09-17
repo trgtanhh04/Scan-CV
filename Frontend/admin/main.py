@@ -513,7 +513,7 @@ def view_search():
                 if not data:
                     st.warning("Không có kết quả CV nào.")
                     return
-                st.json(data)  # debug
+                # st.json(data)  # debug
                 fa = data.get("final_answer", {})
                 if not isinstance(fa, dict):
                     st.warning(str(fa))
@@ -548,6 +548,9 @@ def view_search():
                 # Save to session
                 st.session_state["rows"] = rows
                 st.session_state["df_original"] = df_original
+                # Persist the raw API response so the JSON Debug tab can display it
+                # Do not overwrite this value unless a new query runs
+                st.session_state["last_api_response"] = data
 
         rows = st.session_state.get("rows")
         df_original = st.session_state.get("df_original")
@@ -575,10 +578,21 @@ def view_search():
         with col_right:
             render_table_view(df_scored)
     with tab2:
-        if data:
-            st.json(data)
+        # Show persisted API response (if available) so it survives rerenders caused by widget interactions
+        last = st.session_state.get("last_api_response")
+        if last:
+            st.markdown("**Persisted last API response**")
+            st.json(last)
         else:
             st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
+
+        # Debug: show session_state keys to help diagnose when/if the key gets cleared
+        with st.expander("🔧 Debug session_state (keys)", expanded=False):
+            try:
+                keys = list(st.session_state.keys())
+                st.write(keys)
+            except Exception as _:
+                st.write("(unable to read session_state)")
 
 # --------------SETTING----------------------
 def view_settings():
