@@ -510,7 +510,14 @@ def view_search():
             if not data:
                 st.warning("Không có kết quả CV nào.")
                 return
-            st.json(data)  # debug
+            # st.json(data)  # debug
+            # debug
+            tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
+            with tab_raw:
+                st.markdown("### Raw API response")
+                st.json(data)
+            #--
+
             fa = data.get("final_answer", {})
             if not isinstance(fa, dict):
                 st.warning(str(fa))
@@ -554,9 +561,21 @@ def view_search():
         return
 
     # Layout: left filter, right results
-    col_left, col_right = st.columns([0.28, 0.72])
-    with col_left:
-        df_scored = filter_ui_dynamic(df_original, rows)
+    # col_left, col_right = st.columns([0.28, 0.72])
+    # with col_left:
+    #     df_scored = filter_ui_dynamic(df_original, rows)
+
+    # debug:
+    try:
+        tab_results  # type: ignore
+    except NameError:
+        tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
+
+    with tab_results:
+        col_left, col_right = st.columns([0.28, 0.72])
+        with col_left:
+            df_scored = filter_ui_dynamic(df_original, rows)
+    # ---
         show_only_matches = st.checkbox("Chỉ hiện CV có điểm > 0", value=False, key="only_matches")
         if show_only_matches:
             df_scored = df_scored[df_scored["_match_score"] > 0].reset_index(drop=True)
