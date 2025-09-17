@@ -103,9 +103,13 @@ from urllib.parse import urljoin
         
 def get_api_base() -> str:
     # ưu tiên session_state; nếu chưa có thì lấy từ ENV hoặc secrets
+    # If user edited the sidebar widget, prefer that value.
     if "api_base" in st.session_state and st.session_state.api_base:
         return st.session_state.api_base
 
+    # Fallback to ENV or secrets; do NOT mutate st.session_state here because the
+    # widget with key 'api_base' may already be instantiated and Streamlit forbids
+    # programmatic modification of a widget-key after instantiation.
     base = (
         os.getenv("API_BASE_URL", "").strip()
         or st.secrets.get("API_BASE_URL", "").strip()
@@ -114,8 +118,7 @@ def get_api_base() -> str:
         st.error(f"API_BASE_URL chưa hợp lệ hoặc chưa cấu hình: {base!r}")
         st.stop()
 
-    st.session_state.api_base = base.rstrip("/")
-    return st.session_state.api_base
+    return base.rstrip("/")
 
 def api_url(path: str) -> str:
     # ghép URL an toàn (tránh tạo ra 'https:///cv/upload')
