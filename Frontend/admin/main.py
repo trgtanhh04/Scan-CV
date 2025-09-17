@@ -503,94 +503,82 @@ def view_search():
     q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
     run = st.button("Run Query", type="primary", use_container_width=True)
 
-    # Create tabs once so Raw JSON persists across rerenders
-    tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
-    # If we have a previously fetched response, show it in the Raw JSON tab
-    with tab_raw:
-        last = st.session_state.get("last_api_response")
-        if last:
-            st.markdown("### Last API response")
-            st.json(last)
-        else:
-            st.info("No API response yet. Run a query to see the raw response.")
-
-    # Create tabs once so they are always available for both results and raw JSON
-    tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
-
+    data = None
+    tab1, tab2 = st.tabs(["Kết quả", "JSON Debug"])
     # Fetch data from API
-    if run and q and q.strip():
-        with st.spinner("Đang thực thi..."):
-            data = call_query(q.strip())
-            if not data:
-                st.warning("Không có kết quả CV nào.")
-                return
-            # st.json(data)  # debug
-            # persist raw response so it remains visible after UI interactions
-            st.session_state["last_api_response"] = data
-            #--
+    with tab1:
+        if run and q and q.strip():
+            with st.spinner("Đang thực thi..."):
+                data = call_query(q.strip())
+                if not data:
+                    st.warning("Không có kết quả CV nào.")
+                    return
+                st.json(data)  # debug
+                fa = data.get("final_answer", {})
+                if not isinstance(fa, dict):
+                    st.warning(str(fa))
+                    return
+                cols = fa.get("columns", []) or []
+                rows_raw = fa.get("rows", []) or []
 
-            fa = data.get("final_answer", {})
-            if not isinstance(fa, dict):
-                st.warning(str(fa))
-                return
-            cols = fa.get("columns", []) or []
-            rows_raw = fa.get("rows", []) or []
-
-            rows = []
-            for r in rows_raw:
-                if isinstance(r, dict):
-                    rows.append(r)
-                elif isinstance(r, (list, tuple)):
-                    try:
-                        rows.append(dict(zip(cols, r)))
-                    except Exception:
+                rows = []
+                for r in rows_raw:
+                    if isinstance(r, dict):
+                        rows.append(r)
+                    elif isinstance(r, (list, tuple)):
+                        try:
+                            rows.append(dict(zip(cols, r)))
+                        except Exception:
+                            continue
+                    else:
                         continue
-                else:
-                    continue
 
-            # Remove empty rows
-            rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
-            df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
-            # Nếu cột id toàn bộ là None nhưng vẫn có dữ liệu, đánh số lại
-            if 'id' not in df_original.columns or df_original['id'].isnull().all():
-                df_original['id'] = range(1, len(df_original) + 1)
+                # Remove empty rows
+                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
+                df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
+                # Nếu cột id toàn bộ là None nhưng vẫn có dữ liệu, đánh số lại
+                if 'id' not in df_original.columns or df_original['id'].isnull().all():
+                    df_original['id'] = range(1, len(df_original) + 1)
 
-            id_col = df_original.get('id')
-            if id_col is None or id_col.isnull().all():
-                st.warning("Cột ID không tồn tại hoặc tất cả giá trị đều null")
+                id_col = df_original.get('id')
+                if id_col is None or id_col.isnull().all():
+                    st.warning("Cột ID không tồn tại hoặc tất cả giá trị đều null")
 
 
-            # Save to session
-            st.session_state["rows"] = rows
-            st.session_state["df_original"] = df_original
+                # Save to session
+                st.session_state["rows"] = rows
+                st.session_state["df_original"] = df_original
 
-    rows = st.session_state.get("rows")
-    df_original = st.session_state.get("df_original")
+        rows = st.session_state.get("rows")
+        df_original = st.session_state.get("df_original")
 
-    if not rows or df_original is None or df_original.empty:
-        st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
-        return
+        if not rows or df_original is None or df_original.empty:
+            st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
+            return
 
-    # Layout: left filter, right results (render inside the Search Results tab)
-    with tab_results:
+        # Layout: left filter, right results
         col_left, col_right = st.columns([0.28, 0.72])
         with col_left:
             df_scored = filter_ui_dynamic(df_original, rows)
-    # ---
-        show_only_matches = st.checkbox("Chỉ hiện CV có điểm > 0", value=False, key="only_matches")
-        if show_only_matches:
-            df_scored = df_scored[df_scored["_match_score"] > 0].reset_index(drop=True)
-        st.markdown(
-            f"<div class='small-muted'>🔎 Tổng CV: <b>{len(df_original)}</b> — Sau lọc: <b>{len(df_scored)}</b></div>",
-            unsafe_allow_html=True,
-        )
-        st.divider()
-        if st.button("Export CSV (filtered)"):
-            csv_bytes = df_scored.drop(columns=["_match_score"]).to_csv(index=False).encode("utf-8")
-            st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
+            show_only_matches = st.checkbox("Chỉ hiện CV có điểm > 0", value=False, key="only_matches")
+            if show_only_matches:
+                df_scored = df_scored[df_scored["_match_score"] > 0].reset_index(drop=True)
+            st.markdown(
+                f"<div class='small-muted'>🔎 Tổng CV: <b>{len(df_original)}</b> — Sau lọc: <b>{len(df_scored)}</b></div>",
+                unsafe_allow_html=True,
+            )
+            st.divider()
+            if st.button("Export CSV (filtered)"):
+                csv_bytes = df_scored.drop(columns=["_match_score"]).to_csv(index=False).encode("utf-8")
+                st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
-    with col_right:
-        render_table_view(df_scored)
+        with col_right:
+            render_table_view(df_scored)
+    with tab2:
+        if data:
+            st.json(data)
+        else:
+            st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
 
 # --------------SETTING----------------------
 def view_settings():
