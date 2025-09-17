@@ -503,6 +503,9 @@ def view_search():
     q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
     run = st.button("Run Query", type="primary", use_container_width=True)
 
+    # Create tabs once so they are always available for both results and raw JSON
+    tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
+
     # Fetch data from API
     if run and q and q.strip():
         with st.spinner("Đang thực thi..."):
@@ -511,8 +514,7 @@ def view_search():
                 st.warning("Không có kết quả CV nào.")
                 return
             # st.json(data)  # debug
-            # debug
-            tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
+            # debug: show raw API response in the Raw JSON tab
             with tab_raw:
                 st.markdown("### Raw API response")
                 st.json(data)
@@ -560,17 +562,7 @@ def view_search():
         st.info("Chưa có dữ liệu. Nhập câu hỏi và nhấn 'Run Query' để bắt đầu.")
         return
 
-    # Layout: left filter, right results
-    # col_left, col_right = st.columns([0.28, 0.72])
-    # with col_left:
-    #     df_scored = filter_ui_dynamic(df_original, rows)
-
-    # debug:
-    try:
-        tab_results  # type: ignore
-    except NameError:
-        tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
-
+    # Layout: left filter, right results (render inside the Search Results tab)
     with tab_results:
         col_left, col_right = st.columns([0.28, 0.72])
         with col_left:
