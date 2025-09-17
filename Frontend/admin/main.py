@@ -503,6 +503,17 @@ def view_search():
     q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
     run = st.button("Run Query", type="primary", use_container_width=True)
 
+    # Create tabs once so Raw JSON persists across rerenders
+    tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
+    # If we have a previously fetched response, show it in the Raw JSON tab
+    with tab_raw:
+        last = st.session_state.get("last_api_response")
+        if last:
+            st.markdown("### Last API response")
+            st.json(last)
+        else:
+            st.info("No API response yet. Run a query to see the raw response.")
+
     # Create tabs once so they are always available for both results and raw JSON
     tab_results, tab_raw = st.tabs(["Search Results", "Raw JSON"])
 
@@ -514,10 +525,8 @@ def view_search():
                 st.warning("Không có kết quả CV nào.")
                 return
             # st.json(data)  # debug
-            # debug: show raw API response in the Raw JSON tab
-            with tab_raw:
-                st.markdown("### Raw API response")
-                st.json(data)
+            # persist raw response so it remains visible after UI interactions
+            st.session_state["last_api_response"] = data
             #--
 
             fa = data.get("final_answer", {})
