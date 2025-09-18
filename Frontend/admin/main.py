@@ -170,9 +170,9 @@ def call_query(question):
         question_en = translate_to_english(question).strip()
     
     # --- Check query trước khi gọi API ---
-    if not validate_candidate_query(question_en):
-        st.warning("⚠️ Invalid query for candidate search")
-        return None
+    # if not validate_candidate_query(question_en):
+    #     st.warning("⚠️ Invalid query for candidate search")
+    #     return None
 
     if needs_finetune(question_en):
         question_ft = convert_job_to_question(question_en)
