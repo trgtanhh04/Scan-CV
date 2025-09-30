@@ -7,12 +7,17 @@ import streamlit as st
 import html
 import re
 from io import BytesIO
+import io
 import base64
-from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query
+from googleapiclient.http import MediaIoBaseDownload
+from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query, get_top_questions
+
+from utils import list_files_in_folder, extract_folder_id, get_drive_service, MIME_TYPE_FOLDER
 
 
 BASE_URL = "http://localhost:8000/cvs"
 DEFAULT_API = os.getenv("API_BASE_URL", "http://localhost:8000")
+DRIVE_API_KEY = os.getenv("DRIVE_API_KEY", "")
 
 st.set_page_config(page_title="CV Manager", page_icon="📄", layout="wide")
 
@@ -47,7 +52,7 @@ with st.sidebar:
 
     nav = st.radio(
         "Điều hướng",
-        ["📤 Upload CV", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
+        ["Main","📤 Upload CV", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
         label_visibility="collapsed"
     )
 
@@ -180,6 +185,7 @@ def call_query(question):
         question_ft = question_en
 
     body = {
+        "ori_question": question,
         "question": question_ft,
         "provider": st.session_state.provider,
         "model": st.session_state.model
@@ -194,6 +200,228 @@ def call_query(question):
         if hasattr(e, 'response') and e.response is not None:
             st.error(f"Response: {e.response.text}")
         return None
+    
+# --- Main UI ---
+
+def call_upload2(file_bytes: bytes, filename: str):
+    # url = f"{st.session_state.api_base}/cv/upload"
+    url = api_url("/cv/upload")
+    try:
+        st.write(f"⚙️ calling: {url}")
+        resp = requests.post(url, files={"file": (filename, file_bytes.getvalue(), "application/pdf")}, timeout=(10, 600))
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"Upload error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            st.error(f"Response: {e.response.text}")
+        raise
+
+def upload_folder(service, folder_id, folder_name):
+    try:
+        # Lấy tất cả file trong folder
+        files = list_files_in_folder(service, folder_id)
+        docs = [f for f in files if f["mimeType"] != MIME_TYPE_FOLDER]
+
+        if not docs:
+            st.warning(f"📂 Folder {folder_name} không có CV nào để upload.")
+            return
+
+        st.info(f"🚀 Bắt đầu upload {len(docs)} CV trong folder **{folder_name}** ...")
+
+        results = []
+        for doc in docs:
+            file_id = doc["id"]
+            file_name = doc["name"]
+
+            # Tải file từ Google Drive
+            request = service.files().get_media(fileId=file_id)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while not done:
+                _, done = downloader.next_chunk()
+
+            fh.seek(0)  # reset pointer
+
+            st.write(f"⬆️ Uploading {file_name} ...")
+            try:
+                resp = call_upload2(fh, file_name)  # gọi API
+                results.append({"file": file_name, "status": "ok", "resp": resp})
+                st.success(f"✅ {file_name} uploaded")
+            except Exception as e:
+                results.append({"file": file_name, "status": f"error {e}"})
+                st.error(f"❌ {file_name} upload failed")
+
+        st.success(f"🎉 Hoàn tất upload {len(results)} file!")
+        return results
+
+    except Exception as e:
+        st.error(f"Upload folder error: {e}")
+
+def view_main():
+    st.title("📄 CV Manager - Public Google Drive")
+
+    # Nếu đã load root_folder thì cho phép nhập lại
+    if "root_folder" in st.session_state:
+        if st.button("🔗 Nhập lại link Google Drive khác"):
+            st.session_state.pop("root_folder", None)
+            st.session_state.pop("current_folder", None)
+            st.session_state.pop("upload_target", None)
+            st.rerun()
+
+    # Nhập link drive nếu chưa có
+    if "root_folder" not in st.session_state:
+        with st.form("drive_form"):
+            drive_link = st.text_input("🔗 Nhập link Google Drive folder (public):")
+            submitted = st.form_submit_button("Enter")
+
+        if submitted and drive_link:
+            try:
+                folder_id = extract_folder_id(drive_link)
+                st.session_state.root_folder = folder_id
+                st.session_state.current_folder = folder_id
+                st.rerun()
+            except Exception as e:
+                st.error(f"Lỗi: {e}")
+
+    # Nếu đã có folder → load nội dung
+    if "current_folder" in st.session_state:
+        try:
+            service = get_drive_service(DRIVE_API_KEY)
+            files = list_files_in_folder(service, st.session_state.current_folder)
+
+            folders = [f for f in files if f["mimeType"] == MIME_TYPE_FOLDER]
+            docs = [f for f in files if f["mimeType"] != MIME_TYPE_FOLDER]
+
+            # Chỉ hiện danh sách folder khi đang ở root_folder
+            if st.session_state.current_folder == st.session_state.root_folder:
+                st.subheader("📂 Danh sách Folder")
+
+                cols = st.columns(3)
+                for i, folder in enumerate(folders):
+                    with cols[i % 3]:
+                        with st.container(border=True):
+                            c1, c2, c3 = st.columns([0.6, 0.2, 0.2])
+
+                            # Click vào folder để mở
+                            with c1:
+                                if st.button(f"{folder['name']}", key=f"open_{folder['id']}", use_container_width=True):
+                                    st.session_state.current_folder = folder["id"]
+                                    st.rerun()
+
+                            # Nút reload (chưa cài)
+                            with c2:
+                                st.button("🔄", key=f"reload_{folder['id']}", help="Reload folder", disabled=True)
+
+                            # Nút upload DB → chỉ gắn cờ, xử lý ở ngoài
+                            with c3:
+                                if st.button("⬆️", key=f"upload_{folder['id']}", help="Upload vào DB"):
+                                    st.session_state.upload_target = {"id": folder["id"], "name": folder["name"]}
+                                    st.rerun()
+
+                # Sau vòng lặp, check nếu có folder cần upload → xử lý ở dưới
+                if "upload_target" in st.session_state:
+                    folder_info = st.session_state.pop("upload_target")
+                    st.markdown("---")
+                    st.subheader(f"⬆️ Kết quả upload folder: {folder_info['name']}")
+                    upload_folder(service, folder_info["id"], folder_info["name"])
+
+            # Nếu đang ở folder con thì hiển thị file CV
+            if st.session_state.current_folder != st.session_state.root_folder:
+                st.subheader("📑 CV trong thư mục này")
+                if docs:
+                    for doc in docs:
+                        file_link = f"https://drive.google.com/file/d/{doc['id']}/view"
+                        col1, col2, col3 = st.columns([0.1, 0.7, 0.2])
+                        with col1:
+                            st.markdown("📄")
+                        with col2:
+                            st.write(doc["name"])
+                        with col3:
+                            st.markdown(f"[👁️ Xem]({file_link})", unsafe_allow_html=True)
+                else:
+                    st.info("Không có CV nào trong thư mục này.")
+
+                if st.button("⬅️ Quay lại"):
+                    st.session_state.current_folder = st.session_state.root_folder
+                    st.rerun()
+
+        except Exception as e:
+            st.error(f"❌ Lỗi khi load nội dung Drive: {e}")
+
+
+
+# def view_main():
+#     st.title("📄 CV Manager - Google Drive")
+#     if "root_folder" not in st.session_state:
+#         with st.form("drive_form"):
+#             drive_link = st.text_input("🔗 Nhập link Google Drive folder:")
+#             submitted = st.form_submit_button("Enter")
+
+#         if submitted and drive_link:
+#             try:
+#                 folder_id = extract_folder_id(drive_link)
+#                 service = get_drive_service()
+#                 st.session_state.root_folder = folder_id
+#                 st.session_state.current_folder = folder_id
+#                 st.rerun()
+#             except Exception as e:
+#                 st.error(f"Lỗi: {e}")
+    
+
+#     # Nếu đã nhập link thì load folder
+#     if "current_folder" in st.session_state:
+#         service = get_drive_service()
+#         files = list_files_in_folder(service, st.session_state.current_folder)
+
+#         folders = [f for f in files if f["mimeType"] == "application/vnd.google-apps.folder"]
+#         docs = [f for f in files if f["mimeType"] != "application/vnd.google-apps.folder"]
+
+#         st.subheader("📂 Danh sách Folder")
+
+#         # Hiển thị folder theo grid 3 cột
+#         cols = st.columns(3)
+#         for i, folder in enumerate(folders):
+#             with cols[i % 3]:
+#                 with st.container(border=True):
+#                     c1, c2, c3 = st.columns([0.6, 0.2, 0.2])
+
+#                     # Tên folder ở góc trái (click để truy cập)
+#                     with c1:
+#                         if st.button(f" {folder['name']}", key=f"open_{folder['id']}", use_container_width=True):
+#                             st.session_state.current_folder = folder["id"]
+#                             st.rerun()
+
+#                     # Nút reload
+#                     with c2:
+#                         if st.button("🔄", key=f"reload_{folder['id']}", help="Reload folder"):
+#                             st.info(f"Reload {folder['name']} chưa được cài đặt.")
+
+#                     # Nút upload
+#                     with c3:
+#                         if st.button("⬆️", key=f"upload_{folder['id']}", help="Upload vào DB"):
+#                             st.info(f"Upload {folder['name']} chưa được cài đặt.")
+
+#         # Chỉ hiển thị CV khi đang trong folder con
+#         if st.session_state.current_folder != st.session_state.root_folder:
+#             st.subheader("📑 CV trong thư mục này")
+#             if docs:
+#                 for doc in docs:
+#                     file_link = f"https://drive.google.com/file/d/{doc['id']}/view"
+#                     col1, col2, col3 = st.columns([0.1, 0.7, 0.2])
+#                     with col1:
+#                         st.markdown("📄")
+#                     with col2:
+#                         st.write(doc["name"])
+#                     with col3:
+#                         st.markdown(f"[👁️ Xem]({file_link})", unsafe_allow_html=True)
+#             else:
+#                 st.info("Không có CV nào trong thư mục này.")
+
+#             if st.button("⬅️ Quay lại"):
+#                 st.session_state.current_folder = st.session_state.root_folder
+#                 st.rerun()
 
 # ---------------- Views ----------------
 def view_upload():
@@ -528,7 +756,28 @@ def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
-    q = st.text_input("Câu hỏi", placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...")
+    top_qs = get_top_questions(3)
+    if top_qs:
+        st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
+        cols = st.columns(len(top_qs))
+        for i, q_text in enumerate(top_qs):
+            if cols[i].button(q_text, key=f"suggest_{i}"):
+                st.session_state["selected_question"] = q_text
+
+    if "selected_question" in st.session_state:
+        default_q = st.session_state["selected_question"]
+    else:
+        default_q = ""
+
+    q = st.text_input(
+        "Câu hỏi",
+        placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
+        key="q_input",
+        value=default_q
+    )
+
+    # insert_log(question=q)
+    
     run = st.button("Run Query", type="primary", use_container_width=True)
 
     data = None
@@ -536,6 +785,35 @@ def view_search():
     # Fetch data from API
     with tab1:
         if run and q and q.strip():
+
+    # top_qs = get_top_questions(3)
+    # if top_qs:
+    #     st.markdown("💡 <b>Gợi ý câu hỏi gần đây:</b>", unsafe_allow_html=True)
+    #     cols = st.columns(len(top_qs))
+    #     for i, q_text in enumerate(top_qs):
+    #         if cols[i].button(q_text, key=f"suggest_{i}"):
+    #             st.session_state["q_input"] = q_text
+    #             st.session_state["auto_run"] = True  # flag tự chạy luôn
+
+    # # Text input (cho phép user gõ tay hoặc từ gợi ý)
+    # q = st.text_input(
+    #     "Câu hỏi",
+    #     placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
+    #     key="q_input"
+    # )
+
+    # # Nếu user bấm Run Query thủ công
+    # manual_run = st.button("Run Query", type="primary", use_container_width=True)
+
+    # # Xác định có chạy không
+    # should_run = manual_run or st.session_state.get("auto_run", False)
+
+    # data = None
+    # tab1, tab2 = st.tabs(["Kết quả", "JSON Debug"])
+    # # Fetch data from API
+    # with tab1:
+    #     if should_run and q and q.strip():
+
             with st.spinner("Đang thực thi..."):
                 data = call_query(q.strip())
                 if not data:
@@ -718,7 +996,10 @@ if "📤" in st.session_state.get("nav", ""):
     pass  # not used; we rely on 'nav' variable below
 
 if __name__ == "__main__" or True:
-    if "Upload" in nav:
+
+    if "Main" in nav:
+        view_main()
+    elif "Upload" in nav:
         view_upload()
     elif "Search" in nav:
         view_search()
