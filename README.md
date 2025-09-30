@@ -182,6 +182,7 @@ SCAN-CV/
 ## ✨ Credits
 
 Project initiated by [Truong Tien Anh](https://github.com/trgtanhh04).
+Project initiated by [Truong Cong Gia Phat](https://github.com/gphat0209).
 
 ---
 
