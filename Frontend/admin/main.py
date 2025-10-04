@@ -8,7 +8,7 @@ import html
 import re
 from io import BytesIO
 import base64
-from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query
+from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query, is_probably_english, expand_abbreviations
 
 
 BASE_URL = "http://localhost:8000/cvs"
@@ -138,40 +138,22 @@ def call_upload(file):
             st.error(f"Response: {e.response.text}")
         raise
     
+
 def call_query(question):
     # url = f"{st.session_state.api_base}/query"
     url = api_url("/query")
-    # st.write(f"⚙️ calling: {url}")
-    
-    # If the question is probably already English, skip the translation step.
-    def is_probably_english(s: str) -> bool:
-        if not s or not isinstance(s, str):
-            return False
-        s = s.strip()
-        # Quick heuristics:
-        # - If the text contains a high ratio of ASCII letters and common English stopwords,
-        #   treat it as English. This avoids translating already-English queries.
-        ascii_letters = re.findall(r"[A-Za-z]", s)
-        ascii_ratio = len(ascii_letters) / max(1, len(s))
-        if ascii_ratio > 0.6:
-            # check for a few common English words
-            lowers = s.lower()
-            for w in ("the", "and", "or", "is", "are", "candidate", "experience", "skills"):
-                if f" {w} " in f" {lowers} ":
-                    return True
-            # if it's mostly ASCII letters and contains at least one space (multiple words), assume English
-            if " " in s:
-                return True
-        return False
 
-    if is_probably_english(question):
-        question_en = question.strip()
+    # Expand common abbreviations first to improve translation / fine-tuning
+    question_expanded = expand_abbreviations(question)
+
+    if is_probably_english(question_expanded):
+        question_en = question_expanded.strip()
     else:
-        question_en = translate_to_english(question).strip()
+        question_en = translate_to_english(question_expanded).strip()
     
     # --- Check query trước khi gọi API ---
     # if not validate_candidate_query(question_en):
-    #     st.warning("⚠️ Invalid query for candidate search")
+    #     st.warning("Invalid query for candidate search")
     #     return None
 
     if needs_finetune(question_en):

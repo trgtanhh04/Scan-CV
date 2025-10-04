@@ -7,6 +7,55 @@ from config import DEEPSEEK_API_KEY
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
+
+# Centralized abbreviation map for job titles / roles / seniority
+# Add or modify entries here to match your team's conventions.
+ABBREV_MAP = {
+    # Roles
+    "DE": "Data Engineer",
+    "SDE": "Software Development Engineer",
+    "SWE": "Software Engineer",
+    "SE": "Software Engineer",
+    "FE": "Frontend Engineer",
+    "BE": "Backend Engineer",
+    "Fullstack": "Fullstack Engineer",
+    "PO": "Product Owner",
+    "PM": "Project Manager",
+    "PdM": "Product Manager",
+    "QA": "Quality Assurance Engineer",
+    "SDET": "Software Development Engineer in Test",
+    "DevOps": "DevOps Engineer",
+    "SRE": "Site Reliability Engineer",
+    "TL": "Tech Lead",
+    "EM": "Engineering Manager",
+    "EngMgr": "Engineering Manager",
+    "Mgr": "Manager",
+
+    # Data / ML
+    "DS": "Data Scientist",
+    "DA": "Data Analyst",
+    "BI": "Business Intelligence",
+    "ML": "Machine Learning",
+    "MLE": "Machine Learning Engineer",
+    "MLEng": "Machine Learning Engineer",
+
+    # Product / Design / Leadership
+    "UX": "User Experience",
+    "UI": "User Interface",
+    "CTO": "Chief Technology Officer",
+    "CPO": "Chief Product Officer",
+    "CEO": "Chief Executive Officer",
+    "VP": "Vice President",
+
+    # Seniority
+    "Sr": "Senior",
+    "Jr": "Junior",
+
+    # Other common shorthand
+    "BD": "Business Development",
+    "AI": "Artificial Intelligence",
+}
+
 #============= HELPERS =============
 
 # Convert job description to English if needed
@@ -17,107 +66,77 @@ def translate_to_english(query):
 # Fine-tune job description to a precise search query
 def convert_job_to_question(job_description):
     search_query_prompt = f"""
-        You are an assistant that converts job descriptions into precise search queries for finding candidates.
-        - For simple queries like "Find candidates that know Python", keep them as is.
-        - For complex job descriptions, convert them into a clear search query highlighting skills, experience, and job-specific keywords.
-        - Output the result in English, question only, no explanations.
-        - Expand abbreviations if they appear:
-            * PM -> Project Manager (not Product Manager unless context clearly says otherwise)
-            * DE -> Data Engineer
-            * SE -> Software Engineer
-            * BA -> Business Analyst
-            * QA -> Quality Assurance Engineer
-            * FE -> Frontend Engineer
-            * BE -> Backend Engineer
-            * AI -> Artificial Intelligence
-            - Always output **only one sentence**, starting with "Find candidates ...".
+        You are a Text-to-Search Query assistant.
+        Convert the input job description into ONE concise English search query for finding candidates.
+        Rules:
+        - Output exactly ONE sentence, starting with "Find candidates ...".
+        - No explanations, no lists, no code fences.
+        - Preserve the user's intent (skills, seniority, years of experience, location, role).
+        - Use clear, natural English suitable for downstream Text2SQL processing.
 
         Examples:
-        Input: "Find candidates that know Python."
-        Output: "Find candidates that know Python."
+            Input: "Find candidates that know Python."
+            Output: "Find candidates that know Python."
 
-        Input: "Find candidates that know Java."
-        Output: "Find candidates that know Java."
+            Input: "Python, pandas, SQL"
+            Output: "Find candidates that know Python, pandas, and SQL."
 
-        Input: "5+ years as a Fullstack Engineer, AI Specialist, or similar, with a strong track record of deploying scalable, AI-integrated applications."
-        Output: "Find candidates with 5+ years of fullstack engineer or AI specialist experience and a proven track record of deploying scalable, AI-integrated applications."
+            Input: "5+ years as a Fullstack Engineer, AI Specialist, or similar, with experience deploying scalable applications."
+            Output: "Find candidates with 5+ years fullstack or AI specialist experience and a proven track record of deploying scalable applications."
 
-        Input: "Find candidates with PM experience"
-        Output: "Find candidates with experience as a Project Manager."
+            Input: "Data Engineer with 7 years experience in ETL, Python, Airflow"
+            Output: "Find Data Engineers with 7 years of experience in ETL and strong skills in Python and Airflow."
 
-        Input: "Find candidates with DE experience"
-        Output: "Find candidates with experience as a Data Engineer."
+            Input: "Senior Software Engineer, 5+ years, Kubernetes, microservices, AWS"
+            Output: "Find Senior Software Engineers with 5+ years experience in Kubernetes, microservices, and AWS."
+
+            Input: "Looking for PM to lead a small product team and own roadmap"
+            Output: "Find Product Managers with experience leading small teams and owning product roadmaps."
+
+            Input: "Data Scientist, machine learning, production deployment"
+            Output: "Find Data Scientists experienced in machine learning and deploying models to production."
+
+            Input: "Data Engineer, 5 years, HCM"
+            Output: "Find Data Engineers with 5 years experience located in Ho Chi Minh City."
+
+            Input: "Fullstack (React/Node), 3 yrs"
+            Output: "Find Fullstack Engineers skilled in React and Node with 3 years experience."
+
+            Now convert the following input into one sentence:
     """
     response = deepseek.invoke(search_query_prompt + f"\nInput: '{job_description}'\nOutput:")
     return response.content.strip()
 
-# def convert_job_to_question(job_description):
-#     search_query_prompt = f"""
-#         You are an assistant that converts job descriptions into precise English search queries for finding candidates.
-
-#         Rules:
-#         - If the input is already a simple English query like "Find candidates that know Python", keep it as is.
-#         - If the input is in another language (e.g., Vietnamese), always translate and convert it into English.
-#         - Expand abbreviations if they appear:
-#         * PM → Project Manager (not Product Manager unless context clearly says otherwise)
-#         * DE → Data Engineer
-#         * SE → Software Engineer
-#         * BA → Business Analyst
-#         * QA → Quality Assurance Engineer
-#         * FE → Frontend Engineer
-#         * BE → Backend Engineer
-#         * AI → Artificial Intelligence
-#         - Always output **only one sentence**, starting with "Find candidates ...".
-#         - Do not add explanations, notes, or code fences.
-
-#         Examples:
-
-#         Input: "Find candidates that know Python."
-#         Output: "Find candidates that know Python."
-
-#         Input: "5+ years as a Fullstack Engineer, AI Specialist, or similar, with a strong track record of deploying scalable, AI-integrated applications."
-#         Output: "Find candidates with 5+ years of fullstack engineer or AI specialist experience and a proven track record of deploying scalable, AI-integrated applications."
-
-#         Input: "Tìm ứng viên có kinh nghiệm 5 năm trong lĩnh vực data engineer, biết python và java, và có GPA xuất sắc."
-#         Output: "Find candidates with 5 years of experience in data engineer, knowledge of Python and Java, and an excellent GPA."
-
-#         Input: "Tìm ứng viên có kinh nghiệm làm PM"
-#         Output: "Find candidates with experience as a Project Manager."
-
-#         ---
-
-#         Input: '{job_description}'
-#         Output:
-#     """
 
 # Decision to fine-tune or not based on clarity/complexity of job description
 def needs_finetune(job_description: str) -> bool:
-    """
-    Quyết định có cần fine-tune hay không dựa trên độ rõ ràng / độ phức tạp của job description.
-    """
-    job_description_lower = job_description.lower()
-
-    simple_keywords = [
-        "python", "java", "javascript", "typescript", "c++", "c#", "ruby", "go", "php",
-        "react", "angular", "vue", "node.js", "django", "flask", "spring", "express",
-        "sql", "nosql", "excel", "python scripting", "html", "css", "rest api", 'software',
-        "developer", "engineer", "data", "database", "cloud", "aws", "azure", "gcp",
-    ]
-    simple_count = sum(kw in job_description_lower for kw in simple_keywords)
-    
-    complex_keywords = [
-        "deploy", "scalable", "ai", "artificial intelligence",
-        "machine learning", "deep learning", "fullstack", "devops", "cloud",
-        "kubernetes", "lead", "architect", "microservices", "ci/cd", "production", "production-ready", "distributed systems",
-        "team management", "project management"
-    ]
-
-    is_complex = len(job_description.split()) > 12 or any(x in job_description_lower for x in complex_keywords)
-
-    if simple_count <= 2 and not is_complex:
+    if not job_description or not isinstance(job_description, str):
         return False
 
-    return True
+    normalized = expand_abbreviations(job_description)
+    norm_lower = normalized.lower()
+
+    if re.match(r"^\s*(find|list|show|search for)\b", norm_lower) and re.search(r"\b(candidate|candidates|resume|cv|cvs)\b", norm_lower):
+        return False
+
+    words = re.findall(r"\w+", norm_lower)
+    if len(words) <= 6 and any(k in norm_lower for k in ["python","java","sql","pandas","django","react","data engineer","software engineer","engineer","devops","sre","ml","machine learning"]):
+        return False
+
+    if len(words) <= 8 and re.search(r"\b\d+\s*(year|years|yr|yrs|năm)\b", norm_lower):
+        return False
+
+    complex_indicators = [
+        "deploy", "scalable", "production", "production-ready", "distributed", "microservices",
+        "kubernetes", "ci/cd", "team management", "project management", "lead", "architect",
+        "machine learning", "deep learning", "data scientist", "business intelligence",
+        "responsible for", "responsibilities", "requirements", "must have", "experience in",
+    ]
+
+    if len(words) > 12 or any(ci in norm_lower for ci in complex_indicators):
+        return True
+
+    return False
 
 # Validate if query is suitable for candidate search
 def validate_candidate_query(query: str, cutoff: float = 0.8) -> bool:
@@ -160,3 +179,33 @@ def validate_candidate_query(query: str, cutoff: float = 0.8) -> bool:
         return True
 
     return False
+
+
+# ---------------------- Helpers migrated from main.py ----------------------
+def is_probably_english(s: str) -> bool:
+    if not s or not isinstance(s, str):
+        return False
+    s = s.strip()
+    ascii_letters = re.findall(r"[A-Za-z]", s)
+    ascii_ratio = len(ascii_letters) / max(1, len(s))
+    if ascii_ratio > 0.6:
+        lowers = s.lower()
+        for w in ("the", "and", "or", "is", "are", "candidate", "experience", "skills"):
+            if f" {w} " in f" {lowers} ":
+                return True
+        if " " in s:
+            return True
+    return False
+
+
+def expand_abbreviations(text: str) -> str:
+    if not text or not isinstance(text, str):
+        return text
+    keys = list(ABBREV_MAP.keys())
+    keys.sort(key=lambda x: -len(x))
+    pattern = re.compile(r"\b(" + "|".join(re.escape(k) for k in keys) + r")(?:\.|s|es)?\b", flags=re.IGNORECASE)
+    def _repl(m):
+        raw = re.sub(r"[\.|s|es]+$", "", m.group(0), flags=re.IGNORECASE)
+        return ABBREV_MAP.get(raw.upper(), ABBREV_MAP.get(raw, m.group(0)))
+
+    return pattern.sub(_repl, text)

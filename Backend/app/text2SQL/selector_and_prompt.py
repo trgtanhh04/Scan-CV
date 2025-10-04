@@ -8,6 +8,7 @@ from typing import List, Tuple
 # 1) SELECTOR (rule-based)
 # =========================
 EXP_WORDS   = r"(kinh nghiệm|từng làm|đã làm|làm việc|company|công ty|experience|worked)"
+YEARS_EXP_WORDS = r"(\d+\s*năm\s*(kinh nghiệm|exp)|\d+\s*years?\s*(experience|exp)|kinh nghiệm\s*\d+\s*năm|experience\s*\d+\s*years?|total.*experience|tổng.*kinh nghiệm)"
 EDU_WORDS = r"(bằng cấp|đại học|university|degree|gpa|điểm trung bình|học|tốt nghiệp|education|studied|field of study)"
 LOC_WORDS   = r"(địa điểm|location|ở|tại|HCM|HCMC|Ho Chi Minh|Hà Nội|Hanoi|Huế|Đà Nẵng|Singapore|USA|UK)"
 LANG_WORDS  = r"(ngôn ngữ|language|languages|tiếng anh|tiếng nhật|english|japanese|vietnamese)"
@@ -28,7 +29,14 @@ def selector_lite(user_query: str) -> Tuple[List[str], str]:
         hints.append("This query involves candidate skills; join skills via candidate_skills.")
         hints.append("If returning a candidate list, use DISTINCT or EXISTS to avoid duplicates.")
 
-    if re.search(EXP_WORDS, uq):
+    if re.search(YEARS_EXP_WORDS, uq):
+        tables |= {"experiences"}
+        hints.append("This query involves TOTAL years of experience calculation.")
+        hints.append("Calculate total experience by SUM of all experience durations for each candidate.")
+        hints.append("Use COALESCE(end_date, CURRENT_DATE) for ongoing positions (where end_date IS NULL).")
+        hints.append("Calculate duration in years: (COALESCE(end_date, CURRENT_DATE) - start_date) / 365.25")
+        hints.append("Group by candidate and use HAVING to filter by total years.")
+    elif re.search(EXP_WORDS, uq):
         tables |= {"experiences"}
         hints.append("This query involves work experiences; join experiences on candidate_id.")
 
@@ -66,6 +74,28 @@ EXAMPLES = [
         JOIN candidate_skills cs ON cs.candidate_id = c.id
         JOIN skills s ON s.id = cs.skill_id
         WHERE s.name ILIKE '%Angular%' AND c.location ILIKE '%HCM%'
+        LIMIT 50;"""
+    ),
+    (
+        "tìm ứng viên có 5 năm kinh nghiệm",
+        """SELECT c.id, c.full_name, c.email, 
+               ROUND(SUM((COALESCE(e.end_date, CURRENT_DATE) - e.start_date) / 365.25), 1) AS total_years
+        FROM candidates c
+        JOIN experiences e ON e.candidate_id = c.id
+        GROUP BY c.id, c.full_name, c.email
+        HAVING SUM((COALESCE(e.end_date, CURRENT_DATE) - e.start_date) / 365.25) >= 5
+        ORDER BY total_years DESC
+        LIMIT 50;"""
+    ),
+    (
+        "candidates with more than 3 years experience",
+        """SELECT c.id, c.full_name, c.email,
+               ROUND(SUM((COALESCE(e.end_date, CURRENT_DATE) - e.start_date) / 365.25), 1) AS years_exp
+        FROM candidates c
+        JOIN experiences e ON e.candidate_id = c.id
+        GROUP BY c.id, c.full_name, c.email
+        HAVING SUM((COALESCE(e.end_date, CURRENT_DATE) - e.start_date) / 365.25) > 3
+        ORDER BY years_exp DESC
         LIMIT 50;"""
     ),
     (
@@ -107,6 +137,8 @@ def build_schema_prompt(schema_txt: str, hints: str, user_query: str, limit: int
         - ALWAYS include the candidate id column (e.g. id) in the SELECT result, even if the user only asks for names. This is required for downstream enrichment (e.g. resume_url).
         - ALWAYS include the candidate email column (e.g. email) in the SELECT result if available, even if the user does not explicitly ask for it. This is required for downstream enrichment.
         - Hint: When subtracting two DATE columns in PostgreSQL, result is in days (integer). Do NOT use INTERVAL literal.
+        - EXPERIENCE DURATION: To calculate years of experience, use (COALESCE(end_date, CURRENT_DATE) - start_date) / 365.25. Sum all experiences per candidate and use HAVING to filter.
+        - For ongoing positions (end_date IS NULL), use CURRENT_DATE as end date.
         - If the user asks for only names, return both id and name.
 
         Limit:
