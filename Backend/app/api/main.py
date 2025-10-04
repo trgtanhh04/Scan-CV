@@ -12,6 +12,7 @@ from app.text2SQL.process_cvs_sql import process_cvs_sql
 from app.services.extract_cv import process_cv_rag
 from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs  
 from app.services.extract_cv import extract_text_from_pdf, extract_info
+from app.models.models import create_all as models_create_all
 
 from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, QDRANT_API_KEY
 from config.storage import MEDIA_ROOT 
@@ -46,20 +47,20 @@ def health(): return {"status": "ok"}
 @app.post("/cv/upload")
 async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
-        # # --- Opt-in: auto-create DB schema when missing ---
-        # # This is disabled by default. Set AUTO_CREATE_DB=true in env to enable (useful for testing).
-        # import os
-        # try:
-        #     with SessionLocal().get_bind().connect() as conn:
-        #         # simple check: does 'candidates' table exist?
-        #         res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
-        #         if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
-        #             # create tables using project's helper
-        #             url = os.getenv('DATABASE_URL')
-        #             models_create_all(url)
-        # except Exception:
-        #     # ignore errors here — we'll surface real errors later during upload
-        #     pass
+        # --- Opt-in: auto-create DB schema when missing ---
+        # This is disabled by default. Set AUTO_CREATE_DB=true in env to enable (useful for testing).
+        import os
+        try:
+            with SessionLocal().get_bind().connect() as conn:
+                # simple check: does 'candidates' table exist?
+                res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
+                if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
+                    # create tables using project's helper
+                    url = os.getenv('DATABASE_URL')
+                    models_create_all(url)
+        except Exception:
+            # ignore errors here — we'll surface real errors later during upload
+            pass
 
         # Lưu tạm file người dùng up
         temp_dir = tempfile.mkdtemp()

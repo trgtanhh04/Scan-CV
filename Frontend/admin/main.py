@@ -280,16 +280,13 @@ def view_upload():
 # ---------------- Filter helpers ----------------
 def extract_filter_options(rows):
     # rows: list[dict]
-    job_titles, skills, degrees, schools = set(), set(), set(), set()
+    job_titles, degrees, schools = set(), set(), set()
     for row in rows:
         if not isinstance(row, dict):
             continue
         jt = row.get("job_title") or row.get("Job Title")
         if jt:
             job_titles.add(jt)
-        for s in row.get("skills", []) or []:
-            if s:
-                skills.add(s)
         for edu in row.get("educations", []) or []:
             if isinstance(edu, dict):
                 d = edu.get("degree")
@@ -298,22 +295,15 @@ def extract_filter_options(rows):
                     degrees.add(d)
                 if u:
                     schools.add(u)
-    return sorted(job_titles), sorted(skills), sorted(degrees), sorted(schools)
+    return sorted(job_titles), sorted(degrees), sorted(schools)
 
-def render_badge_html(text, kind="skill"):
+def render_badge_html(text, kind="degree"):
     cls = "badge"
-    if kind == "skill":
-        cls += " badge-skill"
-    elif kind == "degree":
+    if kind == "degree":
         cls += " badge-degree"
     elif kind == "school":
         cls += " badge-school"
     return f'<span class="{cls}">{html.escape(str(text))}</span>'
-
-def skills_to_html(sk_list):
-    if not sk_list:
-        return ""
-    return " ".join([render_badge_html(s, "skill") for s in sk_list if s])
 
 def educations_to_html(edu_list):
     # edu_list: list of dict
@@ -339,7 +329,7 @@ def filter_ui_dynamic(df, rows):
         '</div>',
         unsafe_allow_html=True,
     )
-    job_titles, skills, degrees, schools = extract_filter_options(rows)
+    job_titles, degrees, schools = extract_filter_options(rows)
 
     # helper: filter default values to only include options
     def filter_defaults(options, defaults):
@@ -349,11 +339,6 @@ def filter_ui_dynamic(df, rows):
     default_jobs = filter_defaults(job_titles, st.session_state.get("job_filter", []))
     job_filter = st.multiselect("Job Title", options=job_titles, default=default_jobs, key="ui_job")
     st.session_state["job_filter"] = job_filter
-
-    # skills
-    default_skills = filter_defaults(skills, st.session_state.get("skill_filter", []))
-    skill_filter = st.multiselect("Skills", options=skills, default=default_skills, key="ui_skill")
-    st.session_state["skill_filter"] = skill_filter
 
     # degrees
     default_degrees = filter_defaults(degrees, st.session_state.get("degree_filter", []))
@@ -371,15 +356,6 @@ def filter_ui_dynamic(df, rows):
         job = row.get("job_title") or row.get("Job Title") or ""
         if job_filter and job in job_filter:
             score += 2
-        skills_list = row.get("skills", []) or []
-        if isinstance(skills_list, str):
-            skills_list = [s.strip() for s in skills_list.split(",") if s.strip()]
-        elif isinstance(skills_list, list):
-            skills_list = [str(s).strip() for s in skills_list if s]
-        else:
-            skills_list = []
-        if skill_filter:
-            score += sum(1 for s in skill_filter if s in skills_list)
         if degree_filter:
             for edu in row.get("educations", []) or []:
                 if isinstance(edu, dict) and edu.get("degree") in degree_filter:
@@ -472,54 +448,19 @@ def render_table_view(df: pd.DataFrame):
     """Hiển thị CV dạng bảng."""
     display_df = df.copy()
 
+    # Loại bỏ cột skills khỏi hiển thị
+    if "skills" in display_df.columns:
+        display_df = display_df.drop(columns=["skills"])
+
     if "resume_url" in display_df.columns:
         display_df["resume_url"] = display_df["resume_url"].apply(
             lambda u: f'<a href="{u}" target="_blank">🔗 Open</a>' if u else ""
         )
 
-    if "skills" in display_df.columns:
-        display_df["skills"] = display_df["skills"].apply(lambda s: skills_to_html(s) if s else "")
-
     if "educations" in display_df.columns:
         display_df["educations"] = display_df["educations"].apply(education_to_chips)
 
     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-
-# def render_table_view(df: pd.DataFrame):
-#     """Render bảng đẹp + chip bo tròn cho Open CV và Download."""
-#     display_df = df.copy()
-
-#     # Open CV
-#     if "resume_url" in display_df.columns:
-#         display_df["CV"] = display_df.apply(
-#             lambda row: chip_html("🔗 Open", row["resume_url"]) if row["resume_url"] else "",
-#             axis=1
-#         )
-
-#     # Skills
-#     if "skills" in display_df.columns:
-#         display_df["skills"] = display_df["skills"].apply(list_to_chips)
-
-#     # Education
-#     # if "educations" in display_df.columns:
-#     #     display_df["educations"] = display_df["educations"].apply(list_to_chips)
-#     # Education
-#     if "educations" in display_df.columns:
-#         display_df["educations"] = display_df["educations"].apply(education_to_chips)
-
-#     # Download
-#     display_df["Download"] = display_df.apply(
-#         lambda row: create_download_link(row["resume_url"], f"{row.get('email','cv')}.pdf")
-#         if row.get("resume_url") else "",
-#         axis=1
-#     )
-
-#     # Cột hiển thị
-#     cols = [c for c in ["id", "email", "CV", "job_title", "skills", "educations", "_match_score", "Download"] if c in display_df.columns]
-#     display_df = display_df[cols]
-
-#     st.markdown(display_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
 
@@ -562,7 +503,7 @@ def view_search():
                         continue
 
                 # Remove empty rows
-                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
+                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("educations")]
                 df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
                 # Nếu cột id toàn bộ là None nhưng vẫn có dữ liệu, đánh số lại
                 if 'id' not in df_original.columns or df_original['id'].isnull().all():
