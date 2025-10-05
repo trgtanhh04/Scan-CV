@@ -52,7 +52,7 @@ with st.sidebar:
 
     nav = st.radio(
         "Điều hướng",
-        ["Main","📤 Upload CV", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
+        ["Main","📤 Upload CV", "🔎 Alternate Search", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
         label_visibility="collapsed"
     )
 
@@ -203,12 +203,16 @@ def call_query(question):
     
 # --- Main UI ---
 
-def call_upload2(file_bytes: bytes, filename: str):
+def call_upload2(file_bytes: bytes, filename: str, folder_name: str):
     # url = f"{st.session_state.api_base}/cv/upload"
     url = api_url("/cv/upload")
     try:
         st.write(f"⚙️ calling: {url}")
-        resp = requests.post(url, files={"file": (filename, file_bytes.getvalue(), "application/pdf")}, timeout=(10, 600))
+        resp = requests.post(
+            url, 
+            files={"file": (filename, file_bytes.getvalue(), "application/pdf")}, 
+            data={"job_apply": folder_name} ,
+            timeout=(10, 600))
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
@@ -246,7 +250,7 @@ def upload_folder(service, folder_id, folder_name):
 
             st.write(f"⬆️ Uploading {file_name} ...")
             try:
-                resp = call_upload2(fh, file_name)  # gọi API
+                resp = call_upload2(fh, file_name, folder_name)  # gọi API
                 results.append({"file": file_name, "status": "ok", "resp": resp})
                 st.success(f"✅ {file_name} uploaded")
             except Exception as e:
@@ -900,6 +904,87 @@ def view_search():
             except Exception as _:
                 st.write("(unable to read session_state)")
 
+
+def call_jobs():
+    import requests
+    try:
+        res = requests.get("http://localhost:8000/jobs")
+        if res.status_code == 200:
+            data = res.json()
+            return data.get("jobs", [])
+    except Exception as e:
+        st.error(f"Lỗi khi tải danh sách công việc: {e}")
+    return []
+
+def view_search2():
+
+    header()
+    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
+
+    st.subheader("🎯 Chọn vị trí tuyển dụng")
+
+    # Lấy danh sách job_apply
+    job_list = call_jobs()
+    selected_job = st.selectbox(
+        "Vị trí ứng tuyển",
+        options=["Tất cả"] + job_list if job_list else ["Tất cả"],
+        index=0,
+        help="Chọn vị trí mà bạn muốn tìm ứng viên"
+    )
+
+    st.markdown("---")
+    # st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
+
+    st.subheader("🔎 Tìm kiếm ứng viên theo tiêu chí")
+
+    # Tạo nhiều thanh input thay vì 1 query
+    with st.form("search_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            school = st.text_input("🏫 Trường học", placeholder="VD: HCMUS, UIT...")
+            gpa = st.text_input("📊 GPA", placeholder="VD: >=3.2, 3.5 ~ 4.0")
+        with col2:
+            skill = st.text_input("💻 Kỹ năng", placeholder="VD: Python, React, Figma...")
+            exp_detail = st.text_area("🧑‍💼 Chi tiết kinh nghiệm", placeholder="VD: Data Analyst tại ABC...")
+        
+        project_detail = st.text_area("📁 Chi tiết dự án", placeholder="VD: LLM chatbot, Web app,...")
+
+        run = st.form_submit_button("🔍 Tìm kiếm", type="primary")
+
+    # Gửi dữ liệu đi khi nhấn nút
+    if run:
+        payload = {
+            "school": school.strip() if school else None,
+            "gpa": gpa.strip() if gpa else None,
+            "skill": skill.strip() if skill else None,
+            "exp_detail": exp_detail.strip() if exp_detail else None,
+            "project_detail": project_detail.strip() if project_detail else None
+        }
+
+        st.info("📤 Đang gửi yêu cầu tìm kiếm...")
+        with st.spinner("Đang xử lý..."):
+            data = call_query(payload)  # cập nhật hàm call_query để nhận dict thay vì q string
+            if not data:
+                st.warning("❌ Không có kết quả nào khớp với tiêu chí.")
+                return
+
+        # Xử lý kết quả như cũ
+        fa = data.get("final_answer", {})
+        cols = fa.get("columns", []) or []
+        rows_raw = fa.get("rows", []) or []
+        rows = [dict(zip(cols, r)) if isinstance(r, (list, tuple)) else r for r in rows_raw]
+
+        df = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first")
+        st.session_state["df_original"] = df
+
+        # Giao diện lọc + hiển thị bảng
+        col_left, col_right = st.columns([0.28, 0.72])
+        with col_left:
+            df_scored = filter_ui_dynamic(df, rows)
+        with col_right:
+            render_table_view(df_scored)
+
+
 # --------------SETTING----------------------
 def view_settings():
     header()
@@ -1001,8 +1086,10 @@ if __name__ == "__main__" or True:
         view_main()
     elif "Upload" in nav:
         view_upload()
-    elif "Search" in nav:
-        view_search()
+    # elif "Search" in nav:
+    #     view_search()
+    elif "Alternate Search" in nav:
+        view_search2()
     elif "Invite" in nav:
         invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
 

@@ -149,6 +149,81 @@ def link_language(db: Session, candidate_id: int, language_id: int) -> None:
     )
     db.execute(stmt)
 
+
+def parse_gpa_to_4(val) -> float | None:
+    """
+    Chuẩn hoá GPA về thang 4.0
+    - '3.4'       -> 3.4
+    - '3.3/4.0'   -> (3.3/4.0)*4 = 3.3
+    - '7/10'      -> (7/10)*4 = 2.8
+    - '85/100'    -> (85/100)*4 = 3.4
+    - 8.0         -> (8/10)*4 = 3.2
+    - 92          -> (92/100)*4 = 3.68
+    """
+    if val is None:
+        return None
+
+    # Nếu đã là float hoặc int
+    if isinstance(val, (float, int)):
+        x = float(val)
+        if x <= 4.0:       # đã ở thang 4
+            return x
+        elif x <= 10.0:    # thang 10
+            return round((x / 10) * 4, 2)
+        elif x <= 100.0:   # thang 100
+            return round((x / 100) * 4, 2)
+        else:
+            return None
+
+    # Nếu là string
+    if isinstance(val, str):
+        # Bóc tách tất cả số
+        matches = re.findall(r"\d*\.?\d+", val.replace(",", "."))
+        if matches:
+            try:
+                if len(matches) == 2:  # dạng x/y
+                    x, y = map(float, matches)
+                    if y > 0:
+                        return round((x / y) * 4, 2)
+                else:  # chỉ có 1 số
+                    x = float(matches[0])
+                    if x <= 4.0:
+                        return x
+                    elif x <= 10.0:
+                        return round((x / 10) * 4, 2)
+                    elif x <= 100.0:
+                        return round((x / 100) * 4, 2)
+            except ValueError:
+                return None
+    return None
+
+def handle_cert_score(raw_score: str | None) -> float | None:
+    if raw_score is None:
+        return None
+
+    s = str(raw_score).strip().lower()
+
+    # Nếu có dạng "550/990" → lấy phần trước "/"
+    if "/" in s:
+        try:
+            return float(s.split("/")[0].strip())
+        except:
+            return None
+
+    # Nếu có chữ (toeic, ielts...) thì lọc số ra
+    match = re.search(r"(\d+(\.\d+)?)", s)
+    if match:
+        try:
+            return float(match.group(1))
+        except:
+            return None
+
+    # fallback
+    try:
+        return float(s)
+    except:
+        return None
+
 # ---------- main upsert ----------
 def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     """
@@ -163,6 +238,7 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     cand.full_name = _clean_str(cv.get("full_name"))
     cand.email     = _clean_str(cv.get("email"))
     cand.phone     = _clean_str(cv.get("phone"))
+    cand.job_apply =  _clean_str(cv.get("job_apply"))
     cand.job_title = _clean_str(cv.get("job_title"))
     cand.location  = _clean_str(cv.get("location"))
     db.flush()
@@ -177,6 +253,7 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
             candidate_id = cand.id,
             degree       = _clean_str(e.get("degree")),
             university   = _clean_str(e.get("university")),
+            gpa          = parse_gpa_to_4(e.get("gpa")),
             start_year   = e.get("start_year") if isinstance(e.get("start_year"), int) else None,
             end_year     = e.get("end_year")   if isinstance(e.get("end_year"), int)   else None,
         )
@@ -211,6 +288,7 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
             candidate_id     = cand.id,
             certificate_name = _clean_str(c.get("certificate_name")),
             organization     = _clean_str(c.get("organization")),
+            score = handle_cert_score(c.get("score")),
         )
         cand.certifications.append(cert)
 
@@ -234,6 +312,12 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
 
     db.flush()
     return cand
+
+from sqlalchemy import distinct
+def get_unique_job_titles(db):
+    result = db.query(distinct(Candidate.job_apply)).all()
+    # SQLAlchemy trả list các tuple [(“Data Analyst”,), (“Backend Developer”,)...]
+    return [r[0] for r in result if r[0] is not None]
 
 
 # ---------- CLI demo ----------

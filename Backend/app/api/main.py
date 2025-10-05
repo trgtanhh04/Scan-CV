@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import tempfile, shutil, os, uuid
+from fastapi import Form
 
 
 from app.models.models import SessionLocal
@@ -12,6 +13,7 @@ from app.text2SQL.process_cvs_sql import process_cvs_sql
 from app.services.extract_cv import process_cv_rag
 from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs  
 from app.services.extract_cv import extract_text_from_pdf, extract_info
+from app.models.ingest import get_unique_job_titles
 
 from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, QDRANT_API_KEY
 from config.storage import MEDIA_ROOT 
@@ -24,7 +26,7 @@ from fastapi import FastAPI, Depends
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
-embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, google_api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 app = FastAPI(title="CV Manager API")
@@ -43,24 +45,14 @@ def get_db():
 @app.get("/health")
 def health(): return {"status": "ok"}
 
-@app.post("/cv/upload")
-async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    try:
-        # # --- Opt-in: auto-create DB schema when missing ---
-        # # This is disabled by default. Set AUTO_CREATE_DB=true in env to enable (useful for testing).
-        # import os
-        # try:
-        #     with SessionLocal().get_bind().connect() as conn:
-        #         # simple check: does 'candidates' table exist?
-        #         res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
-        #         if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
-        #             # create tables using project's helper
-        #             url = os.getenv('DATABASE_URL')
-        #             models_create_all(url)
-        # except Exception:
-        #     # ignore errors here — we'll surface real errors later during upload
-        #     pass
+@app.get("/jobs")
+def get_jobs(db: Session = Depends(get_db)):
+    jobs = get_unique_job_titles(db)
+    return {"jobs": jobs}
 
+@app.post("/cv/upload")
+async def upload_cv(file: UploadFile = File(...), job_apply: str = Form(None), db: Session = Depends(get_db)):
+    try:
         # Lưu tạm file người dùng up
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, f"{uuid.uuid4().hex}.pdf")
@@ -75,16 +67,30 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         text = extract_text_from_pdf(temp_path)
         info = extract_info(text) or {}
 
+        if job_apply:
+            info["job_apply"] = job_apply
+
+        # if "education" in info:
+        #     for edu in info["education"]:
+        #         gpa = edu.get("gpa")
+        #         print("📌 GPA:", gpa)   # log ra console
+                
+        # if "certifications" in info:
+        #     print("📌 Certifications:", info["certifications"])
+        
+
+        
+
         # (3) RAG 
-        rag_results = process_cv_rag(
-            file_path=temp_path,
-            vector_db=qdrant,
-            embedding_model=embedding,
-            collection_name=QDRANT_COLLECTION,
-            pre_text=text,
-            pre_info=info,
-            resume_url=resume_url,
-        )
+        # rag_results = process_cv_rag(
+        #     file_path=temp_path,
+        #     vector_db=qdrant,
+        #     embedding_model=embedding,
+        #     collection_name=QDRANT_COLLECTION,
+        #     pre_text=text,
+        #     pre_info=info,
+        #     resume_url=resume_url,
+        # )
 
         # (4) Text2SQL 
         sql_results = process_cvs_sql(
@@ -110,6 +116,7 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
 
 # --- Search / Query ---
 class QueryRequest(BaseModel):
+    ori_question: str
     question: str
     provider: str = "deepseek"
     model: str = "deepseek-chat"
@@ -135,8 +142,11 @@ class QueryRequest(BaseModel):
 async def query_api(request: QueryRequest):
     try:
         question = request.question.strip()
+        ori_question = request.ori_question.strip()
         state = {"question": question}
         result = enrich_final_answer(state)
+
+        # insert_log(question=ori_question, route=result.get("route")) #hàm insert_log để lưu memory
         return {
             "question": request.question,
             "provider": request.provider,
