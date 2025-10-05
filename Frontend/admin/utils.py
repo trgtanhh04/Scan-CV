@@ -3,7 +3,12 @@ from translate import Translator
 import re
 from difflib import get_close_matches
 from langchain_deepseek import ChatDeepSeek
-from config import DEEPSEEK_API_KEY
+
+from sqlalchemy import create_engine, Column, Integer, Text, String, TIMESTAMP, func
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from config import DEEPSEEK_API_KEY, LOGS_DATABASE_URL
+
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
@@ -55,6 +60,95 @@ ABBREV_MAP = {
     "BD": "Business Development",
     "AI": "Artificial Intelligence",
 }
+
+
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+
+import requests
+
+from googleapiclient.discovery import build
+from google.auth.credentials import AnonymousCredentials
+from googleapiclient.http import MediaIoBaseDownload
+import streamlit as st
+import io
+    
+
+MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
+
+
+def extract_folder_id(drive_url: str) -> str:
+    """Trích xuất folder_id từ link Google Drive public"""
+    match = re.search(r"/folders/([a-zA-Z0-9_-]+)", drive_url)
+    if match:
+        return match.group(1)
+    raise ValueError("❌ Không tìm thấy folder ID trong link Drive")
+
+def get_drive_service(API_KEY):
+    """Tạo service kết nối Google Drive API bằng API key"""
+    return build("drive", "v3", developerKey=API_KEY, credentials=AnonymousCredentials())
+
+def list_files_in_folder(service, folder_id: str):
+    """Liệt kê file/folder trong thư mục public"""
+    query = f"'{folder_id}' in parents and trashed = false"
+    results = service.files().list(
+        q=query,
+        fields="files(id, name, mimeType)"
+    ).execute()
+    return results.get("files", [])
+
+
+# def list_files_in_folder(folder_id):
+#     url = "https://www.googleapis.com/drive/v3/files"
+#     params = {
+#         "q": f"'{folder_id}' in parents and trashed=false",
+#         "fields": "files(id, name, mimeType)",
+#         "key": API_KEY
+#     }
+#     res = requests.get(url, params=params)
+#     if res.status_code != 200:
+#         raise Exception(res.json())
+#     return res.json().get("files", [])
+
+# SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+
+# import os
+# import json
+
+# CONFIG_FILE = "drive_config.json"
+
+# def save_drive_link(link):
+#     with open(CONFIG_FILE, "w") as f:
+#         json.dump({"drive_link": link}, f)
+
+# def load_drive_link():
+#     if os.path.exists(CONFIG_FILE):
+#         with open(CONFIG_FILE, "r") as f:
+#             data = json.load(f)
+#             return data.get("drive_link")
+#     return None
+
+# #============= MAIN =============
+
+
+
+# def extract_folder_id(drive_link: str) -> str:
+#     match = re.search(r"/folders/([a-zA-Z0-9_-]+)", drive_link)
+#     if match:
+#         return match.group(1)
+#     else:
+#         raise ValueError("Không tìm thấy folder_id trong link.")
+
+
+# def list_files_in_folder(service, folder_id: str):
+#     response = service.files().list(
+#         q=f"'{folder_id}' in parents and trashed=false",
+#         fields="files(id, name, mimeType)",
+#     ).execute()
+#     return response.get("files", [])
+
 
 #============= HELPERS =============
 
@@ -209,3 +303,53 @@ def expand_abbreviations(text: str) -> str:
         return ABBREV_MAP.get(raw.upper(), ABBREV_MAP.get(raw, m.group(0)))
 
     return pattern.sub(_repl, text)
+
+#Gợi ý câu truy vấn từ lịch sử tìm kiếm
+
+engine_logs = create_engine(LOGS_DATABASE_URL)
+
+SessionLocalLogs = sessionmaker(autocommit=False, autoflush=False, bind=engine_logs)
+Base = declarative_base()
+
+class QuestionLog(Base):
+    __tablename__ = "question_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(Text, nullable=False)
+    route = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+# def insert_log(question: str):
+#     """Lưu log vào database logs"""
+#     db = SessionLocalLogs()
+#     try:
+#         log_entry = QuestionLog(
+#             question=question,
+#         )
+#         db.add(log_entry)
+#         db.commit()
+#         db.refresh(log_entry)
+#         return log_entry
+#     except Exception as e:
+#         db.rollback()
+#         raise e
+#     finally:
+#         db.close()
+
+def get_top_questions(limit: int = 3):
+    """Trả ra N câu hỏi được hỏi nhiều nhất"""
+    db = SessionLocalLogs()
+    try:
+        results = (
+            db.query(
+                QuestionLog.question,
+                func.count(QuestionLog.id).label("frequency")
+            )
+            .group_by(QuestionLog.question)
+            .order_by(func.count(QuestionLog.id).desc())
+            .limit(limit)
+            .all()
+        )
+        return [str(r[0]) for r in results if r[0] is not None]
+    finally:
+        db.close()

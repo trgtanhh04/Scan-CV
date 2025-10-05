@@ -5,3 +5,7 @@ requests==2.32.3
 translate==3.6.1
 langchain_deepseek==0.1.0
 python-dotenv==1.0.0
+google-api-python-client>=2.70.0
+google-auth>=2.20.0
+google-auth-oauthlib>=1.0.0
+SQLAlchemy==2.0.42

@@ -204,6 +204,7 @@ services:
     env_file: .env
     environment:
       API_BASE_URL: ${API_BASE_URL}
+      DRIVE_API_KEY: ${DRIVE_API_KEY}
     ports:
       - "8501:8501"
     depends_on:
