@@ -20,6 +20,10 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.schema import HumanMessage
 from langchain.schema import Document
 
+from qdrant_client.http.models import PointStruct, SparseVector
+
+from collections import defaultdict
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 
@@ -47,10 +51,12 @@ Extract the following candidate information fields from the CV content (as plain
 "email": "...",
 "phone": "...",
 "job_title": "...",
+"location": "...",
 "education": [
     {{
     "degree": "...",
     "university": "...",
+    "gpa": "...",
     "start_year": ...,
     "end_year": ...
     }}
@@ -69,13 +75,24 @@ Extract the following candidate information fields from the CV content (as plain
 "certifications": [
     {{
     "certificate_name": "...",
-    "organization": "..."
+    "organization": "...",
+    "score": "..."
     }}
 ],
+"project": [
+    {{
+    "project_name": "...",
+    "project_description": "..."
+    }}
+]
 "languages": ["...", "..."]
 }}
 
-Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
+- Include ALL English language certifications (TOEIC, IELTS, TOEFL, etc.) in the "certifications" section.
+- Always capture their score if available (e.g., "TOEIC 850", "IELTS 7.5", "TOEFL iBT 95").
+- If the certificate is mentioned without a score, set "score" to null.
+
+- Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
 **Do not include personal, academic, or side projects** in the experience section.
 
 Only return the JSON content. Do not include any explanation.  
@@ -84,6 +101,7 @@ If any field cannot be found, set it to null or empty array.
 CV content:
 {text}
 """
+
 
 def extract_info(text: str) -> dict:
     prompt = prompt_template.format(text=text)
@@ -206,17 +224,6 @@ def _dedup_experiences(exps_in) -> List[dict]:
     return uniq
 
 
-# def ensure_collection(qdrant: QdrantClient, collection_name: str, embedding_model) -> None:
-#     try:
-#         if not qdrant.collection_exists(collection_name):  
-#             dim = len(embedding_model.embed_query("dimension_probe"))  
-#             qdrant.create_collection(                       
-#                 collection_name=collection_name,
-#                 vectors_config=rest.VectorParams(size=dim, distance=rest.Distance.COSINE),
-#                 on_disk_payload=True,
-#             )
-#     except Exception as e:
-#         print(f"[WARN] ensure_collection failed: {e}")
 
 REQUIRED_INDEXES = [
     ("type", qm.PayloadSchemaType.KEYWORD),
@@ -228,7 +235,7 @@ REQUIRED_INDEXES = [
     ("skill", qm.PayloadSchemaType.KEYWORD),
 ]
 
-def ensure_collection(client: QdrantClient, collection: str, embedding_dim: int):
+def ensure_collection(client: QdrantClient, collection: str, embedding_dim=3072):
     # 1) Tạo collection nếu chưa có
     try:
         client.get_collection(collection)
@@ -255,6 +262,21 @@ def ensure_collection(client: QdrantClient, collection: str, embedding_dim: int)
                 continue
             raise
 
+def dedup_sparse(indices, values):
+    agg = defaultdict(float)
+    for i, v in zip(indices, values):
+        agg[i] += v
+    new_indices, new_values = zip(*agg.items())
+    return list(new_indices), list(new_values)
+
+def get_sparse_vector(text: str, vocab_size: int = 1000) -> SparseVector:
+    tokens = text.lower().split()
+    indices = [abs(hash(t)) % vocab_size for t in tokens]
+    values = [1.0] * len(tokens)
+
+    indices, values = dedup_sparse(indices, values)
+
+    return SparseVector(indices=indices, values=values)
 
 def process_cv_rag(
     file_path: str,
@@ -311,23 +333,6 @@ def process_cv_rag(
             },
         ))
 
-    # for i, exp in enumerate(experiences):
-    #     exp_text = f"{exp.get('job_title','')} at {exp.get('company','')} ({exp.get('start_date','')} - {exp.get('end_date','')}) {exp.get('description','')}"
-    #     vec = embedding_model.embed_query(exp_text)
-    #     points.append(PointStruct(
-    #         id=make_id(f"exp-{filename}-{exp.get('company','unknown')}-{i}-{uuid.uuid4().hex[:8]}"),
-    #         vector=vec,
-    #         payload={
-    #             "type": "experience",
-    #             "experience": exp_text,
-    #             "experience_detail": exp,
-    #             "job_title": info.get("job_title"),
-    #             "source_file": filename,
-    #             "candidate_name": info.get("full_name"),
-    #             "email": email_norm,
-    #             "resume_url": resume_url, 
-    #         },
-    #     ))
     for i, exp in enumerate(experiences):
         job_title = exp.get("job_title", "")
         company = exp.get("company", "")
