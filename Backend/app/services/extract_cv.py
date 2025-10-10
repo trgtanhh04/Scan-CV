@@ -292,7 +292,37 @@ def process_cv_rag(
     print(f"Processing {filename}...")
 
     # ensure collection exists
-    ensure_collection(vector_db, collection_name, embedding_model)
+    # ensure collection exists: determine embedding dim (integer) from embedding_model
+    embedding_dim = None
+    try:
+        # Try to get a sample embedding and infer its length
+        sample = embedding_model.embed_query("__embed_dim_probe__")
+        # sample may be list/tuple/numpy array or scalar
+        if hasattr(sample, '__len__'):
+            embedding_dim = len(sample)
+        else:
+            # if scalar, try cast
+            embedding_dim = int(sample)
+    except Exception:
+        embedding_dim = None
+
+    # Try common attribute names if probe failed
+    if not embedding_dim:
+        for attr in ("embedding_dimension", "embedding_size", "dim", "dimensions", "n_dim", "output_dim"):
+            try:
+                val = getattr(embedding_model, attr, None)
+                if val:
+                    embedding_dim = int(val)
+                    break
+            except Exception:
+                continue
+
+    if not embedding_dim:
+        # final fallback
+        embedding_dim = 3072
+
+    print(f"[INFO] ensure_collection: using embedding_dim={embedding_dim} for collection={collection_name}")
+    ensure_collection(vector_db, collection_name, embedding_dim=embedding_dim)
 
     # dùng text có sẵn nếu được truyền, nếu không thì mới đọc PDF
     text = pre_text if pre_text is not None else extract_text_from_pdf(file_path)
