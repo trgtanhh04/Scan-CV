@@ -223,6 +223,44 @@ def handle_cert_score(raw_score: str | None) -> float | None:
         return float(s)
     except:
         return None
+    
+regex_mapping = {
+    r"(Foreign Trade University|FTU|FTU2)": "Đại học Ngoại thương",
+    r"(University of Economics Ho Chi Minh City|UEH)": "Đại học Kinh tế TP.HCM",
+    r"(University of Economics and Law|UEL)": "Đại học Kinh tế - Luật - ĐHQG TP.HCM",
+    r"(University of Finance and Marketing|UFM)": "Đại học Tài chính - Marketing",
+    r"(University of Technology and Education|UTE)": "Đại học Sư phạm Kỹ thuật TP.HCM",
+    r"(Ho Chi Minh City University of Technology|HUTECH)": "Đại học HUTECH",
+    r"(Bach Khoa University|BKU)": "Đại học Bách khoa - ĐHQG TP.HCM",
+    r"(Ho Chi Minh City University of Science|HCMUS)": "Đại học Khoa học Tự nhiên - ĐHQG TP.HCM", 
+    r"(Ho Chi Minh City University of Social Sciences and Humanities|HCMUSSH)": "Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM",
+    r"(University of Transport and Communications|UTC)": "Đại học Giao thông Vận tải TP.HCM",
+    r"(Ho Chi Minh City University of Foreign Languages & IT|HUFLIT)": "Đại học Ngoại ngữ - Tin học TP.HCM",
+    r"(Ton Duc Thang University|TDTU)": "Đại học Tôn Đức Thắng",
+    r"(Industrial University|IUH)": "Đại học Công nghiệp TP.HCM",
+    r"(Saigon Technology University|STU)": "Đại học Công nghệ Sài Gòn",
+    r"(University of Information Technology|UIT|VNU-HCM.*Information Technology)": "Đại học Công nghệ thông tin - ĐHQG TP.HCM",
+    r"(University of Industry and Trade)": "Đại học Công nghiệp Thương mại TP.HCM",
+    r"(Open University|OU)": "Đại học Mở TP.HCM",
+    r"(RMIT University|RMIT)": "Đại học RMIT Việt Nam",
+    r"(International University|HCMIU)": "Đại học Quốc tế - ĐHQG TP.HCM",
+    r"(Sai Gon University|SGU)": "Đại học Sài Gòn",
+    r"(Van Lang University|VLU)": "Đại học Văn Lang",
+    r"(Hoa Sen University|HSU)": "Đại học Hoa Sen",
+    r"(FPT University|FPT)": "Đại học FPT",
+    r"(Ho Chi Minh City University of Law|HCMUL)": "Đại học Luật TP.HCM",
+    r"(Nguyen Tat Thanh University|NTTU)": "Đại học Nguyễn Tất Thành",
+    r"(Ho Chi Minh City University of Architecture|HCMUA)": "Đại học Kiến trúc TP.HCM",
+    r"(Ho Chi Minh City University of Economics and Finance|UEF)": "Đại học Kinh tế Tài chính TP.HCM",
+    r"(Ho Chi Minh City University of Education|HCMUE)": "Đại học Sư phạm TP.HCM",
+}
+
+# Hàm chuẩn hoá
+def normalize_university(name):
+    for pattern, unified in regex_mapping.items():
+        if re.search(pattern, name, flags=re.IGNORECASE):
+            return unified
+    return name 
 
 # ---------- main upsert ----------
 def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
@@ -249,10 +287,12 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     for e in edu_list:
         if not isinstance(e, dict):
             continue
+        raw_uni = _clean_str(e.get("university"))
+        normalized_uni = normalize_university(raw_uni) if raw_uni else None
         edu = Educations(
             candidate_id = cand.id,
             degree       = _clean_str(e.get("degree")),
-            university   = _clean_str(e.get("university")),
+            university   = normalized_uni,
             gpa          = parse_gpa_to_4(e.get("gpa")),
             start_year   = e.get("start_year") if isinstance(e.get("start_year"), int) else None,
             end_year     = e.get("end_year")   if isinstance(e.get("end_year"), int)   else None,

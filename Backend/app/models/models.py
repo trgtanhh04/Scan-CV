@@ -1,7 +1,7 @@
 # models.py — lean schema for Text2SQL
 import os
 from sqlalchemy import (
-    Column, Integer, String, ForeignKey, Date, Text,
+    Column, Integer, String, ForeignKey, Date, Text, Float,
     Table, UniqueConstraint, Index, DateTime, func, create_engine
 )
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
@@ -65,6 +65,7 @@ class Candidate(Base):
     full_name  = Column(String, nullable=True)
     email      = Column(String, unique=True, nullable=True)
     phone      = Column(String, nullable=True)
+    job_apply  = Column(String, nullable=True)
     job_title  = Column(String, nullable=True)
     location   = Column(String, nullable=True)
 
@@ -91,6 +92,7 @@ class Educations(Base):
     id           = Column(Integer, primary_key=True, index=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False)
     degree       = Column(String, nullable=True)
+    gpa         = Column(Float, nullable=True)
     university   = Column(String, nullable=True)
     start_year   = Column(Integer, nullable=True)   # giữ dạng năm cho đơn giản
     end_year     = Column(Integer, nullable=True)
@@ -127,6 +129,7 @@ class Certification(Base):
     candidate_id   = Column(Integer, ForeignKey("candidates.id", ondelete="CASCADE"), nullable=False)
     certificate_name = Column(String, nullable=True)
     organization   = Column(String, nullable=True)
+    score          = Column(Float, nullable=True)
 
     candidate      = relationship("Candidate", back_populates="certifications")
 
