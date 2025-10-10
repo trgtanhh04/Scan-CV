@@ -10,7 +10,7 @@ from io import BytesIO
 import io
 import base64
 from googleapiclient.http import MediaIoBaseDownload
-from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query, get_top_questions
+from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query
 
 from utils import list_files_in_folder, extract_folder_id, get_drive_service, MIME_TYPE_FOLDER
 
@@ -52,7 +52,7 @@ with st.sidebar:
 
     nav = st.radio(
         "Điều hướng",
-        ["Main","📤 Upload CV", "🔎 Alternate Search", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
+        ["✉️ Main", "📤 Drive Upload","📤 Upload CV", "🔎 Alternate Search", "🔎 Search", "✉️ Invite", "⚙️ Settings"],
         label_visibility="collapsed"
     )
 
@@ -201,6 +201,22 @@ def call_query(question):
             st.error(f"Response: {e.response.text}")
         return None
     
+def call_FilterQuery(payload: dict):
+    try:
+        res = requests.post(
+            "http://localhost:8000/filter_query",
+            json=payload,
+            timeout=30
+        )
+        if res.status_code == 200:
+            return res.json()
+        else:
+            st.error(f"Lỗi {res.status_code}: {res.text}")
+            return None
+    except Exception as e:
+        st.error(f"❌ Không thể kết nối backend: {e}")
+        return None
+    
 # --- Main UI ---
 
 def call_upload2(file_bytes: bytes, filename: str, folder_name: str):
@@ -264,7 +280,148 @@ def upload_folder(service, folder_id, folder_name):
         st.error(f"Upload folder error: {e}")
 
 def view_main():
-    st.title("📄 CV Manager - Public Google Drive")
+    st.title("📄 CV Manager")
+    st.markdown("### 🔍 Trạng thái tuyển dụng hiện tại")
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    # CSS
+    st.markdown("""
+    <style>
+    div[data-testid="stHorizontalBlock"] {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 18px 22px;
+        border-radius: 12px;
+        margin-bottom: 14px;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+    div[data-testid="stHorizontalBlock"]:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        transform: translateY(-2px);
+    }
+    .job-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #fafafa;
+        margin-bottom: 6px;
+    }
+    .job-count {
+        font-size: 15px;
+        color: #cccccc;
+        margin-bottom: 0;
+    }
+    div[data-testid="stButton"] button {
+        font-size: 13px !important;
+        padding: 4px 10px !important;
+        border-radius: 8px !important;
+        background-color: rgba(120, 120, 255, 0.15) !important;
+        color: #d0cfff !important;
+        border: 1px solid rgba(150, 150, 255, 0.3) !important;
+        transition: background-color 0.2s, border-color 0.2s;
+    }
+    div[data-testid="stButton"] button:hover {
+        background-color: rgba(150, 150, 255, 0.25) !important;
+        border-color: rgba(170, 170, 255, 0.4) !important;
+    }
+    .uploader-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 0 0 0;
+    }
+    [data-testid="stFileUploader"] {
+        width: 60% !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # API
+    url = api_url("/candidate/count")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        st.error(f"Không thể kết nối API: {e}")
+        return
+
+    if not data:
+        st.info("Chưa có dữ liệu ứng viên nào.")
+        return
+
+    # Hiển thị từng job
+    for job, count in data.items():
+        with st.container():
+            col1, col2, col3 = st.columns([3, 0.8, 0.8])
+
+            # --- Cột 1: thông tin job ---
+            with col1:
+                if st.button(f"💼 {job}", key=f"view_{job}"):
+                    st.session_state["viewing_job"] = job
+                # st.markdown(f"<div class='job-title'>💼 {job}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='job-count'>{count} ứng viên</div>", unsafe_allow_html=True)
+
+            # --- Cột 2: thêm CV ---
+            with col2:
+                if "show_upload" not in st.session_state:
+                    st.session_state["show_upload"] = {}
+
+                if st.button("➕ Thêm CV", key=f"toggle_{job}"):
+                    st.session_state["show_upload"][job] = not st.session_state["show_upload"].get(job, False)
+
+            # --- Cột 3: xóa job ---
+            with col3:
+                if st.button("🗑️ Xóa", key=f"delete_{job}"):
+                    requests.post(api_url("/job_apply/delete"), data={"job_apply": job})
+
+            # --- Uploader: nằm dưới hàng ---
+            if st.session_state["show_upload"].get(job, False):
+                st.markdown('<div class="uploader-wrapper">', unsafe_allow_html=True)
+
+                uploaded_file = st.file_uploader(
+                    "Chọn file PDF",
+                    type=["pdf"],
+                    key=f"uploader_{job}",
+                    label_visibility="collapsed",
+                )
+
+                if uploaded_file:
+                    if st.button("📤 Upload", key=f"upload_{job}"):
+                        res = requests.post(
+                            api_url("/cv/upload"),
+                            data={"job_apply": job},
+                            files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
+                        )
+                        if res.ok:
+                            st.success(f"✅ Đã thêm CV vào {job}")
+                        else:
+                            st.error("❌ Upload thất bại")
+
+                st.markdown('</div>', unsafe_allow_html=True)
+            if st.session_state.get("viewing_job") == job:
+                st.markdown("---")
+                st.markdown(f"#### 📋 Danh sách ứng viên cho {job}")
+
+                try:
+                    res = requests.get(api_url(f"/candidate/by_job/{job}"))
+                    res.raise_for_status()
+                    candidates = res.json()
+                except Exception as e:
+                    st.error(f"Không thể tải danh sách: {e}")
+                    candidates = []
+
+                if candidates:
+                    df = pd.DataFrame(candidates)[["name", "email", "public_url"]]
+                    df["📎 CV"] = df["public_url"].apply(lambda x: f"[Xem CV]({x})")
+                    df = df[["name", "email", "📎 CV"]]
+
+                    # st.markdown("#### Danh sách ứng viên")
+                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                else:
+                    st.info("Không có ứng viên nào cho vị trí này.")
+
+def upload_with_Drive():
+    st.title("📄 Upload CV với Google Drive")
 
     # Nếu đã load root_folder thì cho phép nhập lại
     if "root_folder" in st.session_state:
@@ -355,79 +512,6 @@ def view_main():
             st.error(f"❌ Lỗi khi load nội dung Drive: {e}")
 
 
-
-# def view_main():
-#     st.title("📄 CV Manager - Google Drive")
-#     if "root_folder" not in st.session_state:
-#         with st.form("drive_form"):
-#             drive_link = st.text_input("🔗 Nhập link Google Drive folder:")
-#             submitted = st.form_submit_button("Enter")
-
-#         if submitted and drive_link:
-#             try:
-#                 folder_id = extract_folder_id(drive_link)
-#                 service = get_drive_service()
-#                 st.session_state.root_folder = folder_id
-#                 st.session_state.current_folder = folder_id
-#                 st.rerun()
-#             except Exception as e:
-#                 st.error(f"Lỗi: {e}")
-    
-
-#     # Nếu đã nhập link thì load folder
-#     if "current_folder" in st.session_state:
-#         service = get_drive_service()
-#         files = list_files_in_folder(service, st.session_state.current_folder)
-
-#         folders = [f for f in files if f["mimeType"] == "application/vnd.google-apps.folder"]
-#         docs = [f for f in files if f["mimeType"] != "application/vnd.google-apps.folder"]
-
-#         st.subheader("📂 Danh sách Folder")
-
-#         # Hiển thị folder theo grid 3 cột
-#         cols = st.columns(3)
-#         for i, folder in enumerate(folders):
-#             with cols[i % 3]:
-#                 with st.container(border=True):
-#                     c1, c2, c3 = st.columns([0.6, 0.2, 0.2])
-
-#                     # Tên folder ở góc trái (click để truy cập)
-#                     with c1:
-#                         if st.button(f" {folder['name']}", key=f"open_{folder['id']}", use_container_width=True):
-#                             st.session_state.current_folder = folder["id"]
-#                             st.rerun()
-
-#                     # Nút reload
-#                     with c2:
-#                         if st.button("🔄", key=f"reload_{folder['id']}", help="Reload folder"):
-#                             st.info(f"Reload {folder['name']} chưa được cài đặt.")
-
-#                     # Nút upload
-#                     with c3:
-#                         if st.button("⬆️", key=f"upload_{folder['id']}", help="Upload vào DB"):
-#                             st.info(f"Upload {folder['name']} chưa được cài đặt.")
-
-#         # Chỉ hiển thị CV khi đang trong folder con
-#         if st.session_state.current_folder != st.session_state.root_folder:
-#             st.subheader("📑 CV trong thư mục này")
-#             if docs:
-#                 for doc in docs:
-#                     file_link = f"https://drive.google.com/file/d/{doc['id']}/view"
-#                     col1, col2, col3 = st.columns([0.1, 0.7, 0.2])
-#                     with col1:
-#                         st.markdown("📄")
-#                     with col2:
-#                         st.write(doc["name"])
-#                     with col3:
-#                         st.markdown(f"[👁️ Xem]({file_link})", unsafe_allow_html=True)
-#             else:
-#                 st.info("Không có CV nào trong thư mục này.")
-
-#             if st.button("⬅️ Quay lại"):
-#                 st.session_state.current_folder = st.session_state.root_folder
-#                 st.rerun()
-
-# ---------------- Views ----------------
 def view_upload():
     header()
     st.markdown("### Upload CV (PDF)")
@@ -760,13 +844,13 @@ def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
-    top_qs = get_top_questions(3)
-    if top_qs:
-        st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
-        cols = st.columns(len(top_qs))
-        for i, q_text in enumerate(top_qs):
-            if cols[i].button(q_text, key=f"suggest_{i}"):
-                st.session_state["selected_question"] = q_text
+    # top_qs = get_top_questions(3)
+    # if top_qs:
+    #     st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
+    #     cols = st.columns(len(top_qs))
+    #     for i, q_text in enumerate(top_qs):
+    #         if cols[i].button(q_text, key=f"suggest_{i}"):
+    #             st.session_state["selected_question"] = q_text
 
     if "selected_question" in st.session_state:
         default_q = st.session_state["selected_question"]
@@ -904,7 +988,6 @@ def view_search():
             except Exception as _:
                 st.write("(unable to read session_state)")
 
-
 def call_jobs():
     import requests
     try:
@@ -916,14 +999,30 @@ def call_jobs():
         st.error(f"Lỗi khi tải danh sách công việc: {e}")
     return []
 
-def view_search2():
+@st.cache_data(ttl=300)
+def fetch_suggestions_for_job(job: str):
+    if not job or job == "Tất cả":
+        return {"schools": [], "skills": []}
+    try:
+        res = requests.get("http://localhost:8000/suggestions", params={"job": job}, timeout=8)
+        if res.ok:
+            data = res.json()
+            return {
+                "schools": data.get("schools", []) if isinstance(data, dict) else [],
+                "skills": data.get("skills", []) if isinstance(data, dict) else []
+            }
+    except Exception as e:
+        # Không throw — frontend vẫn hoạt động với danh sách rỗng
+        st.warning(f"Không lấy được gợi ý từ backend: {e}")
+    return {"schools": [], "skills": []}
 
+def view_search2():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
     st.subheader("🎯 Chọn vị trí tuyển dụng")
 
-    # Lấy danh sách job_apply
+    # --- Lấy danh sách job_apply ---
     job_list = call_jobs()
     selected_job = st.selectbox(
         "Vị trí ứng tuyển",
@@ -933,54 +1032,100 @@ def view_search2():
     )
 
     st.markdown("---")
-    # st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
-
     st.subheader("🔎 Tìm kiếm ứng viên theo tiêu chí")
 
-    # Tạo nhiều thanh input thay vì 1 query
+    # --- Gợi ý filter ---
+    suggestions = fetch_suggestions_for_job(selected_job)
+    school_options = ["(Không chọn)"] + suggestions.get("schools", [])
+    school_options.append("Khác (tự nhập)")
+    skill_options = suggestions.get("skills", [])
+
+    # --- Quản lý state ---
+    if "custom_skills" not in st.session_state:
+        st.session_state["custom_skills"] = []
+
+    # -----------------------
+    # PHẦN FORM CHÍNH
+    # -----------------------
     with st.form("search_form"):
         col1, col2 = st.columns(2)
         with col1:
-            school = st.text_input("🏫 Trường học", placeholder="VD: HCMUS, UIT...")
-            gpa = st.text_input("📊 GPA", placeholder="VD: >=3.2, 3.5 ~ 4.0")
+            school_choice = st.selectbox("🏫 Trường học", options=school_options, index=0)
+            if school_choice == "Khác (tự nhập)":
+                school_input = st.text_input("Nhập tên trường", placeholder="VD: Đại học Kinh tế Luật")
+                school_value = school_input.strip() if school_input else None
+            elif school_choice == "(Không chọn)":
+                school_value = None
+            else:
+                school_value = school_choice
+
+            gpa = st.text_input("📊 Ngưỡng GPA", placeholder="VD: >=3.2, 3.5 ~ 4.0")
+
         with col2:
-            skill = st.text_input("💻 Kỹ năng", placeholder="VD: Python, React, Figma...")
-            exp_detail = st.text_area("🧑‍💼 Chi tiết kinh nghiệm", placeholder="VD: Data Analyst tại ABC...")
-        
+            combined_skills = list(dict.fromkeys(skill_options + st.session_state["custom_skills"]))
+            selected_skills = st.multiselect("💻 Kỹ năng (chọn nhiều)", options=combined_skills)
+            english_cert_only = st.checkbox("🎓 Chỉ ứng viên có chứng chỉ ngoại ngữ (IELTS/TOEIC/TOEFL)")
+
+        exp_detail = st.text_area("🧑‍💼 Chi tiết kinh nghiệm", placeholder="VD: Data Analyst tại ABC...")
         project_detail = st.text_area("📁 Chi tiết dự án", placeholder="VD: LLM chatbot, Web app,...")
 
         run = st.form_submit_button("🔍 Tìm kiếm", type="primary")
 
-    # Gửi dữ liệu đi khi nhấn nút
-    if run:
-        payload = {
-            "school": school.strip() if school else None,
-            "gpa": gpa.strip() if gpa else None,
-            "skill": skill.strip() if skill else None,
-            "exp_detail": exp_detail.strip() if exp_detail else None,
-            "project_detail": project_detail.strip() if project_detail else None
-        }
+    # -----------------------
+    # PHẦN THÊM SKILL (ngoài form)
+    # -----------------------
+    # st.markdown("### ➕ Thêm kỹ năng tuỳ chỉnh")
+    # new_skill = st.text_input("Thêm kỹ năng khác", key="new_skill_input", placeholder="VD: FastAPI, GCP, Figma...")
 
+    # if st.button("Thêm skill", key="btn_add_skill"):
+    #     ns = new_skill.strip()
+    #     if ns and ns not in st.session_state["custom_skills"]:
+    #         st.session_state["custom_skills"].append(ns)
+    #         st.success(f"✅ Đã thêm kỹ năng: {ns}")
+    #     st.session_state["new_skill_input"] = ""
+
+    # Khi submit form -> gửi payload tới backend
+    if run:
+        # Chuẩn hóa payload: gửi selected_job trừ khi Tất cả
+        payload = {
+            "job_apply": None if selected_job == "Tất cả" else selected_job,
+            "school": school_value,
+            "gpa": float(gpa.strip()) if gpa else None,
+            "english_cert_only": bool(english_cert_only),
+            # Gửi skill dưới dạng list (backend nên chấp nhận list)
+            "skills": selected_skills or None,
+            "exp_detail": exp_detail.strip() if exp_detail else None,
+            "project_detail": project_detail.strip() if project_detail else None,
+            
+        }
         st.info("📤 Đang gửi yêu cầu tìm kiếm...")
         with st.spinner("Đang xử lý..."):
-            data = call_query(payload)  # cập nhật hàm call_query để nhận dict thay vì q string
+            data = call_FilterQuery(payload)  # cập nhật hàm call_query để nhận dict thay vì q string
             if not data:
                 st.warning("❌ Không có kết quả nào khớp với tiêu chí.")
                 return
 
         # Xử lý kết quả như cũ
-        fa = data.get("final_answer", {})
-        cols = fa.get("columns", []) or []
-        rows_raw = fa.get("rows", []) or []
-        rows = [dict(zip(cols, r)) if isinstance(r, (list, tuple)) else r for r in rows_raw]
+        try:
+            df = pd.DataFrame(data)
+        except Exception as e:
+            st.error(f"⚠️ Lỗi khi xử lý dữ liệu: {e}")
+            st.json(data)  # in thử dữ liệu ra cho dễ debug
+            return
 
-        df = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first")
+        # Loại trùng email nếu có
+        if "email" in df.columns:
+            df = df.drop_duplicates(subset=["email"], keep="first")
+
+        # Lưu vào session state để tái sử dụng
         st.session_state["df_original"] = df
 
-        # Giao diện lọc + hiển thị bảng
+        # ✅ Hiển thị kết quả tìm kiếm
+        st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
+
         col_left, col_right = st.columns([0.28, 0.72])
         with col_left:
-            df_scored = filter_ui_dynamic(df, rows)
+            df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
         with col_right:
             render_table_view(df_scored)
 
@@ -1084,6 +1229,8 @@ if __name__ == "__main__" or True:
 
     if "Main" in nav:
         view_main()
+    elif "Drive Upload" in nav:
+        upload_with_Drive()
     elif "Upload" in nav:
         view_upload()
     # elif "Search" in nav:
