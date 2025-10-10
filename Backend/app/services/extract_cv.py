@@ -237,16 +237,26 @@ REQUIRED_INDEXES = [
 
 def ensure_collection(client: QdrantClient, collection: str, embedding_dim=3072):
     # 1) Tạo collection nếu chưa có
+    # Defensive: ensure embedding_dim is an int (Qdrant requires integer size)
+    try:
+        embedding_dim_int = int(embedding_dim)
+    except Exception as e:
+        raise RuntimeError(f"Invalid embedding_dim passed to ensure_collection: {embedding_dim!r} ({type(embedding_dim)}). Error: {e}")
+
     try:
         client.get_collection(collection)
     except Exception:
-        client.recreate_collection(
-            collection_name=collection,
-            vectors_config=qm.VectorParams(size=embedding_dim, distance=qm.Distance.COSINE),
-            optimizers_config=qm.OptimizersConfigDiff(memmap_threshold=20000),
-            # ghi bền hơn một chút trên prod
-            replication_factor=1, write_consistency_factor=1
-        )
+        try:
+            client.recreate_collection(
+                collection_name=collection,
+                vectors_config=qm.VectorParams(size=embedding_dim_int, distance=qm.Distance.COSINE),
+                optimizers_config=qm.OptimizersConfigDiff(memmap_threshold=20000),
+                # ghi bền hơn một chút trên prod
+                replication_factor=1, write_consistency_factor=1
+            )
+        except Exception as e:
+            # Provide a clearer error if VectorParams validation fails
+            raise RuntimeError(f"Failed to create/recreate Qdrant collection '{collection}' with embedding_dim={embedding_dim_int}: {e}")
 
     # 2) Tạo index cho các trường cần lọc
     for field, schema in REQUIRED_INDEXES:
