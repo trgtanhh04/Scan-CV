@@ -9,7 +9,7 @@ from config.config import QDRANT_URL, QDRANT_API_KEY
 
 
 def setup_qdrant(collection_name, embedding, path, embedding_size):
-    client = QdrantClient(url=QDRANT_URL)
+    client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
     client.recreate_collection(
         collection_name=collection_name,
         vectors_config=VectorParams(size=embedding_size, distance=Distance.COSINE)
