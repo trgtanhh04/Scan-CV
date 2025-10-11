@@ -306,18 +306,18 @@ def expand_abbreviations(text: str) -> str:
 
 #Gợi ý câu truy vấn từ lịch sử tìm kiếm
 
-engine_logs = create_engine(LOGS_DATABASE_URL)
+# engine_logs = create_engine(LOGS_DATABASE_URL)
 
-SessionLocalLogs = sessionmaker(autocommit=False, autoflush=False, bind=engine_logs)
-Base = declarative_base()
+# SessionLocalLogs = sessionmaker(autocommit=False, autoflush=False, bind=engine_logs)
+# Base = declarative_base()
 
-class QuestionLog(Base):
-    __tablename__ = "question_logs"
+# class QuestionLog(Base):
+#     __tablename__ = "question_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    question = Column(Text, nullable=False)
-    route = Column(String, nullable=True)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+#     id = Column(Integer, primary_key=True, index=True)
+#     question = Column(Text, nullable=False)
+#     route = Column(String, nullable=True)
+#     created_at = Column(TIMESTAMP, server_default=func.now())
 
 # def insert_log(question: str):
 #     """Lưu log vào database logs"""
@@ -336,20 +336,20 @@ class QuestionLog(Base):
 #     finally:
 #         db.close()
 
-def get_top_questions(limit: int = 3):
-    """Trả ra N câu hỏi được hỏi nhiều nhất"""
-    db = SessionLocalLogs()
-    try:
-        results = (
-            db.query(
-                QuestionLog.question,
-                func.count(QuestionLog.id).label("frequency")
-            )
-            .group_by(QuestionLog.question)
-            .order_by(func.count(QuestionLog.id).desc())
-            .limit(limit)
-            .all()
-        )
-        return [str(r[0]) for r in results if r[0] is not None]
-    finally:
-        db.close()
+# def get_top_questions(limit: int = 3):
+#     """Trả ra N câu hỏi được hỏi nhiều nhất"""
+#     db = SessionLocalLogs()
+#     try:
+#         results = (
+#             db.query(
+#                 QuestionLog.question,
+#                 func.count(QuestionLog.id).label("frequency")
+#             )
+#             .group_by(QuestionLog.question)
+#             .order_by(func.count(QuestionLog.id).desc())
+#             .limit(limit)
+#             .all()
+#         )
+#         return [str(r[0]) for r in results if r[0] is not None]
+#     finally:
+#         db.close()

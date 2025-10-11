@@ -679,24 +679,24 @@ def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
-    top_qs = get_top_questions(3)
-    if top_qs:
-        st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
-        cols = st.columns(len(top_qs))
-        for i, q_text in enumerate(top_qs):
-            if cols[i].button(q_text, key=f"suggest_{i}"):
-                st.session_state["selected_question"] = q_text
+    # top_qs = get_top_questions(3)
+    # if top_qs:
+    #     st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
+    #     cols = st.columns(len(top_qs))
+    #     for i, q_text in enumerate(top_qs):
+    #         if cols[i].button(q_text, key=f"suggest_{i}"):
+    #             st.session_state["selected_question"] = q_text
 
-    if "selected_question" in st.session_state:
-        default_q = st.session_state["selected_question"]
-    else:
-        default_q = ""
+    # if "selected_question" in st.session_state:
+    #     default_q = st.session_state["selected_question"]
+    # else:
+    #     default_q = ""
 
     q = st.text_input(
         "Câu hỏi",
         placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
         key="q_input",
-        value=default_q
+        # value=default_q
     )
 
     # insert_log(question=q)
