@@ -85,6 +85,48 @@ def startup_event():
     except Exception as e:
         log.exception("Failed to initialize Qdrant client: %s", e)
 
+
+def get_qdrant():
+    """Return initialized Qdrant client or attempt to lazy-initialize it.
+    Raises HTTPException(503) if initialization fails so endpoints return a
+    clear error instead of crashing with AttributeError on None.
+    """
+    global qdrant
+    import logging
+    log = logging.getLogger("uvicorn.error")
+    if qdrant is None:
+        if not QDRANT_URL:
+            raise HTTPException(status_code=503, detail="Qdrant not configured (QDRANT_URL missing)")
+        try:
+            qdrant_kwargs = {"url": QDRANT_URL}
+            if QDRANT_API_KEY:
+                qdrant_kwargs["api_key"] = QDRANT_API_KEY
+            qdrant = QdrantClient(prefer_grpc=False, **qdrant_kwargs)
+            log.info("Qdrant lazy-initialized (url=%s)", QDRANT_URL)
+        except Exception as e:
+            log.exception("Failed to lazy-initialize Qdrant: %s", e)
+            raise HTTPException(status_code=503, detail=f"Qdrant init failed: {e}")
+    return qdrant
+
+
+def get_embedding():
+    """Return initialized embedding client or attempt to lazy-initialize it.
+    Raises HTTPException(503) if initialization fails.
+    """
+    global embedding
+    import logging
+    log = logging.getLogger("uvicorn.error")
+    if embedding is None:
+        if not EMBEDDING_MODEL_NAME:
+            raise HTTPException(status_code=503, detail="Embedding model not configured (EMBEDDING_MODEL_NAME missing)")
+        try:
+            embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+            log.info("Embedding lazy-initialized (model=%s)", EMBEDDING_MODEL_NAME)
+        except Exception as e:
+            log.exception("Failed to lazy-initialize embedding client: %s", e)
+            raise HTTPException(status_code=503, detail=f"Embedding init failed: {e}")
+    return embedding
+
 def get_db():
     db = SessionLocal()
     try: yield db
@@ -126,10 +168,14 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         info = extract_info(text) or {}
 
         # (3) RAG 
+        # Ensure dependencies are available (lazy-init if needed)
+        qdr = get_qdrant()
+        emb = get_embedding()
+
         rag_results = process_cv_rag(
             file_path=temp_path,
-            vector_db=qdrant,
-            embedding_model=embedding,
+            vector_db=qdr,
+            embedding_model=emb,
             collection_name=QDRANT_COLLECTION,
             pre_text=text,
             pre_info=info,
@@ -214,7 +260,8 @@ def ensure_indexes():
         ("skill", qm.PayloadSchemaType.KEYWORD),
     ]:
         try:
-            qdrant.create_payload_index(QDRANT_COLLECTION, field, schema, wait=True)
+            qdr = get_qdrant()
+            qdr.create_payload_index(QDRANT_COLLECTION, field, schema, wait=True)
             created.append(field)
         except Exception as e:
             if "already exists" not in str(e).lower():
@@ -226,7 +273,8 @@ def ensure_indexes():
 @app.get("/__debug/qdrant")
 def dbg_qdrant():
     try:
-        return qdrant.get_collections().dict()
+        qdr = get_qdrant()
+        return qdr.get_collections().dict()
     except Exception as e:
         return {"error": str(e)}
     
