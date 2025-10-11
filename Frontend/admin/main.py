@@ -10,7 +10,7 @@ from io import BytesIO
 import io
 import base64
 from googleapiclient.http import MediaIoBaseDownload
-from utils import translate_to_english, convert_job_to_question, needs_finetune, validate_candidate_query, is_probably_english, expand_abbreviations, get_top_questions
+from utils import translate_to_english, convert_job_to_question, needs_finetune, is_probably_english, expand_abbreviations
 
 from utils import list_files_in_folder, extract_folder_id, get_drive_service, MIME_TYPE_FOLDER
 from config import DRIVE_API_KEY
