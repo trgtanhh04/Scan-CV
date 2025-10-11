@@ -14,7 +14,7 @@ from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 from app.services.extract_cv import extract_text_from_pdf, extract_info
 from app.models.models import create_all as models_create_all
 
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, QDRANT_API_KEY
 from config.storage import MEDIA_ROOT 
 from langchain_deepseek import ChatDeepSeek
 from qdrant_client import QdrantClient
@@ -23,43 +23,15 @@ from sqlalchemy import text as sa_text
 from fastapi import FastAPI, Depends
 
 
-deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
-
-embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
-
-
-def make_qdrant_client():
-    """Create a QdrantClient using configured env vars. Prefer REST (prefer_grpc=False)
-    for HTTP endpoints (e.g., Cloud Run). Fall back to localhost if connection fails.
-    """
-    from config.config import QDRANT_URL, QDRANT_API_KEY
-    # prefer REST transport for HTTP-hosted Qdrant (Cloud Run or similar)
-    try:
-        qdrant_kwargs = dict(url=QDRANT_URL or "http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
-        if QDRANT_API_KEY:
-            qdrant_kwargs["api_key"] = QDRANT_API_KEY
-        client = QdrantClient(**qdrant_kwargs)
-        # quick ping to validate connection
-        client.get_collections()
-        return client
-    except Exception:
-        # Last-resort: try localhost without api_key
-        try:
-            client = QdrantClient(url="http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
-            client.get_collections()
-            return client
-        except Exception:
-            # re-raise original to allow caller to handle
-            raise
-
-
+# Defer initialization of external/networked clients until app startup.
+# If these are created at import time and fail (missing creds, network issues),
+# the process will crash and Cloud Run won't see the server bind to $PORT.
+deepseek = None
+embedding = None
 qdrant = None
-try:
-    qdrant = make_qdrant_client()
-except Exception:
-    # Defer error until used; endpoints will return errors if qdrant is required.
-    qdrant = None
 
+
+# Create the FastAPI app before registering events so decorators can reference it.
 app = FastAPI(title="CV Manager API")
 
 app.add_middleware(
@@ -67,6 +39,51 @@ app.add_middleware(
     allow_origins=["*"], allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def startup_event():
+    """Initialize external clients on startup. Failures are logged but won't
+    crash the server so Cloud Run can start and report startup errors in logs.
+    """
+    global deepseek, embedding, qdrant
+    import logging
+    log = logging.getLogger("uvicorn.error")
+
+    # DeepSeek (optional)
+    try:
+        if DEEPSEEK_API_KEY:
+            deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+            log.info("DeepSeek client initialized")
+        else:
+            log.info("DEEPSEEK_API_KEY not set; skipping DeepSeek init")
+    except Exception as e:
+        log.exception("Failed to initialize DeepSeek client: %s", e)
+
+    # Embedding model (optional)
+    try:
+        if EMBEDDING_MODEL_NAME:
+            embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+            log.info("Embedding client initialized")
+        else:
+            log.info("EMBEDDING_MODEL_NAME not set; skipping embedding init")
+    except Exception as e:
+        log.exception("Failed to initialize embedding client: %s", e)
+
+    # Qdrant client (optional). prefer_grpc=False uses REST which is suitable for Cloud Run.
+    try:
+        if QDRANT_URL:
+            # include API key if provided
+            qdrant_kwargs = {"url": QDRANT_URL}
+            if QDRANT_API_KEY:
+                qdrant_kwargs["api_key"] = QDRANT_API_KEY
+            # prefer_grpc=False ensures REST client (avoids grpc issues in some environments)
+            qdrant = QdrantClient(prefer_grpc=False, **qdrant_kwargs)
+            log.info("Qdrant client initialized (url=%s)", QDRANT_URL)
+        else:
+            log.info("QDRANT_URL not set; skipping Qdrant init")
+    except Exception as e:
+        log.exception("Failed to initialize Qdrant client: %s", e)
 
 def get_db():
     db = SessionLocal()

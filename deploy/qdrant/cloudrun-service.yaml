@@ -1,0 +1,26 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: REPLACE_WITH_IMAGE
+          env:
+            - name: QDRANT__SERVICE__HTTP_PORT
+              value: "8080"
+            - name: QDRANT__SERVICE__GRPC_PORT
+              value: "6334"
+            - name: QDRANT__SERVICE__ENABLE_HTTP2
+              value: "true"
+            - name: QDRANT__LOG_LEVEL
+              value: "INFO"
+            # Optional: enable API key auth
+            # - name: QDRANT__SERVICE__API_KEY
+            #   value: "${QDRANT_API_KEY}"
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
