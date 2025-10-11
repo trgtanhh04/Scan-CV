@@ -246,38 +246,17 @@ def ensure_collection(client: QdrantClient, collection: str, embedding_dim=3072)
     try:
         client.get_collection(collection)
     except Exception:
-        # Try recreate_collection with retries/backoff because Qdrant can
-        # occasionally time out during heavy ops (especially on Cloud Run).
-        import time
-        max_attempts = 3
-        backoff = 2
-        last_exc = None
-        for attempt in range(1, max_attempts + 1):
-            try:
-                client.recreate_collection(
-                    collection_name=collection,
-                    vectors_config=qm.VectorParams(size=embedding_dim_int, distance=qm.Distance.COSINE),
-                    # use a conservative optimizers config to reduce chance of long-running ops
-                    optimizers_config=qm.OptimizersConfigDiff(memmap_threshold=20000),
-                    replication_factor=1, write_consistency_factor=1,
-                )
-                last_exc = None
-                break
-            except Exception as e:
-                last_exc = e
-                # If it's the last attempt, break and raise below
-                if attempt == max_attempts:
-                    break
-                # otherwise sleep and retry
-                try:
-                    time.sleep(backoff)
-                except Exception:
-                    pass
-                backoff *= 2
-
-        if last_exc is not None:
-            # Provide a clearer error if VectorParams validation fails or operation timed out
-            raise RuntimeError(f"Failed to create/recreate Qdrant collection '{collection}' with embedding_dim={embedding_dim_int}: {last_exc}")
+        try:
+            client.recreate_collection(
+                collection_name=collection,
+                vectors_config=qm.VectorParams(size=embedding_dim_int, distance=qm.Distance.COSINE),
+                optimizers_config=qm.OptimizersConfigDiff(memmap_threshold=20000),
+                # ghi bền hơn một chút trên prod
+                replication_factor=1, write_consistency_factor=1
+            )
+        except Exception as e:
+            # Provide a clearer error if VectorParams validation fails
+            raise RuntimeError(f"Failed to create/recreate Qdrant collection '{collection}' with embedding_dim={embedding_dim_int}: {e}")
 
     # 2) Tạo index cho các trường cần lọc
     for field, schema in REQUIRED_INDEXES:
