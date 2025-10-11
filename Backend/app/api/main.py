@@ -14,7 +14,7 @@ from app.services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 from app.services.extract_cv import extract_text_from_pdf, extract_info
 from app.models.models import create_all as models_create_all
 
-from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME, QDRANT_API_KEY
+from config.config import DEEPSEEK_API_KEY, GOOGLE_API_KEY, QDRANT_COLLECTION, QDRANT_URL, EMBEDDING_MODEL_NAME
 from config.storage import MEDIA_ROOT 
 from langchain_deepseek import ChatDeepSeek
 from qdrant_client import QdrantClient
@@ -26,7 +26,39 @@ from fastapi import FastAPI, Depends
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
-qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+
+
+def make_qdrant_client():
+    """Create a QdrantClient using configured env vars. Prefer REST (prefer_grpc=False)
+    for HTTP endpoints (e.g., Cloud Run). Fall back to localhost if connection fails.
+    """
+    from config.config import QDRANT_URL, QDRANT_API_KEY
+    # prefer REST transport for HTTP-hosted Qdrant (Cloud Run or similar)
+    try:
+        qdrant_kwargs = dict(url=QDRANT_URL or "http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
+        if QDRANT_API_KEY:
+            qdrant_kwargs["api_key"] = QDRANT_API_KEY
+        client = QdrantClient(**qdrant_kwargs)
+        # quick ping to validate connection
+        client.get_collections()
+        return client
+    except Exception:
+        # Last-resort: try localhost without api_key
+        try:
+            client = QdrantClient(url="http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
+            client.get_collections()
+            return client
+        except Exception:
+            # re-raise original to allow caller to handle
+            raise
+
+
+qdrant = None
+try:
+    qdrant = make_qdrant_client()
+except Exception:
+    # Defer error until used; endpoints will return errors if qdrant is required.
+    qdrant = None
 
 app = FastAPI(title="CV Manager API")
 

@@ -424,7 +424,14 @@ def process_cv_rag(
 if __name__ == "__main__":
     # honor QDRANT_API_KEY from config if present
     from config.config import QDRANT_URL, QDRANT_API_KEY
-    qdrant = QdrantClient(url=QDRANT_URL or "http://localhost:6333", api_key=QDRANT_API_KEY, check_compatibility=False)
+    try:
+        kwargs = dict(url=QDRANT_URL or "http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
+        if QDRANT_API_KEY:
+            kwargs["api_key"] = QDRANT_API_KEY
+        qdrant = QdrantClient(**kwargs)
+        qdrant.get_collections()
+    except Exception:
+        qdrant = QdrantClient(url="http://localhost:6333", prefer_grpc=False, timeout=60, check_compatibility=False)
     embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
 
     file_path = '../../raw/cvs/02.pdf'
