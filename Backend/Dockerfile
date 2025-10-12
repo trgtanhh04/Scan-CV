@@ -34,7 +34,6 @@
 # CMD ["bash", "-lc", "uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT}"]
 
 # ---------------------------------
-
 FROM python:3.10-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
