@@ -72,19 +72,37 @@ def get_jobs(db: Session = Depends(get_db)):
     return {"jobs": jobs}
 
 @app.post("/job_apply/delete")
-def delete_candidates_by_job(job_apply: str= Form(None), db: Session = Depends(get_db)):
-    candidates = db.query(Candidate).filter(Candidate.job_apply == job_apply).all()
+def delete_candidates_by_job(job_apply: str = Form(None), db: Session = Depends(get_db)):
+    # Normalize common string sentinels for NULL from frontend ('null', 'None', '')
+    if isinstance(job_apply, str) and job_apply.strip().lower() in ("null", "none", ""):
+        job_apply_val = None
+    else:
+        job_apply_val = job_apply
+
+    # Delete matching candidates. Use .is_(None) for NULL checks.
+    if job_apply_val is None:
+        candidates = db.query(Candidate).filter(Candidate.job_apply.is_(None)).all()
+    else:
+        candidates = db.query(Candidate).filter(Candidate.job_apply == job_apply_val).all()
+
     count = len(candidates)
     for candidate in candidates:
         db.delete(candidate)
     db.commit()
 
-    qdrant.delete(
-    collection_name="candidates",
-    points_selector=models.Filter(
-        must=[models.FieldCondition(key="job_apply", match=models.MatchValue(value=job_apply))]
-    )
-    )
+    # Only call Qdrant deletion for non-null job_apply values
+    if job_apply_val is not None:
+        try:
+            qdrant.delete(
+                collection_name="candidates",
+                points_selector=models.Filter(
+                    must=[models.FieldCondition(key="job_apply", match=models.MatchValue(value=job_apply_val))]
+                )
+            )
+        except Exception:
+            # don't block DB deletion on Qdrant errors; log if needed
+            pass
+
     return {"deleted_count": count}
 
 @app.get("/candidate/by_job/{job_apply}")

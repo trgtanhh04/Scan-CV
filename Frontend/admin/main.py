@@ -388,11 +388,11 @@ def view_main():
 
                 if candidates:
                     df = pd.DataFrame(candidates)[["name", "email", "public_url"]]
-                    df["📎 CV"] = df["public_url"].apply(lambda x: f"[Xem CV]({x})")
+                    df["📎 CV"] = df["public_url"].apply(lambda x: f"<a href=\"{x}\" target=\"_blank\">Xem CV</a>")
                     df = df[["name", "email", "📎 CV"]]
 
-                    # st.markdown("#### Danh sách ứng viên")
-                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
+                    # Use HTML rendering to avoid optional pandas dependency 'tabulate'
+                    st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
                 else:
                     st.info("Không có ứng viên nào cho vị trí này.")
 
@@ -1135,10 +1135,6 @@ if "📤" in st.session_state.get("nav", ""):
 
 if __name__ == "__main__" or True:
 
-    # Use exact equality checks for `nav` values. Previously the code used
-    # substring checks like `if "Search" in nav:` which made
-    # "🔽 Filter Search" match the "Search" branch. That caused Filter Search
-    # to render the same view as Search. Using exact matches fixes this.
     if nav == "✉️ Main":
         view_main()
     elif nav == "🗂️ Drive Upload":
