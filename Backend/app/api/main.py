@@ -33,8 +33,6 @@ from fastapi import FastAPI, Depends
 from typing import List, Optional
 from qdrant_client import models
 
-
-
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
 
 embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, google_api_key=GOOGLE_API_KEY, request_timeout=60)

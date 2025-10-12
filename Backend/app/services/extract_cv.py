@@ -56,13 +56,11 @@ Extract the following candidate information fields from the CV content (as plain
 "phone": "...",
 "job_title": "...",
 "location": "...",
-"location": "...",
 "education": [
     {{
     "degree": "...",
     "university": "...",
-    "gpa": "...",
-    "gpa": "...",
+    "gpa": null,
     "start_year": ...,
     "end_year": ...
     }}
@@ -82,8 +80,7 @@ Extract the following candidate information fields from the CV content (as plain
     {{
     "certificate_name": "...",
     "organization": "...",
-    "score": "...",
-    "score": "..."
+    "score": null
     }}
 ],
 "project": [
@@ -91,25 +88,13 @@ Extract the following candidate information fields from the CV content (as plain
     "project_name": "...",
     "project_description": "..."
     }}
-]
-"project": [
-    {{
-    "project_name": "...",
-    "project_description": "..."
-    }}
-]
+],
 "languages": ["...", "..."]
 }}
 
 - Include ALL English language certifications (TOEIC, IELTS, TOEFL, etc.) in the "certifications" section.
 - Always capture their score if available (e.g., "TOEIC 850", "IELTS 7.5", "TOEFL iBT 95").
 - If the certificate is mentioned without a score, set "score" to null.
-
-- Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
-- Include ALL English language certifications (TOEIC, IELTS, TOEFL, etc.) in the "certifications" section.
-- Always capture their score if available (e.g., "TOEIC 850", "IELTS 7.5", "TOEFL iBT 95").
-- If the certificate is mentioned without a score, set "score" to null.
-
 - Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
 **Do not include personal, academic, or side projects** in the experience section.
 
