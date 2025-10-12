@@ -179,26 +179,6 @@ def call_FilterQuery(payload: dict):
     except Exception as e:
         st.error(f"❌ Không thể kết nối backend: {e}")
         return None
-
-
-# --- Input parsing helpers ---
-def parse_gpa_input(s: str):
-    """Try to extract a numeric GPA from user input.
-    Accepts forms like '>=3.6', '3,6', '3.5 ~ 4.0', '>= 3.2' and returns float or None.
-    """
-    if not s or not isinstance(s, str):
-        return None
-    s = s.strip()
-    # Replace comma decimal with dot
-    s = s.replace(',', '.')
-    # Find first occurrence of a number like 3.5 or 4
-    m = re.search(r"(\d+(?:\.\d+)?)", s)
-    if not m:
-        return None
-    try:
-        return float(m.group(1))
-    except Exception:
-        return None
     
 # --- Main UI ---
 
@@ -1013,7 +993,7 @@ def view_search2():
         payload = {
             "job_apply": None if selected_job == "Tất cả" else selected_job,
             "school": school_value,
-            "gpa": parse_gpa_input(gpa),
+            "gpa": float(gpa.strip()) if gpa else None,
             "english_cert_only": bool(english_cert_only),
             # Gửi skill dưới dạng list (backend nên chấp nhận list)
             "skills": selected_skills or None,
