@@ -339,8 +339,16 @@ def _skill_terms_from_query(q: str) -> List[str]:
     return [kw for kw in vocab if kw in qn]
 
 def _fallback_sql_experiences_like(skills: List[str], limit: int) -> str:
+    def _regex_word_match(column: str, kw: str) -> str:
+        # Escape single quotes in kw for SQL literal
+        esc = kw.replace("'", "''")
+        # Use a regex that matches the keyword as a whole word (non-alnum boundaries)
+        # (^|[^A-Za-z0-9])KW($|[^A-Za-z0-9])  -> wrapped as case-insensitive (~*)
+        regex = f"(^|[^A-Za-z0-9]){esc}($|[^A-Za-z0-9])"
+        return f"{column} ~* '{regex}'"
+
     like_or = " AND ".join(
-        [f"(e.job_title ILIKE '%{kw}%' OR e.description ILIKE '%{kw}%')" for kw in skills]
+        [f"({_regex_word_match('e.job_title', kw)} OR {_regex_word_match('e.description', kw)})" for kw in skills]
     ) or "TRUE"
     return f"""
         SELECT DISTINCT c.id, c.full_name
