@@ -24,6 +24,10 @@ from qdrant_client.http.models import PointStruct, SparseVector
 
 from collections import defaultdict
 
+from qdrant_client.http.models import PointStruct, SparseVector
+
+from collections import defaultdict
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from services.get_cv_url_from_gcs import upload_pdf_and_get_url_gcs
 
@@ -52,10 +56,12 @@ Extract the following candidate information fields from the CV content (as plain
 "phone": "...",
 "job_title": "...",
 "location": "...",
+"location": "...",
 "education": [
     {{
     "degree": "...",
     "university": "...",
+    "gpa": "...",
     "gpa": "...",
     "start_year": ...,
     "end_year": ...
@@ -76,9 +82,16 @@ Extract the following candidate information fields from the CV content (as plain
     {{
     "certificate_name": "...",
     "organization": "...",
+    "score": "...",
     "score": "..."
     }}
 ],
+"project": [
+    {{
+    "project_name": "...",
+    "project_description": "..."
+    }}
+]
 "project": [
     {{
     "project_name": "...",
@@ -93,6 +106,11 @@ Extract the following candidate information fields from the CV content (as plain
 - If the certificate is mentioned without a score, set "score" to null.
 
 - Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
+- Include ALL English language certifications (TOEIC, IELTS, TOEFL, etc.) in the "certifications" section.
+- Always capture their score if available (e.g., "TOEIC 850", "IELTS 7.5", "TOEFL iBT 95").
+- If the certificate is mentioned without a score, set "score" to null.
+
+- Only include **real work experience** (e.g. internships, jobs at companies, freelance work) in the "experience" field.  
 **Do not include personal, academic, or side projects** in the experience section.
 
 Only return the JSON content. Do not include any explanation.  
@@ -101,6 +119,7 @@ If any field cannot be found, set it to null or empty array.
 CV content:
 {text}
 """
+
 
 
 def extract_info(text: str) -> dict:
@@ -287,6 +306,21 @@ def get_sparse_vector(text: str, vocab_size: int = 1000) -> SparseVector:
     indices, values = dedup_sparse(indices, values)
 
     return SparseVector(indices=indices, values=values)
+def dedup_sparse(indices, values):
+    agg = defaultdict(float)
+    for i, v in zip(indices, values):
+        agg[i] += v
+    new_indices, new_values = zip(*agg.items())
+    return list(new_indices), list(new_values)
+
+def get_sparse_vector(text: str, vocab_size: int = 1000) -> SparseVector:
+    tokens = text.lower().split()
+    indices = [abs(hash(t)) % vocab_size for t in tokens]
+    values = [1.0] * len(tokens)
+
+    indices, values = dedup_sparse(indices, values)
+
+    return SparseVector(indices=indices, values=values)
 
 def process_cv_rag(
     file_path: str,
@@ -355,6 +389,7 @@ def process_cv_rag(
 
     skills = _dedup_skills(info.get("skills"))
     experiences = _dedup_experiences(info.get("experience"))
+    projects = info.get("project", [])
 
     points = []
     for skill in skills:
@@ -366,12 +401,14 @@ def process_cv_rag(
                 "type": "skill", 
                 "skill": skill,
                 "job_title": info.get("job_title"),
+                "job_apply": info.get("job_apply"),
                 "source_file": filename,
                 "candidate_name": info.get("full_name"),
                 "email": email_norm,
                 "resume_url": resume_url, 
             },
         ))
+
 
     for i, exp in enumerate(experiences):
         job_title = exp.get("job_title", "")
@@ -393,6 +430,7 @@ def process_cv_rag(
                     "exp_company": company,
                     "exp_job_title": job_title,
                     "job_title": info.get("job_title"),
+                    "job_apply": info.get("job_apply"),
                     "source_file": filename,                    
                     "candidate_name": info.get("full_name"),
                     "email": email_norm,
@@ -408,6 +446,7 @@ def process_cv_rag(
                     "exp_job_title": job_title,
                     "exp_description": exp_description,
                     "job_title": info.get("job_title"),
+                    "job_apply": info.get("job_apply"),
                     "source_file": filename,                    
                     "candidate_name": info.get("full_name"),
                     "email": email_norm,
@@ -415,6 +454,26 @@ def process_cv_rag(
                 },
         ))
 
+    for i, proj in enumerate(projects):
+        name = proj.get("project_name", "")
+        description = proj.get("project_description", "")
+        
+        project_text = f"Project name: {name} \nProject description: {description}" if name and description else ""
+        project_emb = embedding_model.embed_query(project_text)
+        points.append(PointStruct(
+                id=make_id(f"proj-{filename}-{name}-{description}-{i}-{uuid.uuid4().hex[:8]}"),
+                vector=project_emb,
+                payload={
+                    "type": "project",
+                    "project_name": name,
+                    "project_description": description,
+                    "job_apply": info.get("job_apply"),
+                    "source_file": filename,                    
+                    "candidate_name": info.get("full_name"),
+                    "email": email_norm,
+                    "resume_url": resume_url,
+                },
+        ))        
 
     if points:
         vector_db.upsert(collection_name=collection_name, points=points)

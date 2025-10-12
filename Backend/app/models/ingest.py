@@ -149,6 +149,119 @@ def link_language(db: Session, candidate_id: int, language_id: int) -> None:
     )
     db.execute(stmt)
 
+
+def parse_gpa_to_4(val) -> float | None:
+    """
+    Chuẩn hoá GPA về thang 4.0
+    - '3.4'       -> 3.4
+    - '3.3/4.0'   -> (3.3/4.0)*4 = 3.3
+    - '7/10'      -> (7/10)*4 = 2.8
+    - '85/100'    -> (85/100)*4 = 3.4
+    - 8.0         -> (8/10)*4 = 3.2
+    - 92          -> (92/100)*4 = 3.68
+    """
+    if val is None:
+        return None
+
+    # Nếu đã là float hoặc int
+    if isinstance(val, (float, int)):
+        x = float(val)
+        if x <= 4.0:       # đã ở thang 4
+            return x
+        elif x <= 10.0:    # thang 10
+            return round((x / 10) * 4, 2)
+        elif x <= 100.0:   # thang 100
+            return round((x / 100) * 4, 2)
+        else:
+            return None
+
+    # Nếu là string
+    if isinstance(val, str):
+        # Bóc tách tất cả số
+        matches = re.findall(r"\d*\.?\d+", val.replace(",", "."))
+        if matches:
+            try:
+                if len(matches) == 2:  # dạng x/y
+                    x, y = map(float, matches)
+                    if y > 0:
+                        return round((x / y) * 4, 2)
+                else:  # chỉ có 1 số
+                    x = float(matches[0])
+                    if x <= 4.0:
+                        return x
+                    elif x <= 10.0:
+                        return round((x / 10) * 4, 2)
+                    elif x <= 100.0:
+                        return round((x / 100) * 4, 2)
+            except ValueError:
+                return None
+    return None
+
+def handle_cert_score(raw_score: str | None) -> float | None:
+    if raw_score is None:
+        return None
+
+    s = str(raw_score).strip().lower()
+
+    # Nếu có dạng "550/990" → lấy phần trước "/"
+    if "/" in s:
+        try:
+            return float(s.split("/")[0].strip())
+        except:
+            return None
+
+    # Nếu có chữ (toeic, ielts...) thì lọc số ra
+    match = re.search(r"(\d+(\.\d+)?)", s)
+    if match:
+        try:
+            return float(match.group(1))
+        except:
+            return None
+
+    # fallback
+    try:
+        return float(s)
+    except:
+        return None
+    
+regex_mapping = {
+    r"(Foreign Trade University|FTU|FTU2)": "Đại học Ngoại thương",
+    r"(University of Economics Ho Chi Minh City|UEH)": "Đại học Kinh tế TP.HCM",
+    r"(University of Economics and Law|UEL)": "Đại học Kinh tế - Luật - ĐHQG TP.HCM",
+    r"(University of Finance and Marketing|UFM)": "Đại học Tài chính - Marketing",
+    r"(University of Technology and Education|UTE)": "Đại học Sư phạm Kỹ thuật TP.HCM",
+    r"(Ho Chi Minh City University of Technology|HUTECH)": "Đại học HUTECH",
+    r"(Bach Khoa University|BKU)": "Đại học Bách khoa - ĐHQG TP.HCM",
+    r"(Ho Chi Minh City University of Science|HCMUS)": "Đại học Khoa học Tự nhiên - ĐHQG TP.HCM", 
+    r"(Ho Chi Minh City University of Social Sciences and Humanities|HCMUSSH)": "Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM",
+    r"(University of Transport and Communications|UTC)": "Đại học Giao thông Vận tải TP.HCM",
+    r"(Ho Chi Minh City University of Foreign Languages & IT|HUFLIT)": "Đại học Ngoại ngữ - Tin học TP.HCM",
+    r"(Ton Duc Thang University|TDTU)": "Đại học Tôn Đức Thắng",
+    r"(Industrial University|IUH)": "Đại học Công nghiệp TP.HCM",
+    r"(Saigon Technology University|STU)": "Đại học Công nghệ Sài Gòn",
+    r"(University of Information Technology|UIT|VNU-HCM.*Information Technology)": "Đại học Công nghệ thông tin - ĐHQG TP.HCM",
+    r"(University of Industry and Trade)": "Đại học Công nghiệp Thương mại TP.HCM",
+    r"(Open University|OU)": "Đại học Mở TP.HCM",
+    r"(RMIT University|RMIT)": "Đại học RMIT Việt Nam",
+    r"(International University|HCMIU)": "Đại học Quốc tế - ĐHQG TP.HCM",
+    r"(Sai Gon University|SGU)": "Đại học Sài Gòn",
+    r"(Van Lang University|VLU)": "Đại học Văn Lang",
+    r"(Hoa Sen University|HSU)": "Đại học Hoa Sen",
+    r"(FPT University|FPT)": "Đại học FPT",
+    r"(Ho Chi Minh City University of Law|HCMUL)": "Đại học Luật TP.HCM",
+    r"(Nguyen Tat Thanh University|NTTU)": "Đại học Nguyễn Tất Thành",
+    r"(Ho Chi Minh City University of Architecture|HCMUA)": "Đại học Kiến trúc TP.HCM",
+    r"(Ho Chi Minh City University of Economics and Finance|UEF)": "Đại học Kinh tế Tài chính TP.HCM",
+    r"(Ho Chi Minh City University of Education|HCMUE)": "Đại học Sư phạm TP.HCM",
+}
+
+# Hàm chuẩn hoá
+def normalize_university(name):
+    for pattern, unified in regex_mapping.items():
+        if re.search(pattern, name, flags=re.IGNORECASE):
+            return unified
+    return name 
+
 # ---------- main upsert ----------
 def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     """
@@ -163,6 +276,7 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     cand.full_name = _clean_str(cv.get("full_name"))
     cand.email     = _clean_str(cv.get("email"))
     cand.phone     = _clean_str(cv.get("phone"))
+    cand.job_apply =  _clean_str(cv.get("job_apply"))
     cand.job_title = _clean_str(cv.get("job_title"))
     cand.location  = _clean_str(cv.get("location"))
     db.flush()
@@ -173,10 +287,13 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
     for e in edu_list:
         if not isinstance(e, dict):
             continue
+        raw_uni = _clean_str(e.get("university"))
+        normalized_uni = normalize_university(raw_uni) if raw_uni else None
         edu = Educations(
             candidate_id = cand.id,
             degree       = _clean_str(e.get("degree")),
-            university   = _clean_str(e.get("university")),
+            university   = normalized_uni,
+            gpa          = parse_gpa_to_4(e.get("gpa")),
             start_year   = e.get("start_year") if isinstance(e.get("start_year"), int) else None,
             end_year     = e.get("end_year")   if isinstance(e.get("end_year"), int)   else None,
         )
@@ -211,6 +328,7 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
             candidate_id     = cand.id,
             certificate_name = _clean_str(c.get("certificate_name")),
             organization     = _clean_str(c.get("organization")),
+            score = handle_cert_score(c.get("score")),
         )
         cand.certifications.append(cert)
 
@@ -234,6 +352,12 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
 
     db.flush()
     return cand
+
+from sqlalchemy import distinct
+def get_unique_job_titles(db):
+    result = db.query(distinct(Candidate.job_apply)).all()
+    # SQLAlchemy trả list các tuple [(“Data Analyst”,), (“Backend Developer”,)...]
+    return [r[0] for r in result if r[0] is not None]
 
 
 # ---------- CLI demo ----------
