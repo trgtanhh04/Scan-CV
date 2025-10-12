@@ -1039,12 +1039,14 @@ def view_search2():
 
         # ✅ Hiển thị kết quả tìm kiếm
         st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
-
-        col_left, col_right = st.columns([0.28, 0.72])
-        with col_left:
-            df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
-        with col_right:
-            render_table_view(df_scored)
+        
+        render_table_view(df)
+        # df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
+        # col_left, col_right = st.columns([0.28, 0.72])
+        # with col_left:
+        #     df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
+        # with col_right:
+        #     render_table_view(df_scored)
 
 
 
