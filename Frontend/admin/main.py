@@ -72,6 +72,7 @@ with st.sidebar:
     st.text_input("Model name", key="model", help="VD: deepseek-chat | gpt-4o-mini | gpt-4o | gpt-4.1-mini ...")
 
     st.divider()
+
 # ---------------- Helpers ----------------
 def provider_badge():
     if st.session_state.provider == "deepseek":
@@ -91,28 +92,14 @@ def provider_badge():
 
 def header():
     st.markdown("<div style='margin-top: 1.5rem'></div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([0.78, 0.22])
-    with c1:
-        st.markdown("<h1 style='margin-bottom:0.5rem;'>📄 CV Manager</h1>", unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""
-        <div class="card-light"><b>API</b><br>{st.session_state.api_base}</div>
-        <div style="height:.4rem"></div>
-        {provider_badge()}
-        """, unsafe_allow_html=True)
+    st.markdown("<h1 style='margin-bottom:0.5rem;'>📄 CV Manager</h1>", unsafe_allow_html=True)
 
 
 from urllib.parse import urljoin
         
 def get_api_base() -> str:
-    # ưu tiên session_state; nếu chưa có thì lấy từ ENV hoặc secrets
-    # If user edited the sidebar widget, prefer that value.
     if "api_base" in st.session_state and st.session_state.api_base:
         return st.session_state.api_base
-
-    # Fallback to ENV or secrets; do NOT mutate st.session_state here because the
-    # widget with key 'api_base' may already be instantiated and Streamlit forbids
-    # programmatic modification of a widget-key after instantiation.
     base = (
         os.getenv("API_BASE_URL", "").strip()
         or st.secrets.get("API_BASE_URL", "").strip()
@@ -131,7 +118,6 @@ def call_upload(file):
     # url = f"{st.session_state.api_base}/cv/upload"
     url = api_url("/cv/upload")
     try:
-        st.write(f"⚙️ calling: {url}")
         resp = requests.post(url, files={"file": (file.name, file.getvalue(), "application/pdf")}, timeout=(10, 600))
         resp.raise_for_status()
         return resp.json()
@@ -192,6 +178,26 @@ def call_FilterQuery(payload: dict):
             return None
     except Exception as e:
         st.error(f"❌ Không thể kết nối backend: {e}")
+        return None
+
+
+# --- Input parsing helpers ---
+def parse_gpa_input(s: str):
+    """Try to extract a numeric GPA from user input.
+    Accepts forms like '>=3.6', '3,6', '3.5 ~ 4.0', '>= 3.2' and returns float or None.
+    """
+    if not s or not isinstance(s, str):
+        return None
+    s = s.strip()
+    # Replace comma decimal with dot
+    s = s.replace(',', '.')
+    # Find first occurrence of a number like 3.5 or 4
+    m = re.search(r"(\d+(?:\.\d+)?)", s)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except Exception:
         return None
     
 # --- Main UI ---
@@ -976,7 +982,7 @@ def view_search2():
             else:
                 school_value = school_choice
 
-            gpa = st.text_input("📊 Ngưỡng GPA", placeholder="VD: >=3.2, 3.5 ~ 4.0")
+            gpa = st.text_input("📊 Ngưỡng GPA", placeholder="VD: 3.2, 3.5, 4.0")
 
         with col2:
             combined_skills = list(dict.fromkeys(skill_options + st.session_state["custom_skills"]))
@@ -1007,7 +1013,7 @@ def view_search2():
         payload = {
             "job_apply": None if selected_job == "Tất cả" else selected_job,
             "school": school_value,
-            "gpa": float(gpa.strip()) if gpa else None,
+            "gpa": parse_gpa_input(gpa),
             "english_cert_only": bool(english_cert_only),
             # Gửi skill dưới dạng list (backend nên chấp nhận list)
             "skills": selected_skills or None,
@@ -1015,7 +1021,6 @@ def view_search2():
             "project_detail": project_detail.strip() if project_detail else None,
             
         }
-        st.info("📤 Đang gửi yêu cầu tìm kiếm...")
         with st.spinner("Đang xử lý..."):
             data = call_FilterQuery(payload)  # cập nhật hàm call_query để nhận dict thay vì q string
             if not data:
@@ -1141,8 +1146,6 @@ if __name__ == "__main__" or True:
         view_main()
     elif nav == "🗂️ Drive Upload":
         upload_with_Drive()
-    # elif nav == "Upload":
-    #     view_upload()
     elif nav == "🔎 Search":
         view_search()
     elif nav == "🔽 Filter Search":

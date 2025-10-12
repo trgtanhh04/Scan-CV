@@ -4,10 +4,14 @@ import re
 from difflib import get_close_matches
 from langchain_deepseek import ChatDeepSeek
 
-from sqlalchemy import create_engine, Column, Integer, Text, String, TIMESTAMP, func
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from config import DEEPSEEK_API_KEY, LOGS_DATABASE_URL
+from config import DEEPSEEK_API_KEY
+
+from googleapiclient.discovery import build
+
+from googleapiclient.discovery import build
+from google.auth.credentials import AnonymousCredentials
+
+    
 
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
@@ -23,11 +27,16 @@ ABBREV_MAP = {
     "SE": "Software Engineer",
     "FE": "Frontend Engineer",
     "BE": "Backend Engineer",
+    "Dev": "Developer",
+    "Eng": "Engineer",
+    "Engr": "Engineer",
     "Fullstack": "Fullstack Engineer",
     "PO": "Product Owner",
     "PM": "Project Manager",
     "PdM": "Product Manager",
+    "PMO": "Project Management Office",
     "QA": "Quality Assurance Engineer",
+    "QE": "Quality Engineer",
     "SDET": "Software Development Engineer in Test",
     "DevOps": "DevOps Engineer",
     "SRE": "Site Reliability Engineer",
@@ -35,6 +44,9 @@ ABBREV_MAP = {
     "EM": "Engineering Manager",
     "EngMgr": "Engineering Manager",
     "Mgr": "Manager",
+    "Lead": "Team Lead",
+    "IC": "Individual Contributor",
+    "SM": "Scrum Master",
 
     # Data / ML
     "DS": "Data Scientist",
@@ -43,6 +55,9 @@ ABBREV_MAP = {
     "ML": "Machine Learning",
     "MLE": "Machine Learning Engineer",
     "MLEng": "Machine Learning Engineer",
+    "MLOps": "MLOps Engineer",
+    "DataEng": "Data Engineer",
+    "DBA": "Database Administrator",
 
     # Product / Design / Leadership
     "UX": "User Experience",
@@ -51,30 +66,33 @@ ABBREV_MAP = {
     "CPO": "Chief Product Officer",
     "CEO": "Chief Executive Officer",
     "VP": "Vice President",
+    "CFO": "Chief Financial Officer",
+    "COO": "Chief Operating Officer",
+    "CIO": "Chief Information Officer",
+    "CISO": "Chief Information Security Officer",
+    "SVP": "Senior Vice President",
+    "AVP": "Associate Vice President",
 
     # Seniority
     "Sr": "Senior",
     "Jr": "Junior",
+    "Sr.": "Senior",
+    "Jr.": "Junior",
 
     # Other common shorthand
     "BD": "Business Development",
     "AI": "Artificial Intelligence",
+    "SDR": "Sales Development Representative",
+    "BDR": "Business Development Representative",
+    "AE": "Account Executive",
+    "CS": "Customer Success",
+    "HR": "Human Resources",
+    "Ops": "Operations",
+    "FTE": "Full-time Employee",
+    "Intern": "Intern",
 }
 
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.discovery import build
-
-import requests
-
-from googleapiclient.discovery import build
-from google.auth.credentials import AnonymousCredentials
-from googleapiclient.http import MediaIoBaseDownload
-import streamlit as st
-import io
-    
 
 MIME_TYPE_FOLDER = "application/vnd.google-apps.folder"
 
@@ -230,26 +248,121 @@ def is_probably_english(s: str) -> bool:
     if not s or not isinstance(s, str):
         return False
     s = s.strip()
+    # If the string contains Vietnamese-specific characters (đ, ă, â, ê, ô, ơ, ư), treat as not English
+    if re.search(r"[đĐăââêôơưĂÂÊÔƠƯ]", s):
+        return False
+
     ascii_letters = re.findall(r"[A-Za-z]", s)
     ascii_ratio = len(ascii_letters) / max(1, len(s))
+
+    lowers = s.lower()
+    # Common English indicator words
+    english_indicators = {"the", "and", "or", "is", "are", "candidate", "experience", "skills", "find", "finds", "looking", "for", "with", "years", "year"}
+
+    # If plenty of ASCII letters and contains spaces or english words -> likely English
     if ascii_ratio > 0.6:
-        lowers = s.lower()
-        for w in ("the", "and", "or", "is", "are", "candidate", "experience", "skills"):
-            if f" {w} " in f" {lowers} ":
-                return True
-        if " " in s:
+        # check if any english indicator appears as a separate word
+        words = re.findall(r"\w+", lowers)
+        if any(w in english_indicators for w in words):
             return True
+        # if it's multiple ASCII words (has spaces) assume English-ish
+        if len(words) >= 2:
+            return True
+
+    # If mixed ASCII but fewer letters, still check for clear English keywords
+    if 0.25 < ascii_ratio <= 0.6:
+        words = re.findall(r"\w+", lowers)
+        if any(w in english_indicators for w in words):
+            return True
+
     return False
 
 
 def expand_abbreviations(text: str) -> str:
     if not text or not isinstance(text, str):
         return text
-    keys = list(ABBREV_MAP.keys())
+    # Prepare a canonical uppercase-keyed map for case-insensitive lookup
+    canonical_map = {k.upper(): v for k, v in ABBREV_MAP.items()}
+    keys = list(canonical_map.keys())
+    # Sort by length so longer keys (e.g., 'SDE') match before shorter ones ('DE')
     keys.sort(key=lambda x: -len(x))
-    pattern = re.compile(r"\b(" + "|".join(re.escape(k) for k in keys) + r")(?:\.|s|es)?\b", flags=re.IGNORECASE)
+    # Allow optional plural suffix 's' or 'es' after the abbreviation
+    pattern = re.compile(r"\b(" + "|".join(re.escape(k) for k in keys) + r")(?:s|es)?\b", flags=re.IGNORECASE)
+
     def _repl(m):
-        raw = re.sub(r"[\.|s|es]+$", "", m.group(0), flags=re.IGNORECASE)
-        return ABBREV_MAP.get(raw.upper(), ABBREV_MAP.get(raw, m.group(0)))
+        base = m.group(1)
+        full = m.group(0)
+        suffix = full[len(base):]  # '' or 's' or 'es'
+        replacement = canonical_map.get(base.upper())
+        if replacement is None:
+            return full
+        # Prevent replacing inside email addresses or URLs like hr@example.com or dev.team@company
+        start, end = m.start(), m.end()
+        if (start > 0 and text[start-1] in ('@', '.')) or (end < len(text) and text[end] in ('@', '.')):
+            return full
+
+        # Preserve plural if present
+        if suffix:
+            # simple pluralization: append the same suffix
+            return f"{replacement}{suffix}"
+        return replacement
 
     return pattern.sub(_repl, text)
+
+if __name__ == "__main__":
+    # A set of bilingual test cases from easy -> harder to validate expand_abbreviations
+    # test_cases = [
+    #     # Easy / exact
+    #     "DE",
+    #     "SDE",
+    #     "FE",
+    #     "BE",
+    #     # Simple English sentences
+    #     "Find candidate: DE",
+    #     "Looking for an SDE.",
+    #     "Hiring FE and BE engineers",
+    #     # Vietnamese short forms
+    #     "Tìm ứng viên vị trí DE",
+    #     "Cần SDE cho team backend",
+    #     # Mixed text and punctuation
+    #     "Senior DE, 5+ years",
+    #     "Apply: FE/BE fullstack",
+    #     "Ứng tuyển vị trí: DE, SE và QA",
+    #     # Plurals and suffixes
+    #     "DEs available",
+    #     "SDEs in HCM",
+    #     # Abbreviations inside longer sentences
+    #     "Looking for a Sr DevOps (SRE/DevOps) to lead infra",
+    #     "Tìm Data Engineer (DE) hoặc Data Scientist (DS) có kinh nghiệm",
+    #     # Harder / ambiguous cases
+    #     "Fullstack engineer (Fullstack) with React + Node",
+    #     "Hiring ML / MLE for production",
+    #     "We need a PM or PdM to manage roadmap",
+    #     "Tuyển: Sr, Jr, EngMgr, EM",
+    # ]
+
+    # print("Running expand_abbreviations tests:\n")
+    # for tc in test_cases:
+    #     expanded = expand_abbreviations(tc)
+    #     print(f"Original: {tc!r}\nExpanded: {expanded!r}\n")
+
+    # Tests for is_probably_english (after expansion)
+    print("\nRunning is_probably_english tests:\n")
+    english_tests = [
+        "Find candidates with Python and SQL",
+        "Looking for a Data Engineer with 3 years experience",
+        "This is an English sentence",
+        "Apply now",
+        "Tìm ứng viên vị trí DE",  # after expand -> should still contain vietnamese words, so not english
+        "Ứng tuyển: Data Engineer, có kinh nghiệm 3 năm",
+        "Senior Software Engineer, 5+ years",
+        "Tuyển dụng - Apply here",
+        "We need a PM or PdM to manage roadmap",
+        "Gửi CV to hr@example.com",
+        "Tìm ứng viên học tại India University"
+    ]
+
+    for t in english_tests:
+        expanded = expand_abbreviations(t)
+        is_eng = is_probably_english(expanded)
+        print(f"Text: {t!r}\nExpanded: {expanded!r}\nIs_English: {is_eng}\n")

@@ -73,13 +73,11 @@ def get_jobs(db: Session = Depends(get_db)):
 
 @app.post("/job_apply/delete")
 def delete_candidates_by_job(job_apply: str = Form(None), db: Session = Depends(get_db)):
-    # Normalize common string sentinels for NULL from frontend ('null', 'None', '')
     if isinstance(job_apply, str) and job_apply.strip().lower() in ("null", "none", ""):
         job_apply_val = None
     else:
         job_apply_val = job_apply
 
-    # Delete matching candidates. Use .is_(None) for NULL checks.
     if job_apply_val is None:
         candidates = db.query(Candidate).filter(Candidate.job_apply.is_(None)).all()
     else:
