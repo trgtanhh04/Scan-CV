@@ -132,6 +132,10 @@ def build_schema_prompt(schema_txt: str, hints: str, user_query: str, limit: int
         - No INSERT/UPDATE/DELETE/DDL.
         - Use table/column names exactly as in schema.
         - Prefer ILIKE for fuzzy text filter.
+        - IMPORTANT: Do NOT invent or use short abbreviations (e.g. 'DE', 'SDE') in WHERE clauses.
+                    If the user mentions an abbreviation, expand it to the full job title in the SQL (e.g. 'Data Engineer').
+                    For ambiguous short tokens (<=3 characters) prefer whole-word regex (~*) or the full phrase
+                    instead of ILIKE '%DE%' which matches substrings like 'Designer'.
         - Add LIMIT 50 unless user asks otherwise.
         - Many-to-many joins (skills/languages) create duplicates: if returning a candidate list, use SELECT DISTINCT or use EXISTS for multiple skill conditions.
         - ALWAYS include the candidate id column (e.g. id) in the SELECT result, even if the user only asks for names. This is required for downstream enrichment (e.g. resume_url).
