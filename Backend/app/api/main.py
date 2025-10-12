@@ -105,23 +105,8 @@ def get_candidates_by_job(job_apply: str, db: Session = Depends(get_db)):
         for r in results
     ]
 @app.post("/cv/upload")
-async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_cv(file: UploadFile = File(...), job_apply: str = Form(None), db: Session = Depends(get_db)):
     try:
-        # --- Opt-in: auto-create DB schema when missing ---
-        # This is disabled by default. Set AUTO_CREATE_DB=true in env to enable (useful for testing).
-        import os
-        try:
-            with SessionLocal().get_bind().connect() as conn:
-                # simple check: does 'candidates' table exist?
-                res = conn.execute(sa_text("SELECT to_regclass('public.candidates')")).scalar()
-                if res is None and os.getenv('AUTO_CREATE_DB', 'false').lower() == 'true':
-                    # create tables using project's helper
-                    url = os.getenv('DATABASE_URL')
-                    models_create_all(url)
-        except Exception:
-            # ignore errors here — we'll surface real errors later during upload
-            pass
-
         # Lưu tạm file người dùng up
         temp_dir = tempfile.mkdtemp()
         temp_path = os.path.join(temp_dir, f"{uuid.uuid4().hex}.pdf")
@@ -135,18 +120,12 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
         # (2) Extract 1 lần
         text = extract_text_from_pdf(temp_path)
         info = extract_info(text) or {}
-        job_apply = info.get("job_apply")
 
         if job_apply:
             info["job_apply"] = job_apply
 
-        # if "education" in info:
-        #     for edu in info["education"]:
-        #         gpa = edu.get("gpa")
-        #         print("📌 GPA:", gpa)   # log ra console
-                
-        # if "certifications" in info:
-        #     print("📌 Certifications:", info["certifications"])
+        # append_info_record(info, resume_url, file.filename)
+
         
         # (3) RAG 
         rag_results = process_cv_rag(
@@ -180,6 +159,7 @@ async def upload_cv(file: UploadFile = File(...), db: Session = Depends(get_db))
     except Exception as e:
         import traceback; traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
 
 # --- Search / Query ---
 class QueryRequest(BaseModel):

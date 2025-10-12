@@ -200,7 +200,6 @@ def call_upload2(file_bytes: bytes, filename: str, folder_name: str):
     # url = f"{st.session_state.api_base}/cv/upload"
     url = api_url("/cv/upload")
     try:
-        st.write(f"⚙️ calling: {url}")
         resp = requests.post(
             url, 
             files={"file": (filename, file_bytes.getvalue(), "application/pdf")}, 

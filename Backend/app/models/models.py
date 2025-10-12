@@ -94,7 +94,7 @@ class Educations(Base):
     degree       = Column(String, nullable=True)
     gpa         = Column(Float, nullable=True)
     university   = Column(String, nullable=True)
-    start_year   = Column(Integer, nullable=True)   # giữ dạng năm cho đơn giản
+    start_year   = Column(Integer, nullable=True)  
     end_year     = Column(Integer, nullable=True)
 
     candidate    = relationship("Candidate", back_populates="educations")
