@@ -253,7 +253,9 @@ keyword_mapping = {
     "Đại học Kinh tế - Luật - ĐHQG TP.HCM": ["uel", "kinh te luat", "and law"],
     "Đại học Luật TP.HCM": ["luat", "of law"],
     "Đại học Kinh tế Tài chính TP.HCM": ["uef", "kinh te tai chinh", "economics and finance"],
-    "(Đại học Sư phạm TP.HCM)": ["hcmue", "su pham", "of education"],
+    "Đại học Sư phạm TP.HCM": ["hcmue", "su pham", "of education"],
+    "Đại học Nông Lâm TP.HCM": ["nlu", "nong lam", "nong lam university", "of agriculture", "forestry"],
+    "Đại học Ngân hàng TP.HCM": ["hub", "ngan hang", "banking"],
 }
 
 # Hàm chuẩn hoá
