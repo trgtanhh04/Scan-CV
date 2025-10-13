@@ -225,6 +225,39 @@ def handle_cert_score(raw_score: str | None) -> float | None:
         return None
     
 keyword_mapping = {
+    "Foreign Trade University ": ["ngoai thuong", "ftu", "foreign trade"],
+    "University of Finance - Marketing": ["tai chinh marketing", "ufm", "finance - marketing", "finace and marketing"],
+    "HCMC University of Technology and Education": ["ute", "su pham ky thuat", "technology and education"],
+    "HCMC University of Technology (HUTECH)": ["hutech"],
+    "Bach Khoa University - VNUHCM": ["bku", "bach khoa", "hcmut"],
+    "University of Sciences - VNUHCM": ["hcmus", "khoa hoc tu nhien", "of science", "natural science"],
+    "University of Social Sciences and Humanities - VNUHCM": ["hcmussh", "xa hoi nhan van", "social", "humanities"],
+    "University of Transport and Communications": ["utc", "giao thong van tai", "transport"],
+    "Ho Chi Minh City University of Foreign Languages - Information Technology (HUFLIT)": ["huflit", "ngoai ngu tin hoc", "foreign languages"],
+    "Ton Duc Thang University": ["tdtu", "ton duc thang"],
+    "Industrial University of Ho Chi Minh City": ["iuh", "cong nghiep", "industrial"],
+    "Saigon Technology University": ["stu", "cong nghe sai gon", "saigon technology"],
+    "University of Information Technology - VNUHCM": ["uit", "cong nghe thong tin", "information technology"],
+    "Ho Chi Minh City University of Industry and Trade (HUIT)": ["cong nghiep thuong mai", "industry and trade"],
+    "HCMC Open University": ["ou", "mo", "open university"],
+    "RMIT University": ["rmit"],
+    "International University - VNUHCM": ["hcmiu", "quoc te", "international"],
+    "Saigon University": ["sai gon", "sgu"],
+    "Van Lang University": ["vlu", "van lang"],
+    "Hoa Sen University":  ["hsu", "hoa sen"],
+    "FPT University":    ["fpt"],
+    "Law University of HCMC": ["luat", "law"],
+    "Nguyen Tat Thanh University": ["nttu", "nguyen tat thanh"],
+    "University of Architecture HCMC (UAH)": ["hcmua", "kien truc", "architecture"],
+    "University of Economics HCMC (UEH)": ["ueh", "kinh te tp hcm", "kinh te tphcm", "university of economics ho chi minh city", "university of economics hcmc"],
+    "University of Economics and Law - VNUHCM": ["uel", "kinh te luat", "and law"],
+    "HCMC University of Economics and Finance (UEF)": ["uef", "kinh te tai chinh", "economics and finance"],
+    "Ho Chi Minh City University of Education": ["hcmue", "su pham", "of education"],
+    "Ho Chi Minh City University of Agriculture and Forestry": ["nlu", "nong lam", "nong lam university", "of agriculture", "forestry"],
+    "Banking University of HCMC": ["hub", "ngan hang", "banking"],
+}
+
+vietnamese_mapping ={
     "Đại học Ngoại thương": ["ngoai thuong", "ftu", "foreign trade"],
     "Đại học Tài chính - Marketing": ["tai chinh marketing", "ufm", "finance - marketing", "finace and marketing"],
     "Đại học Sư phạm Kỹ thuật TP.HCM": ["ute", "su pham ky thuat", "technology and education"],
@@ -248,7 +281,7 @@ keyword_mapping = {
     "Đại học FPT":    ["fpt"],
     "Đại học Luật TP.HCM": ["luat", "law"],
     "Đại học Nguyễn Tất Thành": ["nttu", "nguyen tat thanh"],
-    "Đại học Kiến trúc TP.HCM)": ["hcmua", "kien truc", "architecture"],
+    "Đại học Kiến trúc TP.HCM": ["hcmua", "kien truc", "architecture"],
     "Đại học Kinh tế TP.HCM": ["ueh", "kinh te tp hcm", "kinh te tphcm", "university of economics ho chi minh city", "university of economics hcmc"],
     "Đại học Kinh tế - Luật - ĐHQG TP.HCM": ["uel", "kinh te luat", "and law"],
     "Đại học Luật TP.HCM": ["luat", "of law"],
@@ -258,12 +291,23 @@ keyword_mapping = {
     "Đại học Ngân hàng TP.HCM": ["hub", "ngan hang", "banking"],
 }
 
+
 # Hàm chuẩn hoá
 def normalize_university(text):
     if not text:
         return None
     text_norm = text.lower()
     for uni, keywords in keyword_mapping.items():
+        for kw in sorted(keywords, key=len, reverse=True):
+            if kw in text_norm:
+                return uni
+    return text
+
+def normalize_university_vietnamese(text):
+    if not text:
+        return None
+    text_norm = text.lower()
+    for uni, keywords in vietnamese_mapping.items():
         for kw in sorted(keywords, key=len, reverse=True):
             if kw in text_norm:
                 return uni
@@ -296,10 +340,12 @@ def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
             continue
         raw_uni = _clean_str(e.get("university"))
         normalized_uni = normalize_university(raw_uni) if raw_uni else None
+        normalize_uni_vietnamese = normalize_university_vietnamese(raw_uni) if raw_uni else None
         edu = Educations(
             candidate_id = cand.id,
             degree       = _clean_str(e.get("degree")),
             university   = normalized_uni,
+            university_vietnamese = normalize_uni_vietnamese,
             gpa          = parse_gpa_to_4(e.get("gpa")),
             start_year   = e.get("start_year") if isinstance(e.get("start_year"), int) else None,
             end_year     = e.get("end_year")   if isinstance(e.get("end_year"), int)   else None,
