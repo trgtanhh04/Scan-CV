@@ -202,15 +202,24 @@ def call_upload2(file_bytes: bytes, filename: str, folder_name: str):
 
 # ---------------- Email helper (uses safe_post) ----------------
 def call_send_invite(candidate_email, subject, body, interview_time=None):
-    payload = {
-        "email": candidate_email,
-        "subject": subject,
-        "body": body,
-        "interview_time": interview_time,
-    }
+    # keep hr_email and phone optional and separate from the HTML body
+    def _make_payload(hr_email=None, phone=None):
+        p = {
+            "email": candidate_email,
+            "subject": subject,
+            "body": body,
+            "interview_time": interview_time,
+        }
+        if hr_email:
+            p["hr_email"] = hr_email
+        if phone:
+            p["phone"] = phone
+        return p
+
     try:
         url = api_url("/invite")
-        res = requests.post(url, json=payload, timeout=30)
+        # default send without hr/phone; caller may include them via kwargs
+        res = requests.post(url, json=_make_payload(), timeout=30)
         if res is None:
             return None
         res.raise_for_status()
@@ -1142,55 +1151,79 @@ if "invite_pool" not in st.session_state:
 # --- Helper chuẩn hoá dữ liệu ứng viên ---
 def _normalize_candidate(row: dict) -> dict:
     """Chuẩn hoá record ứng viên để lưu trong invite_pool."""
+    # Accept multiple possible key variants
+    def pick(r, keys):
+        for k in keys:
+            if k in r and r.get(k):
+                return r.get(k)
+        return None
+
     return {
-        "id": row.get("id"),
-        "email": row.get("email"),
-        "full_name": row.get("full_name") or row.get("name"),
-        "job_title": row.get("job_title") or row.get("Job Title"),
-        "resume_url": row.get("resume_url") or row.get("public_url"),
+        "id": pick(row, ["id", "Id", "ID"]),
+        "email": pick(row, ["email", "Email", "e-mail"]),
+        "full_name": pick(row, ["full_name", "fullName", "name", "Name", "full name", "Full name"]),
+        "job_title": pick(row, ["job_title", "jobTitle", "Job Title", "Job title"]),
+        "resume_url": pick(row, ["resume_url", "public_url", "file_url", "resumeUrl"]),
+        "educations": pick(row, ["educations", "education", "educs"])
     }
 
 # --- Hàm render bảng kết quả có cột Invitation ---
 def render_selectable_table(df: pd.DataFrame, key: str = "candidates_editor"):
-    """Hiển thị bảng có cột Invitation (checkbox) và cập nhật invite_pool theo lựa chọn."""
+    """Render a selectable table using per-row checkboxes (more stable than data_editor).
+    Updates st.session_state['invite_pool'] keyed by email.
+    """
     if df is None or df.empty:
         st.info("Không có dữ liệu để hiển thị.")
         return
 
-    # Cột hiển thị (tuỳ theo df hiện có)
-    cols = [c for c in ["id", "full_name", "email", "resume_url", "job_title", "educations", "_match_score"] if c in df.columns]
-    view_df = df[cols].copy()
+    # Ensure invite_pool exists
+    if "invite_pool" not in st.session_state:
+        st.session_state["invite_pool"] = {}
 
-    # Pre-check theo state đã chọn trước đó
-    invited_emails = set(st.session_state["invite_pool"].keys())
-    view_df["Invitation"] = view_df["email"].apply(lambda e: e in invited_emails if pd.notna(e) else False)
+    # Show header with counts
+    st.markdown(f"**🔎 Hiển thị {len(df)} ứng viên**")
 
-    # Data editor với checkbox
-    edited = st.data_editor(
-        view_df,
-        hide_index=True,
-        use_container_width=True,
-        key=key,
-        column_config={
-            "resume_url": st.column_config.LinkColumn("resume_url", display_text="Open"),
-            "Invitation": st.column_config.CheckboxColumn("Invitation", help="Chọn để thêm vào danh sách thư mời"),
-            "_match_score": st.column_config.NumberColumn("_match_score", format="%.0f"),
-        },
-    )
+    # Render rows
+    for idx, row in df.reset_index(drop=True).iterrows():
+        # normalize
+        r = _normalize_candidate(row.to_dict())
+        email = r.get("email") or f"row_{idx}"
 
-    # Cập nhật invite_pool theo bảng đã sửa
-    # - chỉ xoá khỏi pool khi ứng viên xuất hiện trong view hiện tại và bị bỏ check
-    current_view_emails = set(df["email"].dropna().tolist())
-    selected_now = set(edited.loc[edited["Invitation"] == True, "email"].dropna().tolist())
+        c1, c2, c3, c4, c5 = st.columns([3, 4, 3, 3, 0.6])
+        with c1:
+            st.markdown(f"**{html.escape(str(r.get('full_name') or '—'))}**")
+            st.caption(r.get("job_title") or "—")
+        with c2:
+            if r.get("email"):
+                st.markdown(f"[{r.get('email')}]({ 'mailto:' + r.get('email') })")
+            else:
+                st.write("—")
+        with c3:
+            edu_html = education_to_chips(r.get("educations") or row.get("educations") or [])
+            if edu_html:
+                st.markdown(edu_html, unsafe_allow_html=True)
+            else:
+                st.write("—")
+        with c4:
+            resume = r.get("resume_url")
+            if resume:
+                st.markdown(f"[🔗 CV]({resume})")
+            else:
+                st.write("—")
+        # checkbox column
+        checked = email in st.session_state["invite_pool"]
+        cb_key = f"invite_checkbox_{email}_{idx}"
+        checked_now = st.checkbox("", value=checked, key=cb_key)
 
-    # Thêm mới/ghi đè những ai đang được check
-    for _, r in df[df["email"].isin(selected_now)].iterrows():
-        st.session_state["invite_pool"][r["email"]] = _normalize_candidate(r.to_dict())
+        # update pool
+        if checked_now and email not in st.session_state["invite_pool"]:
+            st.session_state["invite_pool"][email] = r
+        if (not checked_now) and email in st.session_state["invite_pool"]:
+            # only remove if this email corresponds to this row (avoid removing others accidentally)
+            st.session_state["invite_pool"].pop(email, None)
 
-    # Bỏ những ai thuộc view này nhưng hiện không còn được check
-    for email in list(st.session_state["invite_pool"].keys()):
-        if email in current_view_emails and email not in selected_now:
-            del st.session_state["invite_pool"][email]
+    # small footer
+    st.markdown(f"\n---\n🔖 Đã chọn: **{len(st.session_state['invite_pool'])}** ứng viên để mời.")
 
 # --- Tab "✉️ Invite" ---
 def view_invite_tab():
