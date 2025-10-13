@@ -108,8 +108,6 @@
 #   # === thêm volume cho Qdrant ===
 #   qdrant_storage:
 
-
-
 services:
   db:
     image: postgres:15
@@ -172,6 +170,7 @@ services:
     env_file: .env
     environment:
       # GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcp/sa-key.json
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
       # GCP_PROJECT: ${GCP_PROJECT}
       # GCS_BUCKET: ${GCS_BUCKET}
       DATABASE_URL: ${DATABASE_URL}
@@ -190,8 +189,9 @@ services:
       qdrant:
         condition: service_started    # service_healthy
     networks: [app-network]
-    # volumes:
-    #   - ./secrets/sa-key.json:/var/secrets/gcp/sa-key.json:ro
+    volumes:
+      # Mount your service account JSON (create ./secrets/sa-key.json locally)
+      - ./secrets/sa-key.json:/var/secrets/gcp/sa-key.json:ro
     command: >
       bash -lc "uvicorn app.api.main:app --host 0.0.0.0 --port 8000"
 
