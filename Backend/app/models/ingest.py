@@ -224,43 +224,48 @@ def handle_cert_score(raw_score: str | None) -> float | None:
     except:
         return None
     
-regex_mapping = {
-    r"(Foreign Trade University|FTU|FTU2)": "Đại học Ngoại thương",
-    r"(University of Economics Ho Chi Minh City|UEH)": "Đại học Kinh tế TP.HCM",
-    r"(University of Economics and Law|UEL)": "Đại học Kinh tế - Luật - ĐHQG TP.HCM",
-    r"(University of Finance and Marketing|UFM)": "Đại học Tài chính - Marketing",
-    r"(University of Technology and Education|UTE)": "Đại học Sư phạm Kỹ thuật TP.HCM",
-    r"(Ho Chi Minh City University of Technology|HUTECH)": "Đại học HUTECH",
-    r"(Bach Khoa University|BKU)": "Đại học Bách khoa - ĐHQG TP.HCM",
-    r"(Ho Chi Minh City University of Science|HCMUS)": "Đại học Khoa học Tự nhiên - ĐHQG TP.HCM", 
-    r"(Ho Chi Minh City University of Social Sciences and Humanities|HCMUSSH)": "Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM",
-    r"(University of Transport and Communications|UTC)": "Đại học Giao thông Vận tải TP.HCM",
-    r"(Ho Chi Minh City University of Foreign Languages & IT|HUFLIT)": "Đại học Ngoại ngữ - Tin học TP.HCM",
-    r"(Ton Duc Thang University|TDTU)": "Đại học Tôn Đức Thắng",
-    r"(Industrial University|IUH)": "Đại học Công nghiệp TP.HCM",
-    r"(Saigon Technology University|STU)": "Đại học Công nghệ Sài Gòn",
-    r"(University of Information Technology|UIT|VNU-HCM.*Information Technology)": "Đại học Công nghệ thông tin - ĐHQG TP.HCM",
-    r"(University of Industry and Trade)": "Đại học Công nghiệp Thương mại TP.HCM",
-    r"(Open University|OU)": "Đại học Mở TP.HCM",
-    r"(RMIT University|RMIT)": "Đại học RMIT Việt Nam",
-    r"(International University|HCMIU)": "Đại học Quốc tế - ĐHQG TP.HCM",
-    r"(Sai Gon University|SGU)": "Đại học Sài Gòn",
-    r"(Van Lang University|VLU)": "Đại học Văn Lang",
-    r"(Hoa Sen University|HSU)": "Đại học Hoa Sen",
-    r"(FPT University|FPT)": "Đại học FPT",
-    r"(Ho Chi Minh City University of Law|HCMUL)": "Đại học Luật TP.HCM",
-    r"(Nguyen Tat Thanh University|NTTU)": "Đại học Nguyễn Tất Thành",
-    r"(Ho Chi Minh City University of Architecture|HCMUA)": "Đại học Kiến trúc TP.HCM",
-    r"(Ho Chi Minh City University of Economics and Finance|UEF)": "Đại học Kinh tế Tài chính TP.HCM",
-    r"(Ho Chi Minh City University of Education|HCMUE)": "Đại học Sư phạm TP.HCM",
+keyword_mapping = {
+    "Đại học Ngoại thương": ["ngoai thuong", "ftu", "foreign trade"],
+    "Đại học Tài chính - Marketing": ["tai chinh marketing", "ufm", "finance - marketing", "finace and marketing"],
+    "Đại học Sư phạm Kỹ thuật TP.HCM": ["ute", "su pham ky thuat", "technology and education"],
+    "Đại học HUTECH": ["hutech"],
+    "Đại học Bách khoa - ĐHQG TP.HCM": ["bku", "bach khoa", "hcmut"],
+    "Đại học Khoa học Tự nhiên - ĐHQG TP.HCM": ["hcmus", "khoa hoc tu nhien", "of science", "natural science"],
+    "Đại học Khoa học Xã hội và Nhân văn - ĐHQG TP.HCM": ["hcmussh", "xa hoi nhan van", "social", "humanities"],
+    "Đại học Giao thông Vận tải TP.HC": ["utc", "giao thong van tai", "transport"],
+    "Đại học Ngoại ngữ - Tin học TP.HCM": ["huflit", "ngoai ngu tin hoc", "foreign languages"],
+    "Đại học Tôn Đức Thắng": ["tdtu", "ton duc thang"],
+    "Đại học Công nghiệp TP.HCM": ["iuh", "cong nghiep", "industrial"],
+    "Đại học Công nghệ Sài Gòn": ["stu", "cong nghe sai gon", "saigon technology"],
+    "Đại học Công nghệ thông tin - ĐHQG TP.HCM": ["uit", "cong nghe thong tin", "information technology"],
+    "Đại học Công nghiệp Thương mại TP.HCM": ["cong nghiep thuong mai", "industry and trade"],
+    "Đại học Mở TP.HCM": ["ou", "mo", "open university"],
+    "Đại học RMIT Việt Nam": ["rmit"],
+    "Đại học Quốc tế - ĐHQG TP.HCM": ["hcmiu", "quoc te", "international"],
+    "Đại học Sài Gòn": ["sai gon", "sgu"],
+    "Đại học Văn Lang": ["vlu", "van lang"],
+    "Đại học Hoa Sen":  ["hsu", "hoa sen"],
+    "Đại học FPT":    ["fpt"],
+    "Đại học Luật TP.HCM": ["luat", "law"],
+    "Đại học Nguyễn Tất Thành": ["nttu", "nguyen tat thanh"],
+    "Đại học Kiến trúc TP.HCM)": ["hcmua", "kien truc", "architecture"],
+    "Đại học Kinh tế TP.HCM": ["ueh", "kinh te tp hcm", "kinh te tphcm", "university of economics ho chi minh city", "university of economics hcmc"],
+    "Đại học Kinh tế - Luật - ĐHQG TP.HCM": ["uel", "kinh te luat", "and law"],
+    "Đại học Luật TP.HCM": ["luat", "of law"],
+    "Đại học Kinh tế Tài chính TP.HCM": ["uef", "kinh te tai chinh", "economics and finance"],
+    "(Đại học Sư phạm TP.HCM)": ["hcmue", "su pham", "of education"],
 }
 
 # Hàm chuẩn hoá
-def normalize_university(name):
-    for pattern, unified in regex_mapping.items():
-        if re.search(pattern, name, flags=re.IGNORECASE):
-            return unified
-    return name 
+def normalize_university(text):
+    if not text:
+        return None
+    text_norm = text.lower()
+    for uni, keywords in keyword_mapping.items():
+        for kw in sorted(keywords, key=len, reverse=True):
+            if kw in text_norm:
+                return uni
+    return text
 
 # ---------- main upsert ----------
 def upsert_candidate_from_json(db: Session, cv: Dict[str, Any]) -> Candidate:
