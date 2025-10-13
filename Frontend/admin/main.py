@@ -873,6 +873,60 @@ def view_search():
                 st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
         with col_right:
+            # Add Invitation selection column UI above the table
+            st.markdown("<div style='margin-bottom:0.5rem; display:flex; gap:8px;'>", unsafe_allow_html=True)
+            if "invites" not in st.session_state:
+                st.session_state["invites"] = {}
+
+            if st.button("➕ Add selected to Invites"):
+                # collect selected rows via checkboxes stored in session_state
+                added = 0
+                for key, val in st.session_state.items():
+                    if key.startswith("invite_chk_") and val:
+                        # stash candidate info saved in a parallel key
+                        cand = st.session_state.get(f"invite_row_{key[11:]}")
+                        if cand:
+                            st.session_state["invites"][str(cand.get("email") or cand.get("id"))] = cand
+                            added += 1
+                if added:
+                    st.success(f"✅ Added {added} candidate(s) to Invites")
+                else:
+                    st.info("No selected candidates found to add.")
+
+            if st.button("🧾 Clear invite selections (UI)"):
+                for key in list(st.session_state.keys()):
+                    if key.startswith("invite_chk_"):
+                        del st.session_state[key]
+                    if key.startswith("invite_row_"):
+                        del st.session_state[key]
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # Render table with per-row invitation checkbox
+            # We'll build HTML with a hidden checkbox state handled by Streamlit widgets below
+            for i, row in df_scored.iterrows():
+                cand = row.to_dict()
+                key_suffix = str(cand.get("email") or cand.get("id") or i)
+                chk_key = f"invite_chk_{key_suffix}"
+                row_key = f"invite_row_{key_suffix}"
+                # store the row candidate dict for later retrieval
+                st.session_state[row_key] = cand
+                cols = st.columns([0.06, 0.94])
+                with cols[0]:
+                    checked = st.checkbox("", key=chk_key)
+                with cols[1]:
+                    # show candidate summary compactly
+                    st.markdown(f"**{html.escape(str(cand.get('full_name') or cand.get('full_name','')))}**  ")
+                    st.markdown(render_table_row := '')
+
+            # Also show currently saved invites
+            if st.session_state.get("invites"):
+                st.markdown("### 📥 Saved Invites")
+                invite_list = list(st.session_state["invites"].values())
+                for c in invite_list:
+                    st.markdown(f"- {c.get('full_name')} — {c.get('email')}")
+
+            # Finally render the main results table for reference
             render_table_view(df_scored)
     with tab2:
         # Show persisted API response (if available) so it survives rerenders caused by widget interactions
@@ -1071,27 +1125,27 @@ def invite_model(candidate):
         template = st.text_area(
             "📝 Email Body (HTML Supported)",
             value=f"""
-<html>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <p>Dear <b>{candidate.get('full_name','')}</b>,</p>
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <p>Dear <b>{candidate.get('full_name','')}</b>,</p>
 
-    <p>We are pleased to invite you for an interview for the position of 
-    <b>{candidate.get('job_title','')}</b> at <b>{company_name}</b>.</p>
+                    <p>We are pleased to invite you for an interview for the position of 
+                    <b>{candidate.get('job_title','')}</b> at <b>{company_name}</b>.</p>
 
-    <table style="border-collapse: collapse; margin: 15px 0;">
-      <tr><td style="padding: 6px 12px;">📅 <b>Interview Date:</b></td><td>[Choose below]</td></tr>
-      <tr><td style="padding: 6px 12px;">⏰ <b>Time:</b></td><td>[Choose below]</td></tr>
-      <tr><td style="padding: 6px 12px;">📍 <b>Location:</b></td><td>{location}</td></tr>
-      <tr><td style="padding: 6px 12px;">📞 <b>Contact:</b></td><td>{phone_number}</td></tr>
-      <tr><td style="padding: 6px 12px;">📧 <b>HR Email:</b></td><td>{hr_email}</td></tr>
-    </table>
+                    <table style="border-collapse: collapse; margin: 15px 0;">
+                    <tr><td style="padding: 6px 12px;">📅 <b>Interview Date:</b></td><td>[Choose below]</td></tr>
+                    <tr><td style="padding: 6px 12px;">⏰ <b>Time:</b></td><td>[Choose below]</td></tr>
+                    <tr><td style="padding: 6px 12px;">📍 <b>Location:</b></td><td>{location}</td></tr>
+                    <tr><td style="padding: 6px 12px;">📞 <b>Contact:</b></td><td>{phone_number}</td></tr>
+                    <tr><td style="padding: 6px 12px;">📧 <b>HR Email:</b></td><td>{hr_email}</td></tr>
+                    </table>
 
-    <p>Please confirm your availability at your earliest convenience.</p>
+                    <p>Please confirm your availability at your earliest convenience.</p>
 
-    <p>Best regards,<br>
-    <b>{company_name} Recruitment Team</b></p>
-  </body>
-</html>
+                    <p>Best regards,<br>
+                    <b>{company_name} Recruitment Team</b></p>
+                </body>
+                </html>
             """.strip()
         )
 
