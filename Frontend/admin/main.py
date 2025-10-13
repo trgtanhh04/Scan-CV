@@ -199,35 +199,6 @@ def call_upload2(file_bytes: bytes, filename: str, folder_name: str):
             st.error(f"Response: {e.response.text}")
         raise
 
-
-# ---------------- Email helper (uses safe_post) ----------------
-def call_send_invite(candidate_email, subject, body, interview_time=None):
-    # keep hr_email and phone optional and separate from the HTML body
-    def _make_payload(hr_email=None, phone=None):
-        p = {
-            "email": candidate_email,
-            "subject": subject,
-            "body": body,
-            "interview_time": interview_time,
-        }
-        if hr_email:
-            p["hr_email"] = hr_email
-        if phone:
-            p["phone"] = phone
-        return p
-
-    try:
-        url = api_url("/invite")
-        # default send without hr/phone; caller may include them via kwargs
-        res = requests.post(url, json=_make_payload(), timeout=30)
-        if res is None:
-            return None
-        res.raise_for_status()
-        return res.json()
-    except Exception as e:
-        st.error(f"Invite error: {e}")
-        return None
-
 def upload_folder(service, folder_id, folder_name):
     try:
         # Lấy tất cả file trong folder
@@ -902,7 +873,7 @@ def view_search():
                 st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
         with col_right:
-                render_selectable_table(df_scored, key="scored_results_editor")
+            render_table_view(df_scored)
     with tab2:
         # Show persisted API response (if available) so it survives rerenders caused by widget interactions
         last = st.session_state.get("last_api_response")
@@ -1054,8 +1025,7 @@ def view_search2():
         # ✅ Hiển thị kết quả tìm kiếm
         st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
         
-    # show selectable table with Invitation column
-    render_selectable_table(df, key="search_results_editor")
+        render_table_view(df)
         # df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
         # col_left, col_right = st.columns([0.28, 0.72])
         # with col_left:
@@ -1066,266 +1036,81 @@ def view_search2():
 
 
 # ------------ SEND EMAIL ----------------
-# def call_send_invite(candidate_email, subject, body, interview_time=None):
-#     url = f"{st.session_state.api_base}/invite"
-#     payload = {
-#         "email": candidate_email,
-#         "subject": subject,
-#         "body": body,
-#         "interview_time": interview_time
-#     }
-#     try:
-#         resp = requests.post(url, json=payload, timeout=30)
-#         resp.raise_for_status()
-#         return resp.json()
-#     except Exception as e:
-#         st.error(f"Invite error: {e}")
-#         return None
-
-# def invite_model(candidate):
-#     with st.form(f"invite_form_{candidate['id']}"):
-#         st.markdown(f"""
-#         <h3>📩 Interview Invitation for <b>{candidate['full_name']}</b></h3>
-#         <hr style="border:1px solid #ddd;">
-#         <p>Please review the details below and send the invitation email.</p>
-#         """, unsafe_allow_html=True)
-
-#         # Company details
-#         company_name = st.text_input("🏢 Company Name", value="ABC Tech Ltd.")
-#         hr_email = st.text_input("📧 HR Contact Email", value="hr@abctech.com")
-#         phone_number = st.text_input("📞 Contact Phone", value="+84 123 456 789")
-#         location = st.text_input("📍 Interview Location", value="123 Nguyen Trai, Hanoi")
-
-#         # Email content (HTML body)
-#         subject = st.text_input("✉️ Email Subject", value="Interview Invitation")
-#         template = st.text_area(
-#             "📝 Email Body (HTML Supported)",
-#             value=f"""
-# <html>
-#   <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-#     <p>Dear <b>{candidate.get('full_name','')}</b>,</p>
-
-#     <p>We are pleased to invite you for an interview for the position of 
-#     <b>{candidate.get('job_title','')}</b> at <b>{company_name}</b>.</p>
-
-#     <table style="border-collapse: collapse; margin: 15px 0;">
-#       <tr><td style="padding: 6px 12px;">📅 <b>Interview Date:</b></td><td>[Choose below]</td></tr>
-#       <tr><td style="padding: 6px 12px;">⏰ <b>Time:</b></td><td>[Choose below]</td></tr>
-#       <tr><td style="padding: 6px 12px;">📍 <b>Location:</b></td><td>{location}</td></tr>
-#       <tr><td style="padding: 6px 12px;">📞 <b>Contact:</b></td><td>{phone_number}</td></tr>
-#       <tr><td style="padding: 6px 12px;">📧 <b>HR Email:</b></td><td>{hr_email}</td></tr>
-#     </table>
-
-#     <p>Please confirm your availability at your earliest convenience.</p>
-
-#     <p>Best regards,<br>
-#     <b>{company_name} Recruitment Team</b></p>
-#   </body>
-# </html>
-#             """.strip()
-#         )
-
-#         # Interview scheduling
-#         interview_date = st.date_input("📅 Interview Date")
-#         time_slot = st.selectbox("⏰ Time Slot", ["09:00", "10:00", "14:00", "16:00"])
-
-#         submitted = st.form_submit_button("📤 Send Invitation")
-#         if submitted:
-#             res = call_send_invite(
-#                 candidate_email=candidate["email"],
-#                 subject=subject,
-#                 body=template,
-#                 interview_time=f"{interview_date} {time_slot}"
-#             )
-#             if res:
-#                 st.success("✅ Invitation email sent successfully!")
-#             else:
-#                 st.error("❌ Failed to send email.")
-
-
-                # --- Khởi tạo session_state cho danh sách ứng viên đã chọn gửi email ---
-if "invite_pool" not in st.session_state:
-    # map email -> {id, email, full_name, job_title, resume_url}
-    st.session_state["invite_pool"] = {}
-
-# --- Helper chuẩn hoá dữ liệu ứng viên ---
-def _normalize_candidate(row: dict) -> dict:
-    """Chuẩn hoá record ứng viên để lưu trong invite_pool."""
-    # Accept multiple possible key variants
-    def pick(r, keys):
-        for k in keys:
-            if k in r and r.get(k):
-                return r.get(k)
+def call_send_invite(candidate_email, subject, body, interview_time=None):
+    url = f"{st.session_state.api_base}/invite"
+    payload = {
+        "email": candidate_email,
+        "subject": subject,
+        "body": body,
+        "interview_time": interview_time
+    }
+    try:
+        resp = requests.post(url, json=payload, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        st.error(f"Invite error: {e}")
         return None
 
-    return {
-        "id": pick(row, ["id", "Id", "ID"]),
-        "email": pick(row, ["email", "Email", "e-mail"]),
-        "full_name": pick(row, ["full_name", "fullName", "name", "Name", "full name", "Full name"]),
-        "job_title": pick(row, ["job_title", "jobTitle", "Job Title", "Job title"]),
-        "resume_url": pick(row, ["resume_url", "public_url", "file_url", "resumeUrl"]),
-        "educations": pick(row, ["educations", "education", "educs"])
-    }
+def invite_model(candidate):
+    with st.form(f"invite_form_{candidate['id']}"):
+        st.markdown(f"""
+        <h3>📩 Interview Invitation for <b>{candidate['full_name']}</b></h3>
+        <hr style="border:1px solid #ddd;">
+        <p>Please review the details below and send the invitation email.</p>
+        """, unsafe_allow_html=True)
 
-# --- Hàm render bảng kết quả có cột Invitation ---
-def render_selectable_table(df: pd.DataFrame, key: str = "candidates_editor"):
-    """Render a selectable table using per-row checkboxes (more stable than data_editor).
-    Updates st.session_state['invite_pool'] keyed by email.
-    """
-    if df is None or df.empty:
-        st.info("Không có dữ liệu để hiển thị.")
-        return
+        # Company details
+        company_name = st.text_input("🏢 Company Name", value="ABC Tech Ltd.")
+        hr_email = st.text_input("📧 HR Contact Email", value="hr@abctech.com")
+        phone_number = st.text_input("📞 Contact Phone", value="+84 123 456 789")
+        location = st.text_input("📍 Interview Location", value="123 Nguyen Trai, Hanoi")
 
-    # Ensure invite_pool exists
-    if "invite_pool" not in st.session_state:
-        st.session_state["invite_pool"] = {}
-
-    # Show header with counts
-    st.markdown(f"**🔎 Hiển thị {len(df)} ứng viên**")
-
-    # Render rows
-    for idx, row in df.reset_index(drop=True).iterrows():
-        # normalize
-        r = _normalize_candidate(row.to_dict())
-        email = r.get("email") or f"row_{idx}"
-
-        c1, c2, c3, c4, c5 = st.columns([3, 4, 3, 3, 0.6])
-        with c1:
-            st.markdown(f"**{html.escape(str(r.get('full_name') or '—'))}**")
-            st.caption(r.get("job_title") or "—")
-        with c2:
-            if r.get("email"):
-                st.markdown(f"[{r.get('email')}]({ 'mailto:' + r.get('email') })")
-            else:
-                st.write("—")
-        with c3:
-            edu_html = education_to_chips(r.get("educations") or row.get("educations") or [])
-            if edu_html:
-                st.markdown(edu_html, unsafe_allow_html=True)
-            else:
-                st.write("—")
-        with c4:
-            resume = r.get("resume_url")
-            if resume:
-                st.markdown(f"[🔗 CV]({resume})")
-            else:
-                st.write("—")
-        # checkbox column
-        checked = email in st.session_state["invite_pool"]
-        cb_key = f"invite_checkbox_{email}_{idx}"
-        checked_now = st.checkbox("", value=checked, key=cb_key)
-
-        # update pool
-        if checked_now and email not in st.session_state["invite_pool"]:
-            st.session_state["invite_pool"][email] = r
-        if (not checked_now) and email in st.session_state["invite_pool"]:
-            # only remove if this email corresponds to this row (avoid removing others accidentally)
-            st.session_state["invite_pool"].pop(email, None)
-
-    # small footer
-    st.markdown(f"\n---\n🔖 Đã chọn: **{len(st.session_state['invite_pool'])}** ứng viên để mời.")
-
-# --- Tab "✉️ Invite" ---
-def view_invite_tab():
-    header()
-    invited = list(st.session_state["invite_pool"].values())
-    st.subheader(f"📩 Danh sách đã chọn mời phỏng vấn: {len(invited)}")
-
-    if not invited:
-        st.info("Chưa chọn ứng viên nào. Hãy vào tab **Search** hoặc **Filter Search** và tick cột **Invitation**.")
-        return
-
-    # Bảng danh sách + nút xoá từng người
-    for cand in invited:
-        c1, c2, c3, c4 = st.columns([3, 3, 3, 1])
-        with c1:
-            st.write(f"**{cand.get('full_name') or '(No name)'}**")
-            st.caption(cand.get("job_title") or "—")
-        with c2:
-            st.write(cand.get("email"))
-        with c3:
-            url = cand.get("resume_url")
-            if url:
-                st.markdown(f"[🔗 CV]({url})")
-            else:
-                st.write("—")
-        with c4:
-            if st.button("🗑️", key=f"rm_{cand['email']}"):
-                st.session_state["invite_pool"].pop(cand["email"], None)
-                st.rerun()
-
-    st.divider()
-
-    # Form gửi hàng loạt
-    with st.form("batch_invite_form"):
-        st.subheader("✉️ Soạn thư mời (gửi cho tất cả đã chọn)")
-        colA, colB = st.columns(2)
-        with colA:
-            company_name = st.text_input("🏢 Company", value="Your Company")
-            location     = st.text_input("📍 Địa điểm", value="Online / Văn phòng")
-        with colB:
-            phone_number = st.text_input("📞 SĐT liên hệ", value="+84 ...")
-            hr_email     = st.text_input("📧 HR Email", value="hr@example.com")
-
-        subject = st.text_input("Tiêu đề", value="Interview Invitation")
-        interview_date = st.date_input("Ngày phỏng vấn")
-        time_slot = st.selectbox("Khung giờ", ["09:00", "10:00", "14:00", "16:00"])
-
-        default_body = f"""
+        # Email content (HTML body)
+        subject = st.text_input("✉️ Email Subject", value="Interview Invitation")
+        template = st.text_area(
+            "📝 Email Body (HTML Supported)",
+            value=f"""
 <html>
-  <body style="font-family: Arial, sans-serif; line-height:1.6; color:#333;">
-    <p>Dear <b>{{name}}</b>,</p>
-    <p>We would like to invite you to interview for the position of <b>{{job_title}}</b> at <b>{company_name}</b>.</p>
-    <ul>
-      <li><b>Date</b>: {interview_date} </li>
-      <li><b>Time</b>: {time_slot}</li>
-      <li><b>Location</b>: {location}</li>
-      <li><b>Contact</b>: {phone_number} — {hr_email}</li>
-    </ul>
-    <p>Please reply to confirm your availability.</p>
-    <p>Best regards,<br><b>{company_name}</b> Recruitment Team</p>
+  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Dear <b>{candidate.get('full_name','')}</b>,</p>
+
+    <p>We are pleased to invite you for an interview for the position of 
+    <b>{candidate.get('job_title','')}</b> at <b>{company_name}</b>.</p>
+
+    <table style="border-collapse: collapse; margin: 15px 0;">
+      <tr><td style="padding: 6px 12px;">📅 <b>Interview Date:</b></td><td>[Choose below]</td></tr>
+      <tr><td style="padding: 6px 12px;">⏰ <b>Time:</b></td><td>[Choose below]</td></tr>
+      <tr><td style="padding: 6px 12px;">📍 <b>Location:</b></td><td>{location}</td></tr>
+      <tr><td style="padding: 6px 12px;">📞 <b>Contact:</b></td><td>{phone_number}</td></tr>
+      <tr><td style="padding: 6px 12px;">📧 <b>HR Email:</b></td><td>{hr_email}</td></tr>
+    </table>
+
+    <p>Please confirm your availability at your earliest convenience.</p>
+
+    <p>Best regards,<br>
+    <b>{company_name} Recruitment Team</b></p>
   </body>
 </html>
-""".strip()
-        body = st.text_area("Nội dung (HTML được hỗ trợ) — dùng {{name}} và {{job_title}} để cá nhân hoá",
-                            value=default_body, height=240)
+            """.strip()
+        )
 
-        colX, colY, colZ = st.columns([1,1,1])
-        with colX:
-            send_all = st.form_submit_button("📤 Gửi tất cả", type="primary")
-        with colY:
-            export = st.form_submit_button("⬇️ Export emails (CSV)")
-        with colZ:
-            clear_all = st.form_submit_button("🧹 Xoá toàn bộ danh sách")
+        # Interview scheduling
+        interview_date = st.date_input("📅 Interview Date")
+        time_slot = st.selectbox("⏰ Time Slot", ["09:00", "10:00", "14:00", "16:00"])
 
-    # Hành động
-    if send_all:
-        ok, fail = 0, 0
-        for cand in invited:
-            personalized = (body
-                            .replace("{{name}}", cand.get("full_name") or "")
-                            .replace("{{job_title}}", cand.get("job_title") or ""))
-            try:
-                res = call_send_invite(cand["email"], subject, personalized, interview_time=f"{interview_date} {time_slot}")
-                if res:
-                    ok += 1
-                else:
-                    fail += 1
-            except Exception:
-                fail += 1
-        if ok:
-            st.success(f"Đã gửi thành công {ok}/{len(invited)} thư mời.")
-        if fail:
-            st.warning(f"Gửi thất bại {fail} ứng viên. Kiểm tra backend / cấu hình email.")
-
-    if export:
-        csv_bytes = pd.DataFrame(invited)[["full_name", "email", "job_title"]].to_csv(index=False).encode("utf-8")
-        st.download_button("Download invites.csv", data=csv_bytes, file_name="invites.csv", mime="text/csv")
-
-    if clear_all:
-        st.session_state["invite_pool"].clear()
-        st.toast("Đã xoá toàn bộ danh sách mời.", icon="🧹")
-        st.rerun()
+        submitted = st.form_submit_button("📤 Send Invitation")
+        if submitted:
+            res = call_send_invite(
+                candidate_email=candidate["email"],
+                subject=subject,
+                body=template,
+                interview_time=f"{interview_date} {time_slot}"
+            )
+            if res:
+                st.success("✅ Invitation email sent successfully!")
+            else:
+                st.error("❌ Failed to send email.")
 
 
 # ---------------- Router ----------------
@@ -1346,6 +1131,7 @@ if __name__ == "__main__" or True:
     elif nav == "🔽 Filter Search":
         view_search2()
     elif nav == "✉️ Invite":
-        view_invite_tab()
+        invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
+
 
 # streamlit run main.py
