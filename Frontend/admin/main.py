@@ -1059,7 +1059,7 @@ def view_search2():
             else:
                 school_value = school_choice
 
-            gpa = st.text_input("📊 Ngưỡng GPA", placeholder="VD: >=3.2, 3.5 ~ 4.0")
+            gpa = st.text_input("📊 Ngưỡng GPA", placeholder="VD: 3.2, 3.5, 4.0")
 
         with col2:
             combined_skills = list(dict.fromkeys(skill_options + st.session_state["custom_skills"]))
@@ -1071,7 +1071,20 @@ def view_search2():
 
         run = st.form_submit_button("🔍 Tìm kiếm", type="primary")
 
+    # -----------------------
+    # PHẦN THÊM SKILL (ngoài form)
+    # -----------------------
+    # st.markdown("### ➕ Thêm kỹ năng tuỳ chỉnh")
+    # new_skill = st.text_input("Thêm kỹ năng khác", key="new_skill_input", placeholder="VD: FastAPI, GCP, Figma...")
 
+    # if st.button("Thêm skill", key="btn_add_skill"):
+    #     ns = new_skill.strip()
+    #     if ns and ns not in st.session_state["custom_skills"]:
+    #         st.session_state["custom_skills"].append(ns)
+    #         st.success(f"✅ Đã thêm kỹ năng: {ns}")
+    #     st.session_state["new_skill_input"] = ""
+
+    # Khi submit form -> gửi payload tới backend
     if run:
         # Chuẩn hóa payload: gửi selected_job trừ khi Tất cả
         payload = {
@@ -1085,7 +1098,6 @@ def view_search2():
             "project_detail": project_detail.strip() if project_detail else None,
             
         }
-        st.info("📤 Đang gửi yêu cầu tìm kiếm...")
         with st.spinner("Đang xử lý..."):
             data = call_FilterQuery(payload)  # cập nhật hàm call_query để nhận dict thay vì q string
             if not data:
@@ -1109,12 +1121,14 @@ def view_search2():
 
         # ✅ Hiển thị kết quả tìm kiếm
         st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
-
-        col_left, col_right = st.columns([0.28, 0.72])
-        with col_left:
-            df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
-        with col_right:
-            render_table_view(df_scored)
+        
+        render_table_view(df)
+        # df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
+        # col_left, col_right = st.columns([0.28, 0.72])
+        # with col_left:
+        #     df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
+        # with col_right:
+        #     render_table_view(df_scored)
 
 
 # --------------SETTING----------------------
