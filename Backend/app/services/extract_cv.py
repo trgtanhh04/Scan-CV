@@ -385,6 +385,7 @@ def process_cv_rag(
         description = proj.get("project_description", "")
         
         project_text = f"Project name: {name} \nProject description: {description}" if name and description else ""
+
         project_emb = embedding_model.embed_query(project_text)
         points.append(PointStruct(
                 id=make_id(f"proj-{filename}-{name}-{description}-{i}-{uuid.uuid4().hex[:8]}"),
@@ -406,26 +407,59 @@ def process_cv_rag(
 
     return info
 
+def test_cv_rag(
+    file_path: str,
+    pre_text: str | None = None,
+    pre_info: dict | None = None,
+) -> dict:
+    filename = os.path.basename(file_path)
+    print(f"Processing {filename}...")
+
+    # ensure collection exists
+
+    # dùng text có sẵn nếu được truyền, nếu không thì mới đọc PDF
+    text = pre_text if pre_text is not None else extract_text_from_pdf(file_path)
+    if not text:
+        print(f"No text extracted from {filename}, skipping.")
+        return {}
+
+    # dùng info có sẵn nếu được truyền, nếu không thì mới gọi LLM
+    info = pre_info if pre_info is not None else (extract_info(text) or {})
+    info["source_file"] = filename
+
+    # Chuẩn hoá + duplicate email
+    email_norm = normalize_email(info.get("email"))
+
+
+    skills = _dedup_skills(info.get("skills"))
+    experiences = _dedup_experiences(info.get("experience"))
+    projects = info.get("project", [])
+
+    for i, proj in enumerate(projects):
+        name = proj.get("project_name", "")
+        description = proj.get("project_description", "")
+        
+        project_text = f"Project name: {name} \nProject description: {description}" if name and description else ""
+
+        print(f"Project text: {project_text}")
+
 if __name__ == "__main__":
     # honor QDRANT_API_KEY from config if present
-    from config.config import QDRANT_URL, QDRANT_API_KEY
-    qdrant = QdrantClient(url=QDRANT_URL or "http://localhost:6333", api_key=QDRANT_API_KEY, check_compatibility=False)
-    embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
+    # from config.config import QDRANT_URL, QDRANT_API_KEY
+    # qdrant = QdrantClient(url=QDRANT_URL or "http://localhost:6333", api_key=QDRANT_API_KEY, check_compatibility=False)
+    # embedding = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-exp-03-07", api_key=GOOGLE_API_KEY)
 
-    file_path = '../../raw/cvs/02.pdf'
+    file_path = 'CV/BA/DinhNguyetQuynh_InternQAQC.pdf'
     text = extract_text_from_pdf(file_path)
     info = extract_info(text) or {}
-    resume_url = upload_pdf_and_get_url_gcs(file_path)
+    # print(info["project"])
+    # resume_url = upload_pdf_and_get_url_gcs(file_path)
     # Gọi thử
-    result = process_cv_rag(
+    result = test_cv_rag(
         file_path,
-        qdrant,
-        embedding,
-        "candidates",
         pre_text=text,
         pre_info=info,
-        resume_url=resume_url
     )
-    print(result)
+    # print(result)
 
 # python extract_cv.py

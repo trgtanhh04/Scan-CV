@@ -49,6 +49,7 @@ qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 class CandidateState(dict):
     question: str
+    job_apply: str
     pre_judge: str
     post_judge: str
     route: str
@@ -96,7 +97,7 @@ def sql_node(state: CandidateState, limit: int):
 
 
 def vector_node(state: CandidateState,llm, embedding_model, qdrant_db, collection, limit, search_threshold):
-    results, plan = search_vector(state["question"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
+    results, plan = search_vector(state["question"], state["job_apply"], llm, embedding_model, qdrant_db, collection, limit, search_threshold)
     state["vector_result"] = results
 
     state["final_answer"] = {

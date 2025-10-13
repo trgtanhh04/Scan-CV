@@ -74,7 +74,7 @@ def split_hybrid_query(question: str, llm):
 
 
 
-def generate_vector_query(question: str, llm, collection_name: str, limit: int = 10):
+def generate_vector_query(question: str, llm, collection_name: str, job_apply:str, limit: int = 10):
     vector_prompt = ChatPromptTemplate.from_template("""
     You are an intelligent query generation system for semantic candidate search.
 
@@ -115,6 +115,7 @@ def generate_vector_query(question: str, llm, collection_name: str, limit: int =
     - If both are relevant, output **two or more JSON objects**, for each type.
     - Always infer meaningful filters if the question contains company names, roles, or applied positions.
     - The `"query_text"` should be a concise embedding text that best captures the intent of the search.
+    - You also need to filter based on "job_apply" on the "job_apply" key in the metadata.
     - Return only valid JSON (no Markdown formatting, no explanations).
 
     Example 1:
@@ -128,7 +129,8 @@ def generate_vector_query(question: str, llm, collection_name: str, limit: int =
         "limit": 10,
         "query_filter": {{
         "must": [
-            {{ "key": "type", "match": {{ "value": "exp_position" }} }}
+            {{ "key": "type", "match": {{ "value": "exp_position" }} }},
+            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},                                      
         }}
         ]
         }}
@@ -148,6 +150,7 @@ def generate_vector_query(question: str, llm, collection_name: str, limit: int =
         "must": [
             {{ "key": "type", "match": {{ "value": "exp_position" }} }},
             {{ "key": "exp_company", "match": {{ "value": "Shopee" }} }},
+            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},  
         }}
         ]
         }}
@@ -165,7 +168,8 @@ def generate_vector_query(question: str, llm, collection_name: str, limit: int =
         "limit": 10,
         "query_filter": {{
         "must": [
-            {{ "key": "type", "match": {{ "value": "exp_description" }} }}
+            {{ "key": "type", "match": {{ "value": "exp_description" }} }},
+            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},  
         ]
         }}
     }}
@@ -175,6 +179,7 @@ def generate_vector_query(question: str, llm, collection_name: str, limit: int =
     Now generate the JSON query for:
     Question: {question}
     collection_name: {collection_name}
+    job_apply: {job_apply}
     limit: {limit}
     """)
 
@@ -285,8 +290,8 @@ def format_rag_output(results):
         rows.append(row)
     return {"columns": columns, "rows": rows}
 
-def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
-    output = generate_vector_query(query, llm, collection, limit)
+def search_vector(query: str, job_apply:str, llm, embedding_model, qdrant_db, collection, limit=30, search_threshold=0.72):
+    output = generate_vector_query(query, llm, collection, job_apply, limit)
     plan = json.loads(output)
     print("Generated vector query plan:", plan)
     results = execute_vector_query(plan, qdrant_db, embedding_model, search_threshold=search_threshold)

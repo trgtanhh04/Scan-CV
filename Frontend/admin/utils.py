@@ -7,7 +7,7 @@ from langchain_deepseek import ChatDeepSeek
 from sqlalchemy import create_engine, Column, Integer, Text, String, TIMESTAMP, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from config import DEEPSEEK_API_KEY, LOGS_DATABASE_URL
+from config import DEEPSEEK_API_KEY
 
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)

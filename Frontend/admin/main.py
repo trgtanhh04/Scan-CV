@@ -1071,20 +1071,7 @@ def view_search2():
 
         run = st.form_submit_button("🔍 Tìm kiếm", type="primary")
 
-    # -----------------------
-    # PHẦN THÊM SKILL (ngoài form)
-    # -----------------------
-    # st.markdown("### ➕ Thêm kỹ năng tuỳ chỉnh")
-    # new_skill = st.text_input("Thêm kỹ năng khác", key="new_skill_input", placeholder="VD: FastAPI, GCP, Figma...")
 
-    # if st.button("Thêm skill", key="btn_add_skill"):
-    #     ns = new_skill.strip()
-    #     if ns and ns not in st.session_state["custom_skills"]:
-    #         st.session_state["custom_skills"].append(ns)
-    #         st.success(f"✅ Đã thêm kỹ năng: {ns}")
-    #     st.session_state["new_skill_input"] = ""
-
-    # Khi submit form -> gửi payload tới backend
     if run:
         # Chuẩn hóa payload: gửi selected_job trừ khi Tất cả
         payload = {

@@ -32,6 +32,12 @@ from fastapi import FastAPI, Depends
 from typing import List, Optional
 from qdrant_client import models
 
+from pathlib import Path
+
+INFO_LOG_PATH = Path("data/info_log.json")
+import json
+from filelock import FileLock 
+
 
 
 deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
@@ -40,6 +46,33 @@ embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, google_api_
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 app = FastAPI(title="CV Manager API")
+
+def append_info_record(info, resume_url, original_filename):
+    """Ghi thêm 1 record info vào file info_log.json"""
+    record = {
+        "id": str(uuid.uuid4()),
+        "resume_url": resume_url,
+        "original_filename": original_filename,
+        **info  # merge toàn bộ field trong info
+    }
+
+    with FileLock(f"{INFO_LOG_PATH}.lock"):
+        # Đọc dữ liệu cũ
+        if INFO_LOG_PATH.exists():
+            with open(INFO_LOG_PATH, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+        else:
+            data = []
+
+        # Thêm record mới
+        data.append(record)
+
+        # Ghi lại
+        with open(INFO_LOG_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
 app.add_middleware(
     CORSMiddleware,
@@ -125,13 +158,8 @@ async def upload_cv(file: UploadFile = File(...), job_apply: str = Form(None), d
         if job_apply:
             info["job_apply"] = job_apply
 
-        # if "education" in info:
-        #     for edu in info["education"]:
-        #         gpa = edu.get("gpa")
-        #         print("📌 GPA:", gpa)   # log ra console
-                
-        # if "certifications" in info:
-        #     print("📌 Certifications:", info["certifications"])
+        # append_info_record(info, resume_url, file.filename)
+
         
         # (3) RAG 
         rag_results = process_cv_rag(
@@ -280,7 +308,7 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
         state = {"question": exp_detail}
         flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
         answer = flow.invoke(state)
-        print("DeepSeek answer:", answer)
+        # print("DeepSeek answer:", answer)
 
         final_answer = answer.get("final_answer", {})
         columns = final_answer.get("columns", [])
@@ -311,6 +339,10 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
                     models.FieldCondition(
                         key="type",
                         match=models.MatchValue(value="project")
+                    ),
+                    models.FieldCondition(
+                        key="job_apply",
+                        match=models.MatchValue(value=job_apply)
                     )
                 ]
             ),
