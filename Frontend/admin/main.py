@@ -873,37 +873,33 @@ def view_search():
                 st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
         with col_right:
-            # Add Invitation selection column UI above the table
-            st.markdown("<div style='margin-bottom:0.5rem; display:flex; gap:8px;'>", unsafe_allow_html=True)
+            # Ensure invites dict exists
             if "invites" not in st.session_state:
                 st.session_state["invites"] = {}
 
-            if st.button("➕ Add selected to Invites"):
-                # collect selected rows via checkboxes stored in session_state
-                added = 0
-                for key, val in st.session_state.items():
-                    if key.startswith("invite_chk_") and val:
-                        # stash candidate info saved in a parallel key
-                        cand = st.session_state.get(f"invite_row_{key[11:]}")
-                        if cand:
-                            st.session_state["invites"][str(cand.get("email") or cand.get("id"))] = cand
-                            added += 1
-                if added:
-                    st.success(f"✅ Added {added} candidate(s) to Invites")
-                else:
-                    st.info("No selected candidates found to add.")
-
-            if st.button("🧾 Clear invite selections (UI)"):
-                for key in list(st.session_state.keys()):
-                    if key.startswith("invite_chk_"):
-                        del st.session_state[key]
-                    if key.startswith("invite_row_"):
-                        del st.session_state[key]
-
+            st.markdown("<div style='display:flex; gap:8px; margin-bottom:0.5rem;'>", unsafe_allow_html=True)
+            if st.button("🧾 Clear UI selections"):
+                # clear per-row checkbox keys but keep saved invites
+                for k in list(st.session_state.keys()):
+                    if k.startswith("invite_chk_") or k.startswith("invite_row_"):
+                        del st.session_state[k]
+                st.experimental_rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
-            # Render table with per-row invitation checkbox
-            # We'll build HTML with a hidden checkbox state handled by Streamlit widgets below
+            # Render header row that aligns with the table below
+            header_cols = st.columns([0.06, 0.32, 0.34, 0.22, 0.06])
+            with header_cols[0]:
+                st.markdown("**Inv**")
+            with header_cols[1]:
+                st.markdown("**Name / Email**")
+            with header_cols[2]:
+                st.markdown("**Job Title**")
+            with header_cols[3]:
+                st.markdown("**Educations**")
+            with header_cols[4]:
+                st.markdown("**Score**")
+
+            # Render each candidate row using same column widths for alignment
             for i, row in df_scored.iterrows():
                 cand = row.to_dict()
                 key_suffix = str(cand.get("email") or cand.get("id") or i)
@@ -911,22 +907,45 @@ def view_search():
                 row_key = f"invite_row_{key_suffix}"
                 # store the row candidate dict for later retrieval
                 st.session_state[row_key] = cand
-                cols = st.columns([0.06, 0.94])
-                with cols[0]:
-                    checked = st.checkbox("", key=chk_key)
-                with cols[1]:
-                    # show candidate summary compactly
-                    st.markdown(f"**{html.escape(str(cand.get('full_name') or cand.get('full_name','')))}**  ")
-                    st.markdown(render_table_row := '')
 
-            # Also show currently saved invites
+                c0, c1, c2, c3, c4 = st.columns([0.06, 0.32, 0.34, 0.22, 0.06])
+                with c0:
+                    checked = st.checkbox("", key=chk_key, value=st.session_state.get("invites", {}).get(str(cand.get("email") or cand.get("id"))) is not None)
+                    # auto-sync to saved invites when toggled
+                    if checked:
+                        st.session_state["invites"][str(cand.get("email") or cand.get("id"))] = cand
+                    else:
+                        st.session_state["invites"].pop(str(cand.get("email") or cand.get("id")), None)
+                with c1:
+                    name = cand.get("full_name") or cand.get("name") or "(No name)"
+                    st.markdown(f"**{html.escape(str(name))}**  \n\n<small>{html.escape(str(cand.get('email') or ''))}</small>", unsafe_allow_html=True)
+                with c2:
+                    st.markdown(str(cand.get("job_title") or ""), unsafe_allow_html=True)
+                with c3:
+                    st.markdown(str(cand.get("educations") or ""), unsafe_allow_html=True)
+                with c4:
+                    st.markdown(str(cand.get("_match_score") or 0))
+
+            # Show persisted invites summary and allow quick actions
             if st.session_state.get("invites"):
+                st.markdown("---")
                 st.markdown("### 📥 Saved Invites")
                 invite_list = list(st.session_state["invites"].values())
                 for c in invite_list:
-                    st.markdown(f"- {c.get('full_name')} — {c.get('email')}")
+                    cols_i = st.columns([0.02, 0.7, 0.2, 0.08])
+                    with cols_i[0]:
+                        st.write("")
+                    with cols_i[1]:
+                        st.markdown(f"**{html.escape(str(c.get('full_name') or c.get('name','')))}**  \n\n<small>{html.escape(str(c.get('email') or ''))}</small>", unsafe_allow_html=True)
+                    with cols_i[2]:
+                        if st.button("✉️ Invite", key=f"invite_now_{c.get('email')}"):
+                            invite_model(c)
+                    with cols_i[3]:
+                        if st.button("🗑️", key=f"remove_inv_{c.get('email')}"):
+                            st.session_state["invites"].pop(str(c.get('email') or c.get('id')), None)
+                            st.experimental_rerun()
 
-            # Finally render the main results table for reference
+            # Finally render the main results table for reference (compact)
             render_table_view(df_scored)
     with tab2:
         # Show persisted API response (if available) so it survives rerenders caused by widget interactions
@@ -1167,6 +1186,50 @@ def invite_model(candidate):
                 st.error("❌ Failed to send email.")
 
 
+def view_invites_tab():
+    header()
+    st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
+    st.subheader("✉️ Invite — Saved Candidates")
+
+    if "invites" not in st.session_state or not st.session_state["invites"]:
+        st.info("Chưa có ứng viên nào được chọn để invite. Quay lại tab '🔎 Search' để chọn ứng viên.")
+        return
+
+    invite_list = list(st.session_state["invites"].values())
+    st.markdown(f"### 📥 {len(invite_list)} saved candidate(s)")
+
+    # Bulk actions
+    cols = st.columns([0.5, 0.5])
+    with cols[0]:
+        if st.button("📤 Send all invitations"):
+            sent = 0
+            failed = 0
+            for c in invite_list:
+                res = call_send_invite(candidate_email=c.get('email'), subject=f"Interview Invitation", body=f"Please join us for an interview.", interview_time=None)
+                if res:
+                    sent += 1
+                else:
+                    failed += 1
+            st.success(f"Sent: {sent}, Failed: {failed}")
+    with cols[1]:
+        if st.button("🧹 Clear all saved invites"):
+            st.session_state["invites"] = {}
+            st.experimental_rerun()
+
+    st.markdown("---")
+    for c in invite_list:
+        cols_i = st.columns([0.02, 0.7, 0.16, 0.12])
+        with cols_i[1]:
+            st.markdown(f"**{html.escape(str(c.get('full_name') or c.get('name','')))}**  \n\n<small>{html.escape(str(c.get('email') or ''))}</small>", unsafe_allow_html=True)
+        with cols_i[2]:
+            if st.button("✉️ Invite", key=f"invite_single_{c.get('email')}"):
+                invite_model(c)
+        with cols_i[3]:
+            if st.button("🗑️ Remove", key=f"remove_single_{c.get('email')}"):
+                st.session_state["invites"].pop(str(c.get('email') or c.get('id')), None)
+                st.experimental_rerun()
+
+
 # ---------------- Router ----------------
 with st.sidebar:
     pass
@@ -1185,7 +1248,7 @@ if __name__ == "__main__" or True:
     elif nav == "🔽 Filter Search":
         view_search2()
     elif nav == "✉️ Invite":
-        invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
+        view_invites_tab()
 
 
 # streamlit run main.py
