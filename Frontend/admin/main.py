@@ -844,24 +844,24 @@ def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
 
-    # top_qs = get_top_questions(3)
-    # if top_qs:
-    #     st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
-    #     cols = st.columns(len(top_qs))
-    #     for i, q_text in enumerate(top_qs):
-    #         if cols[i].button(q_text, key=f"suggest_{i}"):
-    #             st.session_state["selected_question"] = q_text
+    # # top_qs = get_top_questions(3)
+    # # if top_qs:
+    # #     st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
+    # #     cols = st.columns(len(top_qs))
+    # #     for i, q_text in enumerate(top_qs):
+    # #         if cols[i].button(q_text, key=f"suggest_{i}"):
+    # #             st.session_state["selected_question"] = q_text
 
-    if "selected_question" in st.session_state:
-        default_q = st.session_state["selected_question"]
-    else:
-        default_q = ""
+    # if "selected_question" in st.session_state:
+    #     default_q = st.session_state["selected_question"]
+    # else:
+    #     default_q = ""
 
     q = st.text_input(
         "Câu hỏi",
         placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
         key="q_input",
-        value=default_q
+        # value=default_q
     )
 
     # insert_log(question=q)
@@ -928,7 +928,7 @@ def view_search():
                         continue
 
                 # Remove empty rows
-                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("skills") or r.get("educations")]
+                rows = [r for r in rows if r.get("email") or r.get("job_title") or r.get("educations")]
                 df_original = pd.DataFrame(rows).drop_duplicates(subset=["email"], keep="first").reset_index(drop=True)
                 # Nếu cột id toàn bộ là None nhưng vẫn có dữ liệu, đánh số lại
                 if 'id' not in df_original.columns or df_original['id'].isnull().all():
@@ -970,6 +970,60 @@ def view_search():
                 st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
         with col_right:
+            # Add Invitation selection column UI above the table
+            st.markdown("<div style='margin-bottom:0.5rem; display:flex; gap:8px;'>", unsafe_allow_html=True)
+            if "invites" not in st.session_state:
+                st.session_state["invites"] = {}
+
+            if st.button("➕ Add selected to Invites"):
+                # collect selected rows via checkboxes stored in session_state
+                added = 0
+                for key, val in st.session_state.items():
+                    if key.startswith("invite_chk_") and val:
+                        # stash candidate info saved in a parallel key
+                        cand = st.session_state.get(f"invite_row_{key[11:]}")
+                        if cand:
+                            st.session_state["invites"][str(cand.get("email") or cand.get("id"))] = cand
+                            added += 1
+                if added:
+                    st.success(f"✅ Added {added} candidate(s) to Invites")
+                else:
+                    st.info("No selected candidates found to add.")
+
+            if st.button("🧾 Clear invite selections (UI)"):
+                for key in list(st.session_state.keys()):
+                    if key.startswith("invite_chk_"):
+                        del st.session_state[key]
+                    if key.startswith("invite_row_"):
+                        del st.session_state[key]
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # Render table with per-row invitation checkbox
+            # We'll build HTML with a hidden checkbox state handled by Streamlit widgets below
+            for i, row in df_scored.iterrows():
+                cand = row.to_dict()
+                key_suffix = str(cand.get("email") or cand.get("id") or i)
+                chk_key = f"invite_chk_{key_suffix}"
+                row_key = f"invite_row_{key_suffix}"
+                # store the row candidate dict for later retrieval
+                st.session_state[row_key] = cand
+                cols = st.columns([0.06, 0.94])
+                with cols[0]:
+                    checked = st.checkbox("", key=chk_key)
+                with cols[1]:
+                    # show candidate summary compactly
+                    st.markdown(f"**{html.escape(str(cand.get('full_name') or cand.get('full_name','')))}**  ")
+                    st.markdown(render_table_row := '')
+
+            # Also show currently saved invites
+            if st.session_state.get("invites"):
+                st.markdown("### 📥 Saved Invites")
+                invite_list = list(st.session_state["invites"].values())
+                for c in invite_list:
+                    st.markdown(f"- {c.get('full_name')} — {c.get('email')}")
+
+            # Finally render the main results table for reference
             render_table_view(df_scored)
     with tab2:
         # Show persisted API response (if available) so it survives rerenders caused by widget interactions
@@ -1228,20 +1282,15 @@ if "📤" in st.session_state.get("nav", ""):
 
 if __name__ == "__main__" or True:
 
-    if "Main" in nav:
+    if nav == "✉️ Main":
         view_main()
-    elif "Drive Upload" in nav:
+    elif nav == "🗂️ Drive Upload":
         upload_with_Drive()
-    elif "Upload" in nav:
-        view_upload()
-    # elif "Search" in nav:
-    #     view_search()
-    elif "Alternate Search" in nav:
+    elif nav == "🔎 Search":
+        view_search()
+    elif nav == "🔽 Filter Search":
         view_search2()
-    elif "Invite" in nav:
+    elif nav == "✉️ Invite":
         invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
-
-    else:
-        view_settings()
 
 # streamlit run main.py

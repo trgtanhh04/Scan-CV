@@ -10,35 +10,45 @@ def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
     return fixed_query
   
-def route_query(question: str, llm):
-    router_prompt = ChatPromptTemplate.from_template("""
-        You are a query classification system.  
-        Your task is to decide whether a user question should be handled by:
-        - "SQL": questions that can be answered from structured data fields in the PostgreSQL database,  
-        - "VECTOR": questions that need semantic search over unstructured text (skills, experience descriptions, project descriptions),  
-        - "HYBRID": questions that require both SQL and VECTOR to answer.  
+# ------------------ Router Agent ------------------
+router_prompt = ChatPromptTemplate.from_template("""
+    You are a query router for a candidate search system.
 
-        Rules:
-        1. Choose **SQL** if the question is about:
-        - structured fields: full_name, email, phone, job_title, certifications, languages, degree, graduation_year
-        - numeric reasoning over structured or experience data: "at least", "minimum", "more than N years", "count how many", "with 2 or more companies"
+    Classify the question into one of these categories:
+    - "SQL": if it asks about structured fields (name, degree, job title, applied position, university, gpa, certifications, languages, etc.)
+    - "VECTOR": if it asks about skills, technologies, past experiences, or project descriptions.
+    - "HYBRID": if it requires both structured data and unstructured (skills/experience) data.
+    - "SQL": also choose SQL if the question involves numeric or logical reasoning over structured data, mainly about past experience (e.g., "at least 3 years as Software Engineer", "worked at at least 2 companies").
 
-        2. Choose **VECTOR** if the question is about:
-        - skills or technologies (Python, Docker, TensorFlow, leadership, etc.)
-        - unstructured experience descriptions (work history, achievements, projects)
-        - semantic search where synonyms or paraphrasing matter.
+    Question: {question}
 
-        3. Choose **HYBRID** if the question combines both structured requirements and unstructured experience/skills, for example:
-        - "Find candidates named John (structured) who have experience in Python (unstructured)."
-        - "List candidates with a Master's degree (structured) and at least 5 years in data engineering (numeric/structured + semantic)."
-
-        Answer only with one of these exact labels: SQL, VECTOR, HYBRID.  
-
-        Question: {question}
+    Answer ONLY with one label: SQL, VECTOR, or HYBRID.
     """)
-    response = llm.invoke(router_prompt.format(question=question))
-    print(response.content.strip())
-    return response.content.strip()
+
+
+
+
+# ------------------ Evaluator Agent ------------------
+evaluator_prompt = ChatPromptTemplate.from_template("""
+    You are an evaluation agent checking the routing decision.
+
+    Rules for correctness:
+    1. VECTOR if about skills, past work experience, or projects.
+    2. SQL if about other structured fields (name, degree, language, university, gpa, certifications, current job title, applied position for this company,  etc.)
+    3. SQL if numeric reasoning about experience (e.g. "at least 3 years", "worked in 2 companies")
+    4. HYBRID if question mixes structured + unstructured requirements.
+
+    Question: {question}
+    Router Decision: {decision}
+
+    Evaluate whether the decision follows these rules.
+    Respond in JSON format:
+    {{
+    "evaluation": "CORRECT" or "INCORRECT",
+    "reason": "<brief explanation>"
+    }}
+    """)
+
 
 def split_hybrid_query(question: str, llm):
     prompt = ChatPromptTemplate.from_template("""

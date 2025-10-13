@@ -15,13 +15,18 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from unidecode import unidecode
 from typing import List
 
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import LLMChain
+
 from sqlalchemy.orm import Session
 from app.models.models import SessionLocal, Candidate, Skill, Educations
 
 # === LangGraph ===
 from langgraph.graph import StateGraph, END
 
-from app.rag_pipeline.rag_modules_test import search_vector, route_query, split_hybrid_query
+from app.rag_pipeline.rag_modules_test import search_vector, split_hybrid_query
+from app.rag_pipeline.rag_modules_test import router_prompt, evaluator_prompt
 from app.text2SQL.t2sql_core import LLM, answer_sql
 
 # === Config ===
@@ -49,29 +54,83 @@ qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 class CandidateState(dict):
     question: str
-    pre_judge: str
-    post_judge: str
+    decision: str
+    feedback: str
     route: str
     sql_query: str
     sql_result: list
     vector_result: list
-    vector_query: dict
     final_answer: str
 
-def router_condition(state):
-    if state["route"] == "SQL":
-        return "sql"
-    elif state["route"] == "VECTOR":
-        return "vector"
-    elif state["route"] == "HYBRID":
-        return "hybrid"
-    return END
+router_memory = ConversationBufferMemory(memory_key="router_history", return_messages=True)
+eval_memory = ConversationBufferMemory(memory_key="eval_history", return_messages=True)
+
+router_chain = LLMChain(
+llm=deepseek,
+prompt=router_prompt,
+memory=router_memory,
+verbose=False
+)
+
+def router_main_node(state):
+    """Router chính quyết định nhánh"""
+    question = state["question"]
+    decision = router_chain.run(question=question).strip()
+    state["decision"] = decision
+    return state
+
+def router_eval_node(state, max_loop: int = 5):
+    """Evaluator kiểm tra quyết định và feedback loop có giới hạn"""
+    question = state["question"]
+    decision = state["decision"]
+
+    eval_response = deepseek.invoke(
+        evaluator_prompt.format(question=question, decision=decision)
+    )
+    feedback = eval_response.content.strip()
+    state["feedback"] = feedback
+
+    # --- Điều kiện feedback ---
+    if "INCORRECT" in feedback:
+        current_loop = state.get("loop_count", 0)
+        if current_loop < max_loop:
+            print(f"⚠️ Feedback loop {current_loop + 1}/{max_loop} triggered, re-evaluating decision...")
+            new_decision = router_chain.run(
+                question=f"{question}\nConsider previous feedback: {feedback}"
+            ).strip()
+            state["decision"] = new_decision
+            state["feedback"] = feedback
+            state["loop_back"] = True
+            state["loop_count"] = current_loop + 1
+        else:
+            print("🚫 Max feedback loop reached, proceeding with last decision.")
+            state["loop_back"] = False
+    else:
+        state["loop_back"] = False
+
+    return state
+
+
+def eval_condition(state):
+    """Kiểm tra có cần loop lại router không"""
+    if state.get("loop_back"):
+        return "loop"
+    return "proceed"
+
+# def router_condition(state):
+#     if state["route"] == "SQL":
+#         return "sql"
+#     elif state["route"] == "VECTOR":
+#         return "vector"
+#     elif state["route"] == "HYBRID":
+#         return "hybrid"
+#     return END
 
 # ---- Node functions ----
-def router_node(state: CandidateState, llm):
-    route = route_query(state["question"], llm)
-    state["route"] = route
-    return state
+# def router_node(state: CandidateState, llm):
+#     route = route_query(state["question"], llm)
+#     state["route"] = route
+#     return state
 
 def sql_node(state: CandidateState, limit: int):
     try:
@@ -214,31 +273,54 @@ def summarizer_node(state: CandidateState):
 def build_flow(llm, embedding_model, qdrant_db, collection, limit=10, search_threshold=0.72):
     graph = StateGraph(CandidateState)
 
-    graph.add_node("router", lambda state: router_node(state, llm))
-    graph.add_node("sql", lambda state: sql_node(state, limit))
-    graph.add_node("vector", lambda state: vector_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
-    graph.add_node("hybrid", lambda state: hybrid_node(state,llm, embedding_model, qdrant_db, collection, limit, search_threshold))
-    graph.add_node("summarizer", lambda state: summarizer_node(state))
+    # --- Routing phase ---
+    graph.add_node("router_main", router_main_node)
+    graph.add_node("router_eval", router_eval_node)
 
+    # --- Processing phase ---
+    graph.add_node("sql", lambda state: sql_node(state, limit))
+    graph.add_node("vector", lambda state: vector_node(state, llm, embedding_model, qdrant_db, collection, limit, search_threshold))
+    graph.add_node("hybrid", lambda state: hybrid_node(state, llm, embedding_model, qdrant_db, collection, limit, search_threshold))
+    graph.add_node("summarizer", summarizer_node)
+
+    # --- Routing flow ---
+    graph.add_edge("router_main", "router_eval")
     graph.add_conditional_edges(
-        "router",
-        router_condition,  
+        "router_eval",
+        eval_condition,
         {
-            "sql": "sql",
-            "vector": "vector",
-            "hybrid": "hybrid",   # thêm HYBRID
-            END: END,
+            "loop": "router_main",   # feedback loop
+            "proceed": "router_dispatch"
         },
     )
 
+    # --- Router dispatch node ---
+    def router_dispatch(state):
+        """Sau khi router được confirm, xác định route"""
+        state["route"] = state["decision"]
+        return state
+
+    graph.add_node("router_dispatch", router_dispatch)
+
+    graph.add_conditional_edges(
+        "router_dispatch",
+        lambda state: state["route"],
+        {
+            "SQL": "sql",
+            "VECTOR": "vector",
+            "HYBRID": "hybrid",
+        },
+    )
+
+    # --- Result flow ---
     graph.add_edge("sql", "summarizer")
     graph.add_edge("vector", "summarizer")
     graph.add_edge("hybrid", "summarizer")
     graph.add_edge("summarizer", END)
 
-    graph.set_entry_point("router")
-
+    graph.set_entry_point("router_main")
     return graph.compile()
+
 
 # ---- Enrich Education, Skills, Job Title ----
 def enrich_with_skills_and_edu(session: Session, candidate_emails: List[str]):

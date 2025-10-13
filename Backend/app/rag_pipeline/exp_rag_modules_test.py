@@ -9,6 +9,61 @@ import re
 def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
     return fixed_query
+
+router_prompt = ChatPromptTemplate.from_template("""
+You are an intelligent **query router** that classifies user questions about candidates’ **work experience**.
+
+Your goal is to decide which module should handle the query:
+
+- "SQL" → for **structured or numeric experience** (e.g., total years, company count, duration).
+- "VECTOR" → for **semantic or descriptive experience** (e.g., job roles, responsibilities, technologies used, company names).
+- "HYBRID" → for **mixed queries** that combine numeric and descriptive aspects.
+
+Guidelines:
+- Choose **SQL** for phrases like:
+  - "at least 3 years"
+  - "worked in 2 companies"
+  - "more than 5 years of experience"
+  - "less than 1 year as intern"
+- Choose **VECTOR** for phrases like:
+  - "worked as Data Scientist"
+  - "experience in React or Python"
+  - "developed machine learning models"
+  - "interned at Shopee"
+- Choose **HYBRID** for phrases like:
+  - "at least 2 years as Data Engineer"
+  - "worked 3 years using JavaScript"
+  - "more than 4 years experience with AI projects"
+
+Answer with **only one label**:
+`SQL`, `VECTOR`, or `HYBRID`.
+
+Question: {question}
+""")
+
+# ------------------ Evaluator Agent ------------------
+evaluator_prompt = ChatPromptTemplate.from_template("""
+You are an **evaluation agent** that verifies whether the router’s decision about a work-experience query is correct.
+
+Follow these strict rules:
+
+1. **SQL** → when the question involves numeric or structured experience,
+   e.g. "at least 3 years", "worked in 2 companies", "more than 5 years".
+2. **VECTOR** → when the question involves semantic or descriptive experience,
+   e.g. "worked as Data Analyst", "experience in Python", "interned at Google".
+3. **HYBRID** → when both numeric and descriptive parts appear,
+   e.g. "at least 3 years as Backend Developer", "worked for 5 years using React".
+
+Question: {question}
+Router Decision: {decision}
+
+Evaluate if the router’s decision is correct based on the above rules.
+Respond in valid JSON format:
+{{
+  "evaluation": "CORRECT" or "INCORRECT",
+  "reason": "<short explanation>"
+}}
+""")
   
 def route_query(question: str, llm):
     router_prompt = ChatPromptTemplate.from_template("""

@@ -94,6 +94,7 @@ class Educations(Base):
     degree       = Column(String, nullable=True)
     gpa         = Column(Float, nullable=True)
     university   = Column(String, nullable=True)
+    university_vietnamese = Column(String, nullable=True)  # tên tiếng Việt nếu có
     start_year   = Column(Integer, nullable=True)   # giữ dạng năm cho đơn giản
     end_year     = Column(Integer, nullable=True)
 
