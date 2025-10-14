@@ -1,6 +1,7 @@
 # E:\Scan-CV\Backend\app\api\main.py
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -9,6 +10,7 @@ from fastapi import Form
 
 
 from app.models.models import SessionLocal
+from app.services.email_utils import send_email
 from app.rag_pipeline.workflow import enrich_final_answer
 from app.rag_pipeline.exp_workflow import build_flow
 from app.text2SQL.process_cvs_sql import process_cvs_sql     
@@ -288,7 +290,7 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
 
     # 2️⃣ Tìm theo exp_detail (semantic search kinh nghiệm)
     if exp_detail:
-        state = {"question": exp_detail}
+        state = {"question": exp_detail, "job_apply": job_apply}
         flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
         answer = flow.invoke(state)
         print("DeepSeek answer:", answer)
@@ -356,6 +358,31 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
 
     print("✅ Final intersection results:", final_results)
     return final_results
+
+class InviteRequest(BaseModel):
+    email: EmailStr
+    subject: str
+    body: str
+    interview_time: str  # ex: "2025-10-14 09:00"
+
+@app.post("/invite")
+def send_invitation(invite: InviteRequest):
+    """Endpoint gửi email mời phỏng vấn cho 1 ứng viên"""
+    success = send_email(invite.email, invite.subject, invite.body)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Failed to send to {invite.email}")
+
+    # Optionally, log lại DB nếu có
+    try:
+        interview_dt = datetime.fromisoformat(invite.interview_time)
+    except Exception:
+        interview_dt = invite.interview_time  # fallback string nếu parse lỗi
+
+    return {
+        "status": "success",
+        "email": invite.email,
+        "interview_time": str(interview_dt)
+    }
 
 
 # app/api/main.py

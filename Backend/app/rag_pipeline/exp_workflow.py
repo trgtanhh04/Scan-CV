@@ -56,6 +56,7 @@ class CandidateState(dict):
     question: str
     decision: str
     feedback: str
+    job_apply: str
     route: str
     sql_query: str
     sql_result: list
@@ -117,34 +118,6 @@ def eval_condition(state):
         return "loop"
     return "proceed"
 
-# class CandidateState(dict):
-#     question: str
-#     job_apply: str
-#     pre_judge: str
-#     post_judge: str
-#     route: str
-#     sql_query: str
-#     sql_result: list
-#     vector_result: list
-#     vector_query: dict
-#     final_answer: str
-
-
-
-# def router_condition(state):
-#     if state["route"] == "SQL":
-#         return "sql"
-#     elif state["route"] == "VECTOR":
-#         return "vector"
-#     elif state["route"] == "HYBRID":
-#         return "hybrid"
-#     return END
-
-# # ---- Node functions ----
-# def router_node(state: CandidateState, llm):
-#     route = route_query(state["question"], llm)
-#     state["route"] = route
-#     return state
 
 def sql_node(state: CandidateState, limit: int):
     try:

@@ -65,28 +65,28 @@ Respond in valid JSON format:
 }}
 """)
   
-def route_query(question: str, llm):
-    router_prompt = ChatPromptTemplate.from_template("""
-    You are a **query classifier** for questions about candidates' work experience.
+# def route_query(question: str, llm):
+#     router_prompt = ChatPromptTemplate.from_template("""
+#     You are a **query classifier** for questions about candidates' work experience.
 
-    Decide whether the question should be handled by:
-    - "SQL" → when the question is about **quantitative or structured experience data** (e.g., number of years, number of companies, duration).
-    - "VECTOR" → when the question is about **semantic or descriptive experience details** (e.g., job roles, tasks, company names, technologies used).
-    - "HYBRID" → when it combines both structured (numeric) and unstructured (semantic) requirements.
+#     Decide whether the question should be handled by:
+#     - "SQL" → when the question is about **quantitative or structured experience data** (e.g., number of years, number of companies, duration).
+#     - "VECTOR" → when the question is about **semantic or descriptive experience details** (e.g., job roles, tasks, company names, technologies used).
+#     - "HYBRID" → when it combines both structured (numeric) and unstructured (semantic) requirements.
 
-    Rules:
-    - Choose **SQL** for phrases like "at least 3 years", "more than 2 companies", "worked for 5 years", "minimum duration".
-    - Choose **VECTOR** for phrases like "worked as Data Analyst", "experience in React", "developed AI model", "interned at Shopee".
-    - Choose **HYBRID** for mixed queries, e.g. "at least 2 years as Data Engineer", "worked for 3 years using Python".
+#     Rules:
+#     - Choose **SQL** for phrases like "at least 3 years", "more than 2 companies", "worked for 5 years", "minimum duration".
+#     - Choose **VECTOR** for phrases like "worked as Data Analyst", "experience in React", "developed AI model", "interned at Shopee".
+#     - Choose **HYBRID** for mixed queries, e.g. "at least 2 years as Data Engineer", "worked for 3 years using Python".
 
-    Answer with only one word:
-    `SQL`, `VECTOR`, or `HYBRID`.
+#     Answer with only one word:
+#     `SQL`, `VECTOR`, or `HYBRID`.
 
-    Question: {question}
-    """)
+#     Question: {question}
+#     """)
 
-    response = llm.invoke(router_prompt.format(question=question))
-    return response.content.strip().upper()
+#     response = llm.invoke(router_prompt.format(question=question))
+#     return response.content.strip().upper()
 
 
 def split_hybrid_query(question: str, llm):
@@ -173,7 +173,8 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
     - You also need to filter based on "job_apply" on the "job_apply" key in the metadata.
     - Return only valid JSON (no Markdown formatting, no explanations).
 
-    Example 1:
+    Example 1: 
+    Job Apply: "Software Engineer"                            
     User: "Find candidates who have experiences as Software Engineer "
     Output:
     [
@@ -185,7 +186,7 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
         "query_filter": {{
         "must": [
             {{ "key": "type", "match": {{ "value": "exp_position" }} }},
-            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},                                      
+            {{ "key": "job_apply", "match": {{ "value": "Software Engineer" }},                                      
         }}
         ]
         }}
@@ -193,6 +194,7 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
     ]
                                                      
     Example 2:
+    Job Apply: "Data Scientist"
     User: "Find candidates who worked as Data Scientist at Shopee"
     Output:
     [
@@ -205,7 +207,7 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
         "must": [
             {{ "key": "type", "match": {{ "value": "exp_position" }} }},
             {{ "key": "exp_company", "match": {{ "value": "Shopee" }} }},
-            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},  
+            {{ "key": "job_apply", "match": {{ "value": "Data Scientist" }},  
         }}
         ]
         }}
@@ -213,6 +215,7 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
     ]
 
     Example 3:
+    Job Apply: "Frontend Developer"
     User: "Find people who developed web applications using React"
     Output:
     [
@@ -224,7 +227,7 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
         "query_filter": {{
         "must": [
             {{ "key": "type", "match": {{ "value": "exp_description" }} }},
-            {{ "key": "job_apply", "match": {{ "value": "{job_apply}" }},  
+            {{ "key": "job_apply", "match": {{ "value":  "Frontend Developer"}},  
         ]
         }}
     }}
@@ -241,7 +244,8 @@ def generate_vector_query(question: str, llm, collection_name: str, job_apply:st
     response = llm.invoke(vector_prompt.format(
         question=question,
         collection_name=collection_name,
-        limit=limit
+        limit=limit,
+        job_apply=job_apply
     ))
     
     # Làm sạch output

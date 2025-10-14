@@ -873,7 +873,12 @@ def view_search():
                 st.download_button("Download CSV", data=csv_bytes, file_name="candidates.csv", mime="text/csv")
 
         with col_right:
-            render_table_view(df_scored)
+            # render selectable table so users can tick Invitation per row
+            try:
+                render_selectable_table(df_scored)
+            except Exception:
+                # fallback to simple table view if selectable renderer fails
+                render_table_view(df_scored)
     with tab2:
         # Show persisted API response (if available) so it survives rerenders caused by widget interactions
         last = st.session_state.get("last_api_response")
@@ -927,13 +932,22 @@ def view_search2():
 
     # --- Lấy danh sách job_apply ---
     job_list = call_jobs()
-    selected_job = st.selectbox(
-        "Vị trí ứng tuyển",
-        options=["Tất cả"] + job_list if job_list else ["Tất cả"],
-        index=0,
-        help="Chọn vị trí mà bạn muốn tìm ứng viên"
-    )
-
+    # selected_job = st.selectbox(
+    #     "Vị trí ứng tuyển",
+    #     options=job_list if job_list else [],
+    #     index=0,
+    #     help="Chọn vị trí mà bạn muốn tìm ứng viên"
+    # )
+    if job_list:
+        selected_job = st.selectbox(
+            "Vị trí ứng tuyển",
+            options=job_list,
+            index=0,
+            help="Chọn vị trí mà bạn muốn tìm ứng viên"
+        )
+    else:
+        st.warning("Hiện chưa có vị trí ứng tuyển nào khả dụng.")
+        selected_job = None
     st.markdown("---")
     st.subheader("🔎 Tìm kiếm ứng viên theo tiêu chí")
 
@@ -1023,15 +1037,17 @@ def view_search2():
         st.session_state["df_original"] = df
 
         # ✅ Hiển thị kết quả tìm kiếm
-        st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
-        
-        render_table_view(df)
-        # df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
-        # col_left, col_right = st.columns([0.28, 0.72])
-        # with col_left:
-        #     df_scored = filter_ui_dynamic(df, df.to_dict(orient="records"))
-        # with col_right:
-        #     render_table_view(df_scored)
+        # st.success(f"✅ Tìm thấy {len(df)} ứng viên phù hợp")
+
+    if "df_original" in st.session_state and not st.session_state["df_original"].empty:
+        st.success(f"✅ Tìm thấy {len(st.session_state['df_original'])} ứng viên phù hợp")
+        render_selectable_table(st.session_state["df_original"])  
+    #     try:
+    #         render_selectable_table(df)
+    #     except Exception:
+    #         render_table_view(df)
+    # # Nếu không run thì hiển thị bảng trống
+
 
 
 
@@ -1113,6 +1129,284 @@ def invite_model(candidate):
                 st.error("❌ Failed to send email.")
 
 
+# send email
+# --- Khởi tạo session_state cho danh sách ứng viên đã chọn gửi email ---
+if "invite_pool" not in st.session_state:
+    # map email -> {id, email, full_name, job_title, resume_url}
+    st.session_state["invite_pool"] = {}
+
+# --- Helper chuẩn hoá dữ liệu ứng viên ---
+def _normalize_candidate(row: dict) -> dict:
+    """Chuẩn hoá record ứng viên để lưu trong invite_pool."""
+    return {
+        "id": row.get("id"),
+        "email": row.get("email"),
+        "full_name": row.get("full_name") or row.get("name"),
+        "job_title": row.get("job_title") or row.get("Job Title"),
+        "resume_url": row.get("resume_url") or row.get("public_url"),
+    }
+
+# --- Hàm render bảng kết quả có cột Invitation ---
+def render_selectable_table(df: pd.DataFrame, key: str = "candidates_editor"):
+    """Render results with a checkbox per row. Uses stable keys based on email/id
+    so checkbox state persists across reruns and selections are stored in
+    st.session_state['invite_pool'] until the user explicitly clears them.
+    """
+    if df is None or df.empty:
+        st.info("Không có dữ liệu để hiển thị.")
+        return
+
+    def _format_educations(edu):
+        if not edu:
+            return ""
+        if isinstance(edu, str):
+            return edu
+        try:
+            parts = []
+            for e in edu:
+                if isinstance(e, dict):
+                    deg = e.get("degree") or e.get("level") or ""
+                    uni = e.get("university") or e.get("school") or ""
+                    text = deg.strip() if deg else ""
+                    if uni:
+                        text = (text + " @ " + uni) if text else uni
+                    if text:
+                        parts.append(text)
+                else:
+                    parts.append(str(e))
+            return ", ".join(parts)
+        except Exception:
+            return str(edu)
+
+    # Ensure session state exists
+    st.session_state.setdefault("invite_pool", {})
+
+    invited_emails = set(st.session_state["invite_pool"].keys())
+
+    # Header row
+    h1, h2, h3, h4 = st.columns([3, 3, 4, 1])
+    h1.markdown("**Name**")
+    h2.markdown("**Email**")
+    h3.markdown("**Job / Education**")
+    h4.markdown("**Invite**")
+
+    # 🔹 Dùng container để mỗi hàng có layout độc lập
+    for i, row in df.reset_index(drop=True).iterrows():
+        cand = row.to_dict()
+        normalized = _normalize_candidate(cand)
+        email = normalized.get("email") or f"__no_email_{i}"
+
+        with st.container():  # ✅ Gói mỗi hàng trong container (fix lệch layout)
+            c1, c2, c3, c4 = st.columns([3, 3, 4, 1])
+
+            with c1:
+                st.write(normalized.get("full_name") or normalized.get("name") or "(No name)")
+                st.caption(normalized.get("job_title") or row.get("job_title") or "—")
+
+            with c2:
+                st.write(email if not email.startswith("__no_email_") else "—")
+
+            with c3:
+                edu_text = _format_educations(row.get("educations") or normalized.get("educations"))
+                if row.get("resume_url") or row.get("public_url"):
+                    url = row.get("resume_url") or row.get("public_url")
+                    st.markdown(f"[🔗 CV]({url})")
+                if edu_text:
+                    st.write(edu_text)
+
+            with c4:
+                cb_key = f"invite__{email}"
+                checked = email in invited_emails
+                val = st.checkbox("", value=checked, key=cb_key)
+
+                # Update invite_pool logic
+                if val and not checked:
+                    st.session_state["invite_pool"][email] = _normalize_candidate(cand)
+                elif not val and checked:
+                    st.session_state["invite_pool"].pop(email, None)
+
+
+# --- Tab "✉️ Invite" ---
+def view_invite_tab():
+    header()
+    invited = list(st.session_state["invite_pool"].values())
+    st.subheader(f"📩 Danh sách đã chọn mời phỏng vấn: {len(invited)}")
+
+    if not invited:
+        st.info("Chưa chọn ứng viên nào. Hãy vào tab **Search** hoặc **Filter Search** và tick cột **Invitation**.")
+        return
+
+    # Bảng danh sách + nút xoá từng người
+    for cand in invited:
+        c1, c2, c3, c4 = st.columns([3, 3, 3, 1])
+        with c1:
+            st.write(f"**{cand.get('full_name') or '(No name)'}**")
+            st.caption(cand.get("job_title") or "—")
+        with c2:
+            st.write(cand.get("email"))
+        with c3:
+            url = cand.get("resume_url")
+            if url:
+                st.markdown(f"[🔗 CV]({url})")
+            else:
+                st.write("—")
+        with c4:
+            if st.button("🗑️", key=f"rm_{cand['email']}"):
+                st.session_state["invite_pool"].pop(cand["email"], None)
+                st.rerun()
+
+    st.divider()
+
+    # Form gửi hàng loạt
+    with st.form("batch_invite_form"):
+        st.subheader("✉️ Soạn thư mời (gửi cho tất cả đã chọn)")
+        colA, colB = st.columns(2)
+        with colA:
+            company_name = st.text_input("🏢 Company", value="Your Company")
+            location     = st.text_input("📍 Địa điểm", value="Online / Văn phòng")
+        with colB:
+            phone_number = st.text_input("📞 SĐT liên hệ", value="+84 ...")
+            hr_email     = st.text_input("📧 HR Email", value="hr@example.com")
+
+        subject = st.text_input("Tiêu đề", value="Interview Invitation")
+        interview_date = st.date_input("Ngày phỏng vấn")
+        time_slot = st.selectbox("Khung giờ", ["09:00", "10:00", "14:00", "16:00"])
+
+        default_body = f"""
+<html>
+  <body style="font-family: Arial, sans-serif; line-height:1.6; color:#333;">
+    <p>Dear <b>{{name}}</b>,</p>
+    <p>We would like to invite you to interview for the position of <b>{{job_title}}</b> at <b>{company_name}</b>.</p>
+    <ul>
+      <li><b>Date</b>: {interview_date} </li>
+      <li><b>Time</b>: {time_slot}</li>
+      <li><b>Location</b>: {location}</li>
+      <li><b>Contact</b>: {phone_number} — {hr_email}</li>
+    </ul>
+    <p>Please reply to confirm your availability.</p>
+    <p>Best regards,<br><b>{company_name}</b> Recruitment Team</p>
+  </body>
+</html>
+""".strip()
+        body = st.text_area("Nội dung (HTML được hỗ trợ) — dùng {{name}} và {{job_title}} để cá nhân hoá",
+                            value=default_body, height=240)
+
+        colX, colY, colZ = st.columns([1,1,1])
+        with colX:
+            send_all = st.form_submit_button("📤 Gửi tất cả", type="primary")
+        with colY:
+            export = st.form_submit_button("⬇️ Export emails (CSV)")
+        with colZ:
+            clear_all = st.form_submit_button("🧹 Xoá toàn bộ danh sách")
+
+    # Hành động
+    if send_all:
+        ok, fail = 0, 0
+        for cand in invited:
+            personalized = (body
+                            .replace("{{name}}", cand.get("full_name") or "")
+                            .replace("{{job_title}}", cand.get("job_title") or ""))
+            try:
+                # nếu đã có api_url, dùng như sau:
+                url = api_url("/invite")
+                resp = requests.post(url, json={
+                    "email": cand["email"],
+                    "subject": subject,
+                    "body": personalized,
+                    "interview_time": f"{interview_date} {time_slot}"
+                }, timeout=30)
+                if resp.ok:
+                    ok += 1
+                else:
+                    fail += 1
+            except Exception:
+                fail += 1
+        if ok:
+            st.success(f"Đã gửi thành công {ok}/{len(invited)} thư mời.")
+        if fail:
+            st.warning(f"Gửi thất bại {fail} ứng viên. Kiểm tra backend / cấu hình email.")
+
+    if export:
+        csv_bytes = pd.DataFrame(invited)[["full_name", "email", "job_title"]].to_csv(index=False).encode("utf-8")
+        st.download_button("Download invites.csv", data=csv_bytes, file_name="invites.csv", mime="text/csv")
+
+    if clear_all:
+        st.session_state["invite_pool"].clear()
+        st.toast("Đã xoá toàn bộ danh sách mời.", icon="🧹")
+        st.rerun()
+
+# --- Tab "✉️ Main" ---
+def view_main():
+    st.title("📄 CV Manager")
+    st.markdown("### 🔍 Trạng thái tuyển dụng hiện tại")
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    # API
+    url = api_url("/candidate/count")
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except Exception as e:
+        st.error(f"Không thể kết nối API: {e}")
+        return
+
+    if not data:
+        st.info("Chưa có dữ liệu ứng viên nào.")
+        return
+
+    # Hiển thị từng job
+    for job, count in data.items():
+        with st.container():
+            col1, col2, col3 = st.columns([3, 0.8, 0.8])
+
+            # --- Cột 1: thông tin job ---
+            with col1:
+                if st.button(f"💼 {job}", key=f"view_{job}"):
+                    st.session_state["viewing_job"] = job
+                st.markdown(f"<div class='job-count'>{count} ứng viên</div>", unsafe_allow_html=True)
+
+            # --- Cột 2: thêm CV ---
+            with col2:
+                if "show_upload" not in st.session_state:
+                    st.session_state["show_upload"] = {}
+
+                if st.button("➕ Thêm CV", key=f"toggle_{job}"):
+                    st.session_state["show_upload"][job] = not st.session_state["show_upload"].get(job, False)
+
+            # --- Cột 3: xóa job ---
+            with col3:
+                if st.button("🗑️ Xóa", key=f"delete_{job}"):
+                    requests.post(api_url("/job_apply/delete"), data={"job_apply": job})
+
+            # --- Uploader: nằm dưới hàng ---
+            if st.session_state["show_upload"].get(job, False):
+                st.markdown('<div class="uploader-wrapper">', unsafe_allow_html=True)
+
+                uploaded_file = st.file_uploader(
+                    "Chọn file PDF",
+                    type=["pdf"],
+                    key=f"uploader_{job}",
+                    label_visibility="collapsed",
+                )
+
+                if uploaded_file:
+                    if st.button("📤 Upload", key=f"upload_{job}"):
+                        res = requests.post(
+                            api_url("/cv/upload"),
+                            data={"job_apply": job},
+                            files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
+                        )
+                        if res.ok:
+                            st.success(f"✅ Đã thêm CV vào {job}")
+                        else:
+                            st.error("❌ Upload thất bại")
+
+                st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+
+
 # ---------------- Router ----------------
 with st.sidebar:
     pass
@@ -1131,7 +1425,7 @@ if __name__ == "__main__" or True:
     elif nav == "🔽 Filter Search":
         view_search2()
     elif nav == "✉️ Invite":
-        invite_model(candidate={"id": "1", "email": "truong@example.com", "full_name": "Truong", "job_title": "Software Engineer"})
+        view_invite_tab()
 
 
 # streamlit run main.py
