@@ -324,7 +324,11 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
                     models.FieldCondition(
                         key="type",
                         match=models.MatchValue(value="project")
-                    )
+                    ),
+                    models.FieldCondition(
+                        key="job_apply",
+                        match=models.MatchValue(value=job_apply)
+            )
                 ]
             ),
         )

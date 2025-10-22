@@ -45,7 +45,7 @@ def _invoke(prompt: str) -> str:
 llm_sql = LLM(_invoke)
 
 # === Set up Qdrant cho RAG ===
-embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, google_api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 # ==== WORKFLOW ====

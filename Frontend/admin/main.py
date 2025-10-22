@@ -434,8 +434,8 @@ def upload_with_Drive():
                                     st.rerun()
 
                             # Nút reload (chưa cài)
-                            with c2:
-                                st.button("🔄", key=f"reload_{folder['id']}", help="Reload folder", disabled=True)
+                            # with c2:
+                            #     st.button("🔄", key=f"reload_{folder['id']}", help="Reload folder", disabled=True)
 
                             # Nút upload DB → chỉ gắn cờ, xử lý ở ngoài
                             with c3:
@@ -746,20 +746,6 @@ def render_table_view(df: pd.DataFrame):
 def view_search():
     header()
     st.markdown("<div style='margin-top:0.6rem'></div>", unsafe_allow_html=True)
-
-    # # top_qs = get_top_questions(3)
-    # # if top_qs:
-    # #     st.markdown("💡 <b>Gợi ý câu hỏi:</b>", unsafe_allow_html=True)
-    # #     cols = st.columns(len(top_qs))
-    # #     for i, q_text in enumerate(top_qs):
-    # #         if cols[i].button(q_text, key=f"suggest_{i}"):
-    # #             st.session_state["selected_question"] = q_text
-
-    # if "selected_question" in st.session_state:
-    #     default_q = st.session_state["selected_question"]
-    # else:
-    #     default_q = ""
-
     q = st.text_input(
         "Câu hỏi",
         placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
@@ -776,35 +762,6 @@ def view_search():
     # Fetch data from API
     with tab1:
         if run and q and q.strip():
-
-    # top_qs = get_top_questions(3)
-    # if top_qs:
-    #     st.markdown("💡 <b>Gợi ý câu hỏi gần đây:</b>", unsafe_allow_html=True)
-    #     cols = st.columns(len(top_qs))
-    #     for i, q_text in enumerate(top_qs):
-    #         if cols[i].button(q_text, key=f"suggest_{i}"):
-    #             st.session_state["q_input"] = q_text
-    #             st.session_state["auto_run"] = True  # flag tự chạy luôn
-
-    # # Text input (cho phép user gõ tay hoặc từ gợi ý)
-    # q = st.text_input(
-    #     "Câu hỏi",
-    #     placeholder="VD: Ứng viên có kỹ năng Python / Liệt kê kinh nghiệm...",
-    #     key="q_input"
-    # )
-
-    # # Nếu user bấm Run Query thủ công
-    # manual_run = st.button("Run Query", type="primary", use_container_width=True)
-
-    # # Xác định có chạy không
-    # should_run = manual_run or st.session_state.get("auto_run", False)
-
-    # data = None
-    # tab1, tab2 = st.tabs(["Kết quả", "JSON Debug"])
-    # # Fetch data from API
-    # with tab1:
-    #     if should_run and q and q.strip():
-
             with st.spinner("Đang thực thi..."):
                 data = call_query(q.strip())
                 if not data:
@@ -875,6 +832,7 @@ def view_search():
         with col_right:
             # render selectable table so users can tick Invitation per row
             try:
+                # render_table_view(df_scored)
                 render_selectable_table(df_scored)
             except Exception:
                 # fallback to simple table view if selectable renderer fails
@@ -1185,8 +1143,8 @@ def render_selectable_table(df: pd.DataFrame, key: str = "candidates_editor"):
 
     # Header row
     h1, h2, h3, h4 = st.columns([3, 3, 4, 1])
-    h1.markdown("**Name**")
-    h2.markdown("**Email**")
+    h1.markdown("**Email**")
+    h2.markdown("**Job Title**")
     h3.markdown("**Job / Education**")
     h4.markdown("**Invite**")
 
@@ -1200,12 +1158,11 @@ def render_selectable_table(df: pd.DataFrame, key: str = "candidates_editor"):
             c1, c2, c3, c4 = st.columns([3, 3, 4, 1])
 
             with c1:
-                st.write(normalized.get("full_name") or normalized.get("name") or "(No name)")
-                st.caption(normalized.get("job_title") or row.get("job_title") or "—")
-
-            with c2:
+                # st.write(normalized.get("full_name") or normalized.get("name") or "(No name)")
                 st.write(email if not email.startswith("__no_email_") else "—")
 
+            with c2:                
+                st.caption(normalized.get("job_title") or row.get("job_title") or "—")
             with c3:
                 edu_text = _format_educations(row.get("educations") or normalized.get("educations"))
                 if row.get("resume_url") or row.get("public_url"):
