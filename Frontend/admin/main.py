@@ -133,26 +133,31 @@ def call_query(question):
     url = api_url("/query")
 
     # Expand common abbreviations first to improve translation / fine-tuning
-    question_expanded = expand_abbreviations(question)
+    # question_expanded = expand_abbreviations(question)
 
-    if is_probably_english(question_expanded):
-        question_en = question_expanded.strip()
-    else:
-        question_en = translate_to_english(question_expanded).strip()
+    # if is_probably_english(question_expanded):
+    #     question_en = question_expanded.strip()
+    # else:
+    #     question_en = translate_to_english(question_expanded).strip()
     
+
+    if is_probably_english(question):
+        question_en = question.strip()
+    else:
+        question_en = translate_to_english(question).strip()
     # --- Check query trước khi gọi API ---
     # if not validate_candidate_query(question_en):
     #     st.warning("Invalid query for candidate search")
     #     return None
 
-    if needs_finetune(question_en):
-        question_ft = convert_job_to_question(question_en)
-    else:
-        question_ft = question_en
+    # if needs_finetune(question_en):
+    #     question_ft = convert_job_to_question(question_en)
+    # else:
+    #     question_ft = question_en
 
     body = {
         "ori_question": question,
-        "question": question_ft,
+        "question": question_en,
         "provider": st.session_state.provider,
         "model": st.session_state.model
     }

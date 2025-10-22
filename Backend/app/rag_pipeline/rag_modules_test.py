@@ -11,43 +11,102 @@ def fix_sql_quotes(query: str) -> str:
     return fixed_query
   
 # ------------------ Router Agent ------------------
+# router_prompt = ChatPromptTemplate.from_template("""
+#     You are a query router for a candidate search system.
+
+#     Classify the question into one of these categories:
+#     - "SQL": if it asks about structured fields (name, degree, job title, applied position, university, gpa, certifications, languages, etc.)
+#     - "VECTOR": if it asks about skills (SQL, Python, Java), technologies, past experiences, or project descriptions.
+#     - "HYBRID": if it requires both structured data and unstructured (skills/experience) data.
+#     - "SQL": also choose SQL if the question involves numeric or logical reasoning over structured data, mainly about past experience (e.g., "at least 3 years as Software Engineer", "worked at at least 2 companies").
+
+#     Question: {question}
+
+#     Answer ONLY with one label: SQL, VECTOR, or HYBRID.
+#     """)
+
+
+
+# # ------------------ Evaluator Agent ------------------
+# evaluator_prompt = ChatPromptTemplate.from_template("""
+#     You are an evaluation agent checking the routing decision.
+
+#     Rules for correctness:
+#     1. VECTOR if about skills, past work experience, or projects.
+#     2. SQL if about other structured fields (name, degree, language, university, gpa, certifications, current job title, applied position for this company,  etc.)
+#     3. SQL if numeric reasoning about experience (e.g. "at least 3 years", "worked in 2 companies")
+#     4. HYBRID if question mixes structured + unstructured requirements.
+
+#     Question: {question}
+#     Router Decision: {decision}
+
+#     Evaluate whether the decision follows these rules.
+#     Respond in JSON format:
+#     {{
+#     "evaluation": "CORRECT" or "INCORRECT",
+#     "reason": "<brief explanation>"
+#     }}
+#     """)
+
 router_prompt = ChatPromptTemplate.from_template("""
-    You are a query router for a candidate search system.
+You are a query router for a candidate search system.
 
-    Classify the question into one of these categories:
-    - "SQL": if it asks about structured fields (name, degree, job title, applied position, university, gpa, certifications, languages, etc.)
-    - "VECTOR": if it asks about skills, technologies, past experiences, or project descriptions.
-    - "HYBRID": if it requires both structured data and unstructured (skills/experience) data.
-    - "SQL": also choose SQL if the question involves numeric or logical reasoning over structured data, mainly about past experience (e.g., "at least 3 years as Software Engineer", "worked at at least 2 companies").
+Your task is to decide which data retrieval method should be used based on the **type of information requested**.
 
-    Question: {question}
+### Available Routes:
+- **SQL** → Use this if the question is about *structured profile fields* such as:
+  - name, email, phone
+  - degree, university, GPA
+  - applied position, current job title
+  - languages, certifications
+  - numeric filters on experience (e.g. “at least 3 years experience”, “2 companies”)
+  
+- **VECTOR** → Use this if the question is about *skills, technologies, work experience, or project content*, such as:
+  - “knows SQL”, “Python developer”, “used TensorFlow”, “worked with APIs”, “data pipeline experience”
+  - any free-text or semantic content describing a candidate’s ability or background.
 
-    Answer ONLY with one label: SQL, VECTOR, or HYBRID.
-    """)
+- **HYBRID** → Use this if the question **mixes both structured fields and unstructured skill/experience data**, e.g.:
+  - “Candidates from Foreign Trade University who know Python”
+  - “Applied for Data Engineer and experienced in SQL”
 
+### Decision Rules:
+1. If the question explicitly mentions a skill or technology, prefer **VECTOR**.
+2. If the question is purely about structured fields or numeric constraints, use **SQL**.
+3. If both types appear, use **HYBRID**.
 
+Question: {question}
 
+Answer ONLY with one of: SQL, VECTOR, or HYBRID.
+""")
 
-# ------------------ Evaluator Agent ------------------
 evaluator_prompt = ChatPromptTemplate.from_template("""
-    You are an evaluation agent checking the routing decision.
+You are an evaluation agent that checks if the router's decision is correct.
 
-    Rules for correctness:
-    1. VECTOR if about skills, past work experience, or projects.
-    2. SQL if about other structured fields (name, degree, language, university, gpa, certifications, current job title, applied position for this company,  etc.)
-    3. SQL if numeric reasoning about experience (e.g. "at least 3 years", "worked in 2 companies")
-    4. HYBRID if question mixes structured + unstructured requirements.
+Use these rules to judge the routing correctness:
 
-    Question: {question}
-    Router Decision: {decision}
+1. **VECTOR**
+   - The question focuses on skills, technologies, experiences, or project content.
+   - Examples: “knows SQL”, “used Python”, “machine learning experience”, “worked on NLP project”.
 
-    Evaluate whether the decision follows these rules.
-    Respond in JSON format:
-    {{
-    "evaluation": "CORRECT" or "INCORRECT",
-    "reason": "<brief explanation>"
-    }}
-    """)
+2. **SQL**
+   - The question focuses on structured fields:
+     - name, degree, GPA, university, language certificates, applied position, current job title.
+   - Includes numeric/logical filters like “at least 3 years”, “2 companies”.
+
+3. **HYBRID**
+   - The question combines both structured and unstructured aspects.
+   - Example: “From HCMC University of Science who knows Python”.
+
+Question: {question}
+Router Decision: {decision}
+
+Now evaluate the decision. Respond strictly in JSON format:
+     {{
+     "evaluation": "CORRECT" or "INCORRECT",
+     "reason": "<brief explanation>"
+     }}
+""")
+
 
 
 def split_hybrid_query(question: str, llm):

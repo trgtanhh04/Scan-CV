@@ -384,7 +384,6 @@ def enrich_final_answer(state: dict) -> dict:
     answer = flow.invoke(state)
 
 
-
     print("Route chosen:", answer.get("route"))
 
     if isinstance(answer.get("sql_query"), str):
