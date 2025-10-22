@@ -460,7 +460,11 @@ def answer_sql(
 
 
 # ===================== CLI run =====================
+
+
+    
 if __name__ == "__main__":
+
     engine = create_engine(DATABASE_URL, future=True)
 
     deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
@@ -476,4 +480,78 @@ if __name__ == "__main__":
     print("Columns:", result["columns"])
     print("Results:", result["rows"])
     print("Trials:", result["trials"])
+
+# import tiktoken
+
+# class DeepSeekTracker:
+#     def __init__(self, llm, model_name="deepseek-chat"):
+#         self.llm = llm
+#         self.tokenizer = tiktoken.get_encoding("cl100k_base")  # tokenizer tương thích OpenAI-style
+#         self.prompt_tokens = 0
+#         self.completion_tokens = 0
+#         self.total_tokens = 0
+
+#     def invoke(self, messages, *args, **kwargs):
+#         # messages là list[HumanMessage] (LangChain style)
+#         if isinstance(messages, list):
+#             prompt_text = "\n".join([m.content for m in messages])
+#         else:
+#             prompt_text = str(messages)
+
+#         prompt_tokens = len(self.tokenizer.encode(prompt_text))
+#         resp = self.llm.invoke(messages, *args, **kwargs)
+#         completion_tokens = len(self.tokenizer.encode(getattr(resp, "content", "")))
+
+#         # cộng dồn usage
+#         self.prompt_tokens += prompt_tokens
+#         self.completion_tokens += completion_tokens
+#         self.total_tokens += (prompt_tokens + completion_tokens)
+
+#         print(f"[Invoke] Prompt: {prompt_tokens}, Completion: {completion_tokens}, Cumulative Total: {self.total_tokens}")
+#         return resp
+
+#     def summary(self):
+#         return {
+#             "prompt_tokens": self.prompt_tokens,
+#             "completion_tokens": self.completion_tokens,
+#             "total_tokens": self.total_tokens,
+#             "estimated_cost_usd": self._estimate_cost(),
+#         }
+
+#     def _estimate_cost(self):
+#         # Tính theo bảng giá bạn đã đưa:
+#         # 1M input (cache miss): $0.28, output: $0.42
+#         cost_input = (self.prompt_tokens / 1_000_000) * 0.28
+#         cost_output = (self.completion_tokens / 1_000_000) * 0.42
+#         return cost_input + cost_output
+
+# if __name__ == "__main__":
+
+#     DEEPSEEK_API_KEY=""
+#     DATABASE_URL=""
+
+#     # --- thêm tracker ---
+#     engine = create_engine(DATABASE_URL, future=True)
+#     deepseek_raw = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+
+#     # Bọc DeepSeek trong tracker
+#     tracker = DeepSeekTracker(deepseek_raw)
+
+#     def _invoke(prompt: str) -> str:
+#         resp = tracker.invoke([HumanMessage(content=prompt)])
+#         return resp.content
+
+#     llm = LLM(_invoke)
+
+#     q = "List candidates with the applied position is BA."
+#     result = answer_sql(engine, llm, q, max_refine=1)
+
+#     print("\n=== FINAL RESULT ===")
+#     print("SQL:\n", result["sql"])
+#     print("Columns:", result["columns"])
+#     print("Rows:", result["rows"])
+#     print("Trials:", result["trials"])
+
+#     print("\n=== TOKEN USAGE SUMMARY ===")
+#     print(tracker.summary())
 

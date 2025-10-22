@@ -303,3 +303,72 @@ def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit
     print("Raw results:", results)
     formatted = format_rag_output(results)
     return formatted, plan
+
+# import tiktoken
+
+# class DeepSeekTracker:
+#     def __init__(self, llm, model_name="deepseek-chat"):
+#         self.llm = llm
+#         self.tokenizer = tiktoken.get_encoding("cl100k_base")  # hoặc model-specific nếu DeepSeek khác
+#         self.total_tokens = 0
+
+#     def invoke(self, prompt, *args, **kwargs):
+#         # Đếm token đầu vào
+#         if isinstance(prompt, str):
+#             prompt_text = prompt
+#         else:
+#             prompt_text = str(prompt)
+
+#         prompt_tokens = len(self.tokenizer.encode(prompt_text))
+
+#         response = self.llm.invoke(prompt, *args, **kwargs)
+
+#         # Đếm token đầu ra (ước lượng)
+#         completion_tokens = len(self.tokenizer.encode(getattr(response, "content", "")))
+
+#         self.total_tokens += prompt_tokens + completion_tokens
+
+#         print(f"Prompt: {prompt_tokens}, Completion: {completion_tokens}, Total: {self.total_tokens}")
+#         return response
+
+
+
+# if __name__ == "__main__":
+#     from langchain_deepseek import ChatDeepSeek
+#     from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+#     DEEPSEEK_API_KEY=""
+
+#     QDRANT_URL=""
+#     QDRANT_COLLECTION=""
+
+#     EMBEDDING_MODEL_NAME=""
+
+#     deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+
+#     tracked_llm = DeepSeekTracker(deepseek)
+
+#     # --- Kết nối Qdrant ---
+#     qdrant = QdrantClient(QDRANT_URL)
+
+#     # --- Model embedding ---
+#     GOOGLE_API_KEY = ''
+
+#     embeddings = GoogleGenerativeAIEmbeddings(
+#         model="models/gemini-embedding-exp-03-07",
+#         google_api_key=GOOGLE_API_KEY
+#     )
+
+#     # --- Câu hỏi mẫu ---
+#     question = "Find candidates who know Python"
+
+#     # --- Thực thi vector search ---
+#     results, plan = search_vector(
+#         query=question,
+#         llm=tracked_llm,
+#         embedding_model=embeddings,
+#         qdrant_db=qdrant,
+#         collection="candidates",
+#         limit=5,
+#         search_threshold=0.7,
+#     )

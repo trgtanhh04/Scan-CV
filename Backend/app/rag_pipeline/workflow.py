@@ -8,7 +8,6 @@ import re
 # === Third-party libraries ===
 from sqlalchemy import create_engine
 from qdrant_client import QdrantClient
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.messages import HumanMessage
 from langchain_deepseek import ChatDeepSeek
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -45,7 +44,7 @@ def _invoke(prompt: str) -> str:
 llm_sql = LLM(_invoke)
 
 # === Set up Qdrant cho RAG ===
-embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, api_key=GOOGLE_API_KEY, request_timeout=60)
+embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL_NAME, google_api_key=GOOGLE_API_KEY, request_timeout=60)
 qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
 
 # ==== WORKFLOW ====
@@ -381,8 +380,10 @@ def enrich_with_skills_and_edu(session: Session, candidate_emails: List[str]):
 
 
 def enrich_final_answer(state: dict) -> dict:
-    flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.3)
+    flow = build_flow(deepseek, embedding, qdrant, QDRANT_COLLECTION, limit=10, search_threshold=0.4)
     answer = flow.invoke(state)
+
+
 
     print("Route chosen:", answer.get("route"))
 
