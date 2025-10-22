@@ -374,11 +374,11 @@ def view_main():
 
                 if candidates:
                     df = pd.DataFrame(candidates)[["name", "email", "public_url"]]
-                    df["📎 CV"] = df["public_url"].apply(lambda x: f"<a href=\"{x}\" target=\"_blank\">Xem CV</a>")
+                    df["📎 CV"] = df["public_url"].apply(lambda x: f"[Xem CV]({x})")
                     df = df[["name", "email", "📎 CV"]]
 
-                    # Use HTML rendering to avoid optional pandas dependency 'tabulate'
-                    st.markdown(df.to_html(escape=False, index=False), unsafe_allow_html=True)
+                    # st.markdown("#### Danh sách ứng viên")
+                    st.markdown(df.to_markdown(index=False), unsafe_allow_html=True)
                 else:
                     st.info("Không có ứng viên nào cho vị trí này.")
 
@@ -1292,76 +1292,77 @@ def view_invite_tab():
         st.toast("Đã xoá toàn bộ danh sách mời.", icon="🧹")
         st.rerun()
 
+
 # --- Tab "✉️ Main" ---
-def view_main():
-    st.title("📄 CV Manager")
-    st.markdown("### 🔍 Trạng thái tuyển dụng hiện tại")
-    st.markdown("<hr>", unsafe_allow_html=True)
+# def view_main():
+#     st.title("📄 CV Manager")
+#     st.markdown("### 🔍 Trạng thái tuyển dụng hiện tại")
+#     st.markdown("<hr>", unsafe_allow_html=True)
 
-    # API
-    url = api_url("/candidate/count")
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        st.error(f"Không thể kết nối API: {e}")
-        return
+#     # API
+#     url = api_url("/candidate/count")
+#     try:
+#         response = requests.get(url)
+#         response.raise_for_status()
+#         data = response.json()
+#     except Exception as e:
+#         st.error(f"Không thể kết nối API: {e}")
+#         return
 
-    if not data:
-        st.info("Chưa có dữ liệu ứng viên nào.")
-        return
+#     if not data:
+#         st.info("Chưa có dữ liệu ứng viên nào.")
+#         return
 
-    # Hiển thị từng job
-    for job, count in data.items():
-        with st.container():
-            col1, col2, col3 = st.columns([3, 0.8, 0.8])
+#     # Hiển thị từng job
+#     for job, count in data.items():
+#         with st.container():
+#             col1, col2, col3 = st.columns([3, 0.8, 0.8])
 
-            # --- Cột 1: thông tin job ---
-            with col1:
-                if st.button(f"💼 {job}", key=f"view_{job}"):
-                    st.session_state["viewing_job"] = job
-                st.markdown(f"<div class='job-count'>{count} ứng viên</div>", unsafe_allow_html=True)
+#             # --- Cột 1: thông tin job ---
+#             with col1:
+#                 if st.button(f"💼 {job}", key=f"view_{job}"):
+#                     st.session_state["viewing_job"] = job
+#                 st.markdown(f"<div class='job-count'>{count} ứng viên</div>", unsafe_allow_html=True)
 
-            # --- Cột 2: thêm CV ---
-            with col2:
-                if "show_upload" not in st.session_state:
-                    st.session_state["show_upload"] = {}
+#             # --- Cột 2: thêm CV ---
+#             with col2:
+#                 if "show_upload" not in st.session_state:
+#                     st.session_state["show_upload"] = {}
 
-                if st.button("➕ Thêm CV", key=f"toggle_{job}"):
-                    st.session_state["show_upload"][job] = not st.session_state["show_upload"].get(job, False)
+#                 if st.button("➕ Thêm CV", key=f"toggle_{job}"):
+#                     st.session_state["show_upload"][job] = not st.session_state["show_upload"].get(job, False)
 
-            # --- Cột 3: xóa job ---
-            with col3:
-                if st.button("🗑️ Xóa", key=f"delete_{job}"):
-                    requests.post(api_url("/job_apply/delete"), data={"job_apply": job})
+#             # --- Cột 3: xóa job ---
+#             with col3:
+#                 if st.button("🗑️ Xóa", key=f"delete_{job}"):
+#                     requests.post(api_url("/job_apply/delete"), data={"job_apply": job})
 
-            # --- Uploader: nằm dưới hàng ---
-            if st.session_state["show_upload"].get(job, False):
-                st.markdown('<div class="uploader-wrapper">', unsafe_allow_html=True)
+#             # --- Uploader: nằm dưới hàng ---
+#             if st.session_state["show_upload"].get(job, False):
+#                 st.markdown('<div class="uploader-wrapper">', unsafe_allow_html=True)
 
-                uploaded_file = st.file_uploader(
-                    "Chọn file PDF",
-                    type=["pdf"],
-                    key=f"uploader_{job}",
-                    label_visibility="collapsed",
-                )
+#                 uploaded_file = st.file_uploader(
+#                     "Chọn file PDF",
+#                     type=["pdf"],
+#                     key=f"uploader_{job}",
+#                     label_visibility="collapsed",
+#                 )
 
-                if uploaded_file:
-                    if st.button("📤 Upload", key=f"upload_{job}"):
-                        res = requests.post(
-                            api_url("/cv/upload"),
-                            data={"job_apply": job},
-                            files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
-                        )
-                        if res.ok:
-                            st.success(f"✅ Đã thêm CV vào {job}")
-                        else:
-                            st.error("❌ Upload thất bại")
+#                 if uploaded_file:
+#                     if st.button("📤 Upload", key=f"upload_{job}"):
+#                         res = requests.post(
+#                             api_url("/cv/upload"),
+#                             data={"job_apply": job},
+#                             files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
+#                         )
+#                         if res.ok:
+#                             st.success(f"✅ Đã thêm CV vào {job}")
+#                         else:
+#                             st.error("❌ Upload thất bại")
 
-                st.markdown('</div>', unsafe_allow_html=True)
+#                 st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+#     st.markdown("---")
 
 
 # ---------------- Router ----------------
