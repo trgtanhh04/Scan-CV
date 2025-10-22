@@ -1,6 +1,6 @@
 # E:\Scan-CV\Backend\app\api\main.py
 from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -340,7 +340,7 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
                     "resume_url": payload.get("resume_url", "")
                 }
 
-    # 🧮 Lấy giao các tập email (chỉ giữa những cái có dữ liệu)
+    # Lấy giao các tập email (chỉ giữa những cái có dữ liệu)
     sets = [s for s in [sql_emails, exp_emails, proj_emails] if s]
     if sets:
         intersection = set.intersection(*sets)
@@ -349,7 +349,7 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
 
     print("📊 Intersection emails:", intersection)
 
-    # 4️⃣ Gộp thông tin theo email giao nhau
+    # 4️ Gộp thông tin theo email giao nhau
     final_results = []
     for email in intersection:
         info = sql_info.get(email) or exp_info.get(email) or proj_info.get(email)
@@ -360,7 +360,7 @@ def search_candidates(payload: QueryFilterPayload, db: Session = Depends(get_db)
     return final_results
 
 class InviteRequest(BaseModel):
-    email: EmailStr
+    email: str
     subject: str
     body: str
     interview_time: str  # ex: "2025-10-14 09:00"
