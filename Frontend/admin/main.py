@@ -150,14 +150,14 @@ def call_query(question):
     #     st.warning("Invalid query for candidate search")
     #     return None
 
-    # if needs_finetune(question_en):
-    #     question_ft = convert_job_to_question(question_en)
-    # else:
-    #     question_ft = question_en
+    if needs_finetune(question_en):
+        question_ft = convert_job_to_question(question_en)
+    else:
+        question_ft = question_en
 
     body = {
         "ori_question": question,
-        "question": question_en,
+        "question": question_ft,
         "provider": st.session_state.provider,
         "model": st.session_state.model
     }
