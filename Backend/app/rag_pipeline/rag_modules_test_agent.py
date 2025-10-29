@@ -10,35 +10,105 @@ def fix_sql_quotes(query: str) -> str:
     fixed_query = re.sub(r'"([^"]*)"', r"'\1'", query)
     return fixed_query
   
-def route_query(question: str, llm):
-    router_prompt = ChatPromptTemplate.from_template("""
-        You are a query classification system.  
-        Your task is to decide whether a user question should be handled by:
-        - "SQL": questions that can be answered from structured data fields in the PostgreSQL database,  
-        - "VECTOR": questions that need semantic search over unstructured text (skills, experience descriptions, project descriptions),  
-        - "HYBRID": questions that require both SQL and VECTOR to answer.  
+# ------------------ Router Agent ------------------
+# router_prompt = ChatPromptTemplate.from_template("""
+#     You are a query router for a candidate search system.
 
-        Rules:
-        1. Choose **SQL** if the question is about:
-        - structured fields: full_name, email, phone, job_title, certifications, languages, degree, graduation_year
-        - numeric reasoning over structured or experience data: "at least", "minimum", "more than N years", "count how many", "with 2 or more companies"
+#     Classify the question into one of these categories:
+#     - "SQL": if it asks about structured fields (name, degree, job title, applied position, university, gpa, certifications, languages, etc.)
+#     - "VECTOR": if it asks about skills (SQL, Python, Java), technologies, past experiences, or project descriptions.
+#     - "HYBRID": if it requires both structured data and unstructured (skills/experience) data.
+#     - "SQL": also choose SQL if the question involves numeric or logical reasoning over structured data, mainly about past experience (e.g., "at least 3 years as Software Engineer", "worked at at least 2 companies").
 
-        2. Choose **VECTOR** if the question is about:
-        - skills or technologies (Python, Docker, TensorFlow, leadership, etc.)
-        - unstructured experience descriptions (work history, achievements, projects)
-        - semantic search where synonyms or paraphrasing matter.
+#     Question: {question}
 
-        3. Choose **HYBRID** if the question combines both structured requirements and unstructured experience/skills, for example:
-        - "Find candidates named John (structured) who have experience in Python (unstructured)."
-        - "List candidates with a Master's degree (structured) and at least 5 years in data engineering (numeric/structured + semantic)."
+#     Answer ONLY with one label: SQL, VECTOR, or HYBRID.
+#     """)
 
-        Answer only with one of these exact labels: SQL, VECTOR, HYBRID.  
 
-        Question: {question}
-    """)
-    response = llm.invoke(router_prompt.format(question=question))
-    print(response.content.strip())
-    return response.content.strip()
+
+# # ------------------ Evaluator Agent ------------------
+# evaluator_prompt = ChatPromptTemplate.from_template("""
+#     You are an evaluation agent checking the routing decision.
+
+#     Rules for correctness:
+#     1. VECTOR if about skills, past work experience, or projects.
+#     2. SQL if about other structured fields (name, degree, language, university, gpa, certifications, current job title, applied position for this company,  etc.)
+#     3. SQL if numeric reasoning about experience (e.g. "at least 3 years", "worked in 2 companies")
+#     4. HYBRID if question mixes structured + unstructured requirements.
+
+#     Question: {question}
+#     Router Decision: {decision}
+
+#     Evaluate whether the decision follows these rules.
+#     Respond in JSON format:
+#     {{
+#     "evaluation": "CORRECT" or "INCORRECT",
+#     "reason": "<brief explanation>"
+#     }}
+#     """)
+
+router_prompt = ChatPromptTemplate.from_template("""
+You are a query router for a candidate search system.
+
+Your task is to decide which data retrieval method should be used based on the **type of information requested**.
+
+### Available Routes:
+- **SQL** → Use this if the question is about *structured profile fields* such as:
+  - name, email, phone
+  - degree, university, GPA
+  - applied position, current job title
+  - languages, certifications
+  - numeric filters on experience (e.g. “at least 3 years experience”, “2 companies”)
+  
+- **VECTOR** → Use this if the question is about *skills, technologies, work experience, or project content*, such as:
+  - “knows SQL”, “Python developer”, “used TensorFlow”, “worked with APIs”, “data pipeline experience”
+  - any free-text or semantic content describing a candidate’s ability or background.
+
+- **HYBRID** → Use this if the question **mixes both structured fields and unstructured skill/experience data**, e.g.:
+  - “Candidates from Foreign Trade University who know Python”
+  - “Applied for Data Engineer and experienced in SQL”
+
+### Decision Rules:
+1. If the question explicitly mentions a skill or technology, prefer **VECTOR**.
+2. If the question is purely about structured fields or numeric constraints, use **SQL**.
+3. If both types appear, use **HYBRID**.
+
+Question: {question}
+
+Answer ONLY with one of: SQL, VECTOR, or HYBRID.
+""")
+
+evaluator_prompt = ChatPromptTemplate.from_template("""
+You are an evaluation agent that checks if the router's decision is correct.
+
+Use these rules to judge the routing correctness:
+
+1. **VECTOR**
+   - The question focuses on skills, technologies, experiences, or project content.
+   - Examples: “knows SQL”, “used Python”, “machine learning experience”, “worked on NLP project”.
+
+2. **SQL**
+   - The question focuses on structured fields:
+     - name, degree, GPA, university, language certificates, applied position, current job title.
+    Examples: "study at...", "apply for...", "work at..."
+   - Includes numeric/logical filters like “at least 3 years”, “2 companies”.
+
+3. **HYBRID**
+   - The question combines both structured and unstructured aspects.
+   - Example: “From HCMC University of Science who knows Python”.
+
+Question: {question}
+Router Decision: {decision}
+
+Now evaluate the decision. Respond strictly in JSON format:
+     {{
+     "evaluation": "CORRECT" or "INCORRECT",
+     "reason": "<brief explanation>"
+     }}
+""")
+
+
 
 def split_hybrid_query(question: str, llm):
     prompt = ChatPromptTemplate.from_template("""
@@ -293,3 +363,72 @@ def search_vector(query: str, llm, embedding_model, qdrant_db, collection, limit
     print("Raw results:", results)
     formatted = format_rag_output(results)
     return formatted, plan
+
+# import tiktoken
+
+# class DeepSeekTracker:
+#     def __init__(self, llm, model_name="deepseek-chat"):
+#         self.llm = llm
+#         self.tokenizer = tiktoken.get_encoding("cl100k_base")  # hoặc model-specific nếu DeepSeek khác
+#         self.total_tokens = 0
+
+#     def invoke(self, prompt, *args, **kwargs):
+#         # Đếm token đầu vào
+#         if isinstance(prompt, str):
+#             prompt_text = prompt
+#         else:
+#             prompt_text = str(prompt)
+
+#         prompt_tokens = len(self.tokenizer.encode(prompt_text))
+
+#         response = self.llm.invoke(prompt, *args, **kwargs)
+
+#         # Đếm token đầu ra (ước lượng)
+#         completion_tokens = len(self.tokenizer.encode(getattr(response, "content", "")))
+
+#         self.total_tokens += prompt_tokens + completion_tokens
+
+#         print(f"Prompt: {prompt_tokens}, Completion: {completion_tokens}, Total: {self.total_tokens}")
+#         return response
+
+
+
+# if __name__ == "__main__":
+#     from langchain_deepseek import ChatDeepSeek
+#     from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+#     DEEPSEEK_API_KEY=""
+
+#     QDRANT_URL=""
+#     QDRANT_COLLECTION=""
+
+#     EMBEDDING_MODEL_NAME=""
+
+#     deepseek = ChatDeepSeek(model="deepseek-chat", api_key=DEEPSEEK_API_KEY)
+
+#     tracked_llm = DeepSeekTracker(deepseek)
+
+#     # --- Kết nối Qdrant ---
+#     qdrant = QdrantClient(QDRANT_URL)
+
+#     # --- Model embedding ---
+#     GOOGLE_API_KEY = ''
+
+#     embeddings = GoogleGenerativeAIEmbeddings(
+#         model="models/gemini-embedding-exp-03-07",
+#         google_api_key=GOOGLE_API_KEY
+#     )
+
+#     # --- Câu hỏi mẫu ---
+#     question = "Find candidates who know Python"
+
+#     # --- Thực thi vector search ---
+#     results, plan = search_vector(
+#         query=question,
+#         llm=tracked_llm,
+#         embedding_model=embeddings,
+#         qdrant_db=qdrant,
+#         collection="candidates",
+#         limit=5,
+#         search_threshold=0.7,
+#     )
