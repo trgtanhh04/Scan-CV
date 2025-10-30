@@ -104,7 +104,8 @@ def router_eval_node(state, max_loop: int = 2):
             state["loop_back"] = True
             state["loop_count"] = current_loop + 1
         else:
-            print("🚫 Max feedback loop reached, proceeding with last decision.")
+            print("🚫 Max feedback loop reached, forcing SQL route as fallback.")
+            state["decision"] = "SQL" # fallback to SQL
             state["loop_back"] = False
     else:
         state["loop_back"] = False
