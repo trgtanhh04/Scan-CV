@@ -80,7 +80,7 @@ def router_main_node(state):
     state["decision"] = decision
     return state
 
-def router_eval_node(state, max_loop: int = 5):
+def router_eval_node(state, max_loop: int = 2):
     """Evaluator kiểm tra quyết định và feedback loop có giới hạn"""
     question = state["question"]
     decision = state["decision"]
